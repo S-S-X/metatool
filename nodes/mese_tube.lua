@@ -1,3 +1,6 @@
+--
+-- Register sorting tube for tubetool
+--
 
 local o2b_lookup = {
 	['0'] = '000',
@@ -22,10 +25,9 @@ end
 local nodenameprefix = "pipeworks:mese_tube_"
 local inv_size = 6
 
+--luacheck: ignore unused argument node player
 local tooldef = {
-	copy = function(node, pos)
-		local nodename = node.name
-		local variant = nodename:sub(#nodenameprefix + 1, #nodenameprefix + 6)
+	copy = function(node, pos, player)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
 
@@ -54,14 +56,13 @@ local tooldef = {
 
 		-- return data required for replicating this tube settings
 		return {
-			description = string.format("Items: %d States: %s Variant: %s", itemcount, table.concat(enabled, ","), variant),
-			variant = variant,
+			description = string.format("Items: %d States: %s", itemcount, table.concat(enabled, ",")),
 			enabled = enabled,
 			inventory = inv_data,
 		}
 	end,
 
-	paste = function(node, pos, data)
+	paste = function(node, pos, player, data)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
 
@@ -77,8 +78,9 @@ local tooldef = {
 			end
 		end
 
-		-- update tube
-		pipeworks.fs_helpers.on_receive_fields(pos, {})
+		-- update tube formspec, this seems to be cleanest solution
+		local nodedef = minetest.registered_nodes[node.name]
+		nodedef.on_receive_fields(pos, "", {}, player)
 	end,
 }
 

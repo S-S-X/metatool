@@ -1,9 +1,12 @@
+--
+-- Register teleport tube for tubetool
+--
+
 local nodenameprefix = "pipeworks:teleport_tube_"
 
+--luacheck: ignore unused argument node player
 local tooldef = {
-	copy = function(node, pos)
-		local nodename = node.name
-		local variant = nodename:sub(#nodenameprefix + 1, #nodenameprefix + 6)
+	copy = function(node, pos, player)
 		local meta = minetest.get_meta(pos)
 
 		-- get and store channel and receive setting
@@ -12,14 +15,13 @@ local tooldef = {
 
 		-- return data required for replicating this tube settings
 		return {
-			description = string.format("Items: %d States: %s Variant: %s", itemcount, table.concat(enabled, ","), variant),
-			variant = variant,
+			description = string.format("Channel: %s Receive: %d", channel, receive),
 			channel = channel,
 			receive = receive,
 		}
 	end,
 
-	paste = function(node, pos, data)
+	paste = function(node, pos, player, data)
 		local meta = minetest.get_meta(pos)
 
 		-- restore channel and receive setting
@@ -33,5 +35,5 @@ local tooldef = {
 
 -- teleport tubes
 for i=1,10 do
-	tubetool:register_node("pipeworks:teleport_tube_" .. i, tooldef)
+	tubetool:register_node(nodenameprefix .. i, tooldef)
 end

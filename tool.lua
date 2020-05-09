@@ -2,7 +2,7 @@
 -- tubetool:wand is in game tool that allows cloning pipeworks node data
 --
 
-local write_wand = function(self, itemstack, data, description)
+local write_wand = function(itemstack, data, description)
 	if not itemstack then
 		return
 	end
@@ -47,11 +47,12 @@ minetest.register_craftitem('tubetool:wand', {
 		local controls = player:get_player_control()
 
 		if controls.aux1 then
-			local data = tubetool:copy(node, pos)
-			write_wand(itemstack, data, type(data) == 'table' and (data.description or 'Data from ' .. minetest.pos_to_string(pos)))
+			local data = tubetool:copy(node, pos, player)
+			local description = type(data) == 'table' and data.description or ('Data from ' .. minetest.pos_to_string(pos))
+			write_wand(itemstack, data, description)
 		else
 			local data = read_wand(itemstack)
-			tubetool:paste(node, pos, data)
+			tubetool:paste(node, pos, player, data)
 		end
 
 		return itemstack

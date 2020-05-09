@@ -56,17 +56,17 @@ tubetool = {
 		return node, pos
 	end,
 
-	copy = function(self, node, pos)
+	copy = function(self, node, pos, player)
 		local definition = self.nodes[node.name]
 		if definition then
-			return definition.copy(node, pos)
+			return definition.copy(node, pos, player)
 		end
 	end,
 
-	paste = function(self, node, pos, data)
+	paste = function(self, node, pos, player, data)
 		local definition = self.nodes[node.name]
 		if definition and data then
-			return definition.paste(node, pos, data)
+			return definition.paste(node, pos, player, data)
 		end
 	end,
 
