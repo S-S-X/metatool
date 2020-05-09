@@ -46,7 +46,7 @@ minetest.register_craftitem('tubetool:wand', {
 
 		local controls = player:get_player_control()
 
-		if controls.aux1 then
+		if controls.aux1 or controls.sneak then
 			local data = tubetool:copy(node, pos, player)
 			local description = type(data) == 'table' and data.description or ('Data from ' .. minetest.pos_to_string(pos))
 			write_wand(itemstack, data, description)
