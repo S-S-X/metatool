@@ -10,6 +10,8 @@ tubetool = {
 				print(string.format('tubetool:register_node invalid definition, must be table but was %s', type(definition)))
 			elseif not definition.group then
 				print('tubetool:register_node invalid definition, group must be defined')
+			elseif not minetest.registered_nodes[name] then
+				print(string.format('tubetool:register_node node %s not registered for minetest, skipping registration.', name))
 			elseif type(definition.copy) == 'function' and type(definition.paste) == 'function' then
 				self.nodes[name] = definition
 				print(string.format('tubetool:register_node registered %s for group %s', name, definition.group))

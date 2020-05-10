@@ -9,8 +9,9 @@ local write_wand = function(itemstack, data, description)
 
 	local meta = itemstack:get_meta()
 	local datastring = minetest.serialize(data)
+	description = string.format('%s (%s)', (description or 'No description'), data.group)
 	meta:set_string('data', datastring)
-	meta:set_string('description', description or 'No description')
+	meta:set_string('description', description)
 end
 
 local read_wand = function(itemstack)
@@ -52,7 +53,11 @@ minetest.register_craftitem('tubetool:wand', {
 			write_wand(itemstack, {data = data, group = group}, description)
 		else
 			local data = read_wand(itemstack)
-			tubetool:paste(node, pos, player, data.data, data.group)
+			if data then
+				tubetool:paste(node, pos, player, data.data, data.group)
+			else
+				minetest.chat_send_player(player:get_player_name(), 'no data stored in this wand, use sneak+use or special+use to record data.')
+			end
 		end
 
 		return itemstack
