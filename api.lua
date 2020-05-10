@@ -71,7 +71,10 @@ tubetool = {
 	paste = function(self, node, pos, player, data, group)
 		local definition = self.nodes[node.name]
 		if definition.group ~= group then
-			minetest.chat_send_player(player:get_player_name(), string.format('tubetool wand contains data for %s, cannot apply for %s', group, definition.group))
+			minetest.chat_send_player(
+				player:get_player_name(),
+				string.format('tubetool wand contains data for %s, cannot apply for %s', group, definition.group)
+			)
 			return
 		end
 		if definition and data then
