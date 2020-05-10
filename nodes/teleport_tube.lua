@@ -6,6 +6,8 @@ local nodenameprefix = "pipeworks:teleport_tube_"
 
 --luacheck: ignore unused argument node player
 local tooldef = {
+	group = 'teleport tube',
+
 	copy = function(node, pos, player)
 		local meta = minetest.get_meta(pos)
 

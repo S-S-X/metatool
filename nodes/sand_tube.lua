@@ -6,6 +6,8 @@
 
 --luacheck: ignore unused argument node player
 local tooldef = {
+	group = 'vacuum tube',
+
 	copy = function(node, pos, player)
 		-- return data required for replicating this tube settings
 		return { description = 'Not implemented' }
