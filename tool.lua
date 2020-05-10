@@ -56,7 +56,10 @@ minetest.register_craftitem('tubetool:wand', {
 			if data then
 				tubetool:paste(node, pos, player, data.data, data.group)
 			else
-				minetest.chat_send_player(player:get_player_name(), 'no data stored in this wand, use sneak+use or special+use to record data.')
+				minetest.chat_send_player(
+					player:get_player_name(),
+					'no data stored in this wand, use sneak+use or special+use to record data.'
+				)
 			end
 		end
 
