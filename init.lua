@@ -12,7 +12,7 @@ dofile(basedir .. '/tool.lua')
 
 -- nodes
 dofile(basedir .. '/nodes/mese_tube.lua')
---dofile(basedir .. '/nodes/teleport_tube.lua')
+dofile(basedir .. '/nodes/teleport_tube.lua')
 --dofile(basedir .. '/nodes/sand_tube.lua')
 --dofile(basedir .. '/nodes/injector.lua')
 

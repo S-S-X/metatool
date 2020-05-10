@@ -30,8 +30,17 @@ local tooldef = {
 		meta:set_string("channel", data.channel)
 		meta:set_int("can_receive", data.receive)
 
-		-- update tube
-		-- TODO: Requires updating teleport tube database, see pipeworks mod for how this is done
+		-- update tube database
+		local db = pipeworks.tptube.get_db()
+		local hash = pipeworks.tptube.hash(pos)
+		db[hash] = {
+			x=pos.x,
+			y=pos.y,
+			z=pos.z,
+			channel=data.channel,
+			cr=data.receive
+		}
+		pipeworks.tptube.save_tube_db()
 	end,
 }
 
