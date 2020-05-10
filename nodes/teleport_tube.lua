@@ -24,14 +24,13 @@ local tooldef = {
 	end,
 
 	paste = function(node, pos, player, data)
-		local meta = minetest.get_meta(pos)
-
-		-- restore channel and receive setting
-		meta:set_string("channel", data.channel)
-		meta:set_int("can_receive", data.receive)
-
-		-- update tube
-		-- TODO: Requires updating teleport tube database, see pipeworks mod for how this is done
+		-- restore settings and update tube, no api available
+		local fields = {
+			channel = data.channel,
+			['cr' .. data.receive] = data.receive,
+		}
+		local nodedef = minetest.registered_nodes[node.name]
+		nodedef.on_receive_fields(pos, "", fields, player)
 	end,
 }
 
