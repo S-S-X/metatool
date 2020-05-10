@@ -6,9 +6,13 @@ tubetool = {
 	nodes = {},
 	register_node = function(self, name, definition, override)
 		if override or not self.nodes[name] then
-			if type(definition.copy) == 'function' and type(definition.paste) == 'function' then
+			if type(definition) ~= 'table' then
+				print(string.format('tubetool:register_node invalid definition, must be table but was %s', type(definition)))
+			elseif not definition.group then
+				print('tubetool:register_node invalid definition, group must be defined')
+			elseif type(definition.copy) == 'function' and type(definition.paste) == 'function' then
 				self.nodes[name] = definition
-				print(string.format('tubetool:register_node registered %s', name))
+				print(string.format('tubetool:register_node registered %s for group %s', name, definition.group))
 			else
 				print('tubetool:register_node invalid definition, copy or paste function not defined')
 			end
@@ -59,13 +63,22 @@ tubetool = {
 	copy = function(self, node, pos, player)
 		local definition = self.nodes[node.name]
 		if definition then
-			return definition.copy(node, pos, player)
+			minetest.chat_send_player(player:get_player_name(), string.format('copying data for group %s', definition.group))
+			return definition.copy(node, pos, player), definition.group
 		end
 	end,
 
-	paste = function(self, node, pos, player, data)
+	paste = function(self, node, pos, player, data, group)
 		local definition = self.nodes[node.name]
+		if definition.group ~= group then
+			minetest.chat_send_player(
+				player:get_player_name(),
+				string.format('tubetool wand contains data for %s, cannot apply for %s', group, definition.group)
+			)
+			return
+		end
 		if definition and data then
+			minetest.chat_send_player(player:get_player_name(), string.format('applying data for group %s', definition.group))
 			return definition.paste(node, pos, player, data)
 		end
 	end,

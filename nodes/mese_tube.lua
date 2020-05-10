@@ -27,6 +27,8 @@ local inv_size = 6
 
 --luacheck: ignore unused argument node player
 local tooldef = {
+	group = 'sorting tube',
+
 	copy = function(node, pos, player)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
