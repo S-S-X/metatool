@@ -24,37 +24,29 @@ local read_wand = function(itemstack)
 	return minetest.deserialize(datastring)
 end
 
-minetest.register_craftitem('tubetool:wand', {
+local recipe = {
+	{ '', '', 'default:mese_crystal' },
+	{ '', 'pipeworks:lua_tube000000', '' },
+	{ 'default:obsidian_shard', '', '' }
+}
+
+local tool = metatool:register_tool('tubetool', {
 
 	description = 'TubeTool',
-	inventory_image = 'tubetool_wand.png',
-	groups = {},
-	stack_max = 1,
-	wield_image = 'tubetool_wand.png',
-	wield_scale = { x = 0.8, y = 1, z = 0.8 },
-	liquids_pointable = false,
-	node_placement_prediction = nil,
-
-	on_use = function(itemstack, player, pointed_thing)
-		if not player or type(player) == 'table' then
-			return
-		end
-
-		local node, pos = tubetool:get_node(player, pointed_thing)
-		if not node then
-			return
-		end
+	texture = 'tubetool_wand.png',
+	recipe = recipe,
+	on_use = function(tooldef, itemstack, player, pointed_thing, node, pos)
 
 		local controls = player:get_player_control()
 
 		if controls.aux1 or controls.sneak then
-			local data, group = tubetool:copy(node, pos, player)
+			local data, group = tooldef:copy(node, pos, player)
 			local description = type(data) == 'table' and data.description or ('Data from ' .. minetest.pos_to_string(pos))
 			write_wand(itemstack, {data = data, group = group}, description)
 		else
 			local data = read_wand(itemstack)
 			if data then
-				tubetool:paste(node, pos, player, data.data, data.group)
+				tooldef:paste(node, pos, player, data.data, data.group)
 			else
 				minetest.chat_send_player(
 					player:get_player_name(),
@@ -65,20 +57,12 @@ minetest.register_craftitem('tubetool:wand', {
 
 		return itemstack
 	end,
-
 })
 
-minetest.register_craft({
-	output = 'tubetool:wand 1',
-	recipe = {
-		{ '', '', 'default:mese_crystal' },
-		{ '', 'pipeworks:lua_tube000000', '' },
-		{ 'default:obsidian_shard', '', '' }
-	}
-})
+minetest.register_alias('tubetool:wand', 'tubetool:tubetool')
 
-minetest.register_craft({
-	type = "shapeless",
-	output = 'tubetool:wand 1',
-	recipe = { 'tubetool:wand' }
-})
+-- nodes
+tool:load_node_definition('mese_tube')
+tool:load_node_definition('teleport_tube')
+--dofile(basedir .. '/tools/tubetool/sand_tube.lua')
+--dofile(basedir .. '/tools/tubetool/injector.lua')
