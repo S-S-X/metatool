@@ -1,8 +1,11 @@
-## What tubetool? And why?
+## What metatool? And why?
 
-Tubetool Minetest mod provides tool for cloning pipeworks node configurations like sorting tube configuration.
+Metatool Minetest mod provides API for registering metadata manipulation tools and other tools primarily focused on special node data operations.
 
-## How to use tubetool:wand
+## How to use metatool:tubetool
+
+Tubetool is made available for cloning pipeworks node configurations like sorting tube configuration.
+Other registered metatool tools might work in similar way allowing to copy data from one node to another.
 
 #### Copy configuration from pipeworks node
 
@@ -36,7 +39,7 @@ local definition = {
 		meta:set_string("owner", data.myvalue)
 	end,
 }
-tubetool:register_node("technic:injector", definition)
+metatool:register_node(tool, "technic:injector", definition)
 ```
 
 That's all, now you can use tubetool wand to copy/paste metadata owner value from one injector to another.

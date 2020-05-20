@@ -230,6 +230,7 @@ metatool = {
 		return node, pos
 	end,
 
+	-- Save data for tool and update tool description
 	write_data = function(itemstack, data, description)
 		if not itemstack then
 			return
@@ -242,6 +243,7 @@ metatool = {
 		meta:set_string('description', description)
 	end,
 
+	-- Return data stored with tool
 	read_data = function(itemstack)
 		if not itemstack then
 			return
