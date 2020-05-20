@@ -28,7 +28,7 @@ end
 
 local register_metatool_item = function(name, definition)
 
-	local itemname = 'tubetool:' .. name
+	local itemname = 'metatool:' .. name
 
 	local description = definition.description or "Weird surprise MetaTool, let's roll the dice..."
 	local texture = definition.texture or 'metatool_wand.png'
@@ -74,17 +74,18 @@ local validate_tool_definition = function(definition)
 		if not res then print(string.format('missing function %s', key)) end
 		return res
 	end
-	return F('on_use') and T('recipe')
+	return F('on_read_node') and F('on_write_node') and T('recipe')
 end
 
 metatool = {
 
 	-- Base directory for metatool mod
-	basedir = minetest.get_modpath('tubetool'),
+	basedir = minetest.get_modpath('metatool'),
 
 	-- Metatool registered tools
 	tools = {},
 
+	-- Called when registered tool is used
 	on_use = function(self, tool, itemstack, player, pointed_thing)
 		if not player or type(player) == 'table' then
 			return
@@ -97,8 +98,25 @@ metatool = {
 			return
 		end
 
-		local result = tooldef.itemdef.on_use(tooldef, itemstack, player, pointed_thing, node, pos)
-		return type(result) == 'ItemStack' and result or itemstack
+		local controls = player:get_player_control()
+		if controls.aux1 or controls.sneak then
+			-- Execute on_read_node when tool is used on node and special or sneak is held
+			local data, group, description = tooldef.itemdef.on_read_node(tooldef, player, pointed_thing, node, pos)
+			metatool.write_data(itemstack, {data=data,group=group}, description)
+		else
+			local data = metatool.read_data(itemstack)
+			if type(data) == 'table' then
+				-- Execute on_write_node when tool is used on node and tool contains data
+				result = tooldef.itemdef.on_write_node(tooldef, data.data, data.group, player, pointed_thing, node, pos)
+			else
+				minetest.chat_send_player(
+					player:get_player_name(),
+					'no data stored in this wand, sneak+use or special+use to record data.'
+				)
+			end
+		end
+
+		return itemstack
 	end,
 
 	-- Common node loading method for tools
@@ -210,6 +228,28 @@ metatool = {
 		end
 
 		return node, pos
+	end,
+
+	write_data = function(itemstack, data, description)
+		if not itemstack then
+			return
+		end
+
+		local meta = itemstack:get_meta()
+		local datastring = minetest.serialize(data)
+		description = string.format('%s (%s)', (description or 'No description'), data.group)
+		meta:set_string('data', datastring)
+		meta:set_string('description', description)
+	end,
+
+	read_data = function(itemstack)
+		if not itemstack then
+			return
+		end
+
+		local meta = itemstack:get_meta()
+		local datastring = meta:get_string('data')
+		return minetest.deserialize(datastring)
 	end,
 
 	copy = function(self, node, pos, player)

@@ -3,7 +3,7 @@
 --]]
 
 -- initialize namespace and core functions
-dofile(minetest.get_modpath('tubetool') .. '/api.lua')
+dofile(minetest.get_modpath('metatool') .. '/api.lua')
 local function tool(name) dofile(string.format('%s/tools/%s.lua', metatool.basedir, name)) end
 
 --
@@ -15,4 +15,4 @@ local function tool(name) dofile(string.format('%s/tools/%s.lua', metatool.based
 -- tubetool:wand
 tool('tubetool')
 
-print('[tubetool] loaded')
+print('[OK] MetaTool loaded')
