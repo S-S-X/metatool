@@ -8,6 +8,7 @@ local recipe = {
 	{ 'default:obsidian_shard', '', '' }
 }
 
+--luacheck: ignore unused argument tooldef player pointed_thing node pos
 local tool = metatool:register_tool('tubetool', {
 
 	description = 'TubeTool',

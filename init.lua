@@ -8,7 +8,7 @@ local function tool(name) dofile(string.format('%s/tools/%s.lua', metatool.based
 
 --
 -- Load tools provided by metatool mod using tool('toolname') function.
--- 
+--
 -- For externally defined tools use API method metatool:register_tool(...) directly.
 --
 

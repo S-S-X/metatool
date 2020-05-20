@@ -4,28 +4,6 @@
 
 local S = string.format
 
-local write_wand = function(itemstack, data, description)
-	if not itemstack then
-		return
-	end
-
-	local meta = itemstack:get_meta()
-	local datastring = minetest.serialize(data)
-	description = string.format('%s (%s)', (description or 'No description'), data.group)
-	meta:set_string('data', datastring)
-	meta:set_string('description', description)
-end
-
-local read_wand = function(itemstack)
-	if not itemstack then
-		return
-	end
-
-	local meta = itemstack:get_meta()
-	local datastring = meta:get_string('data')
-	return minetest.deserialize(datastring)
-end
-
 local register_metatool_item = function(name, definition)
 
 	local itemname = 'metatool:' .. name
@@ -77,6 +55,7 @@ local validate_tool_definition = function(definition)
 	return F('on_read_node') and F('on_write_node') and T('recipe')
 end
 
+--luacheck: ignore unused argument self
 metatool = {
 
 	-- Base directory for metatool mod
@@ -107,7 +86,7 @@ metatool = {
 			local data = metatool.read_data(itemstack)
 			if type(data) == 'table' then
 				-- Execute on_write_node when tool is used on node and tool contains data
-				result = tooldef.itemdef.on_write_node(tooldef, data.data, data.group, player, pointed_thing, node, pos)
+				tooldef.itemdef.on_write_node(tooldef, data.data, data.group, player, pointed_thing, node, pos)
 			else
 				minetest.chat_send_player(
 					player:get_player_name(),
@@ -128,11 +107,17 @@ metatool = {
 		end
 		local def = dofile(string.format('%s/tools/%s/%s.lua', metatool.basedir, self.name, name))
 		if not def or type(def) ~= 'table' then
-			print(string.format('metatool:%s error in %s:load_node_definition invalid return value for %s', self.name, self.name, name))
+			print(string.format(
+				'metatool:%s error in %s:load_node_definition invalid return value for %s',
+				self.name, self.name, name
+			))
 			return
 		end
 		if type(def.tooldef) ~= 'table' then
-			print(string.format('metatool:%s error in %s:load_node_definition invalid tooldef for %s', self.name, self.name, name))
+			print(string.format(
+				'metatool:%s error in %s:load_node_definition invalid tooldef for %s',
+				self.name, self.name, name
+			))
 			return
 		end
 		if type(def.nodes) == 'table' then
@@ -142,7 +127,10 @@ metatool = {
 		elseif type(def.nodes) == 'string' then
 			metatool:register_node(self.name, def.nodes, def.tooldef)
 		else
-			print(string.format('metatool:%s error in %s:load_node_definition invalid tooldef for %s', self.name, self.name, name))
+			print(string.format(
+				'metatool:%s error in %s:load_node_definition invalid tooldef for %s',
+				self.name, self.name, name
+			))
 			return
 		end
 	end,

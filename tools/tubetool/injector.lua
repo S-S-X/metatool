@@ -22,4 +22,4 @@ local tooldef = {
 	end,
 }
 
-tubetool:register_node('pipeworks:injector', tooldef)
+metatool:register_node('pipeworks:injector', tooldef)
