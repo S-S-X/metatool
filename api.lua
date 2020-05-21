@@ -105,7 +105,8 @@ metatool = {
 			print('metatool:load_node invalid method call, requires tool context')
 			return
 		end
-		local def = dofile(string.format('%s/tools/%s/%s.lua', metatool.basedir, self.name, name))
+		local basedir = self.basedir or (metatool.basedir .. '/tools')
+		local def = dofile(string.format('%s/%s/%s.lua', basedir, self.name, name))
 		if not def or type(def) ~= 'table' then
 			print(string.format(
 				'metatool:%s error in %s:load_node_definition invalid return value for %s',
@@ -143,6 +144,7 @@ metatool = {
 				self.tools[name] = {
 					itemdef = definition,
 					name = name,
+					nice_name = definition.name or name,
 					nodes = {},
 					load_node_definition = metatool.load_node_definition,
 					copy = metatool.copy,
@@ -194,6 +196,7 @@ metatool = {
 		local pos = minetest.get_pointed_thing_position(pointed_thing)
 		if not pos then
 			-- could not get definite position
+			minetest.chat_send_player(name, S('%s could not get valid position', tool.nice_name))
 			return
 		end
 
@@ -212,6 +215,7 @@ metatool = {
 		local definition = tool.nodes[node.name]
 		if not definition then
 			-- node is not registered for metatool
+			minetest.chat_send_player(name, S('%s cannot be used on %s', tool.nice_name, node.name))
 			return
 		end
 
@@ -260,7 +264,6 @@ metatool = {
 			return
 		end
 		if definition and data then
-			minetest.chat_send_player(player:get_player_name(), S('applying data for group %s', definition.group))
 			return definition.paste(node, pos, player, data)
 		end
 	end,
