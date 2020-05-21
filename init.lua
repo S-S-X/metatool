@@ -2,18 +2,17 @@
 	Tubetool allows cloning pipeworks tube settings.
 --]]
 
-local basedir = minetest.get_modpath('tubetool')
+-- initialize namespace and core functions
+dofile(minetest.get_modpath('metatool') .. '/api.lua')
+local function tool(name) dofile(string.format('%s/tools/%s.lua', metatool.basedir, name)) end
 
--- namespace and core functions
-dofile(basedir .. '/api.lua')
+--
+-- Load tools provided by metatool mod using tool('toolname') function.
+--
+-- For externally defined tools use API method metatool:register_tool(...) directly.
+--
 
 -- tubetool:wand
-dofile(basedir .. '/tool.lua')
+tool('tubetool')
 
--- nodes
-dofile(basedir .. '/nodes/mese_tube.lua')
-dofile(basedir .. '/nodes/teleport_tube.lua')
---dofile(basedir .. '/nodes/sand_tube.lua')
---dofile(basedir .. '/nodes/injector.lua')
-
-print('[tubetool] loaded')
+print('[OK] MetaTool loaded')

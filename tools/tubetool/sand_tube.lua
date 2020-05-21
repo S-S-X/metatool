@@ -1,12 +1,12 @@
 --
--- Register injectors for tubetool
+-- Register vacuum tube for tubetool
 --
 
--- TODO: Register injectors for tubetool
+-- TODO: Register vacuum tubes for tubetool
 
 --luacheck: ignore unused argument node player
 local tooldef = {
-	group = 'injector',
+	group = 'vacuum tube',
 
 	copy = function(node, pos, player)
 		-- useless stuff to remove luacheck warnings
@@ -22,4 +22,7 @@ local tooldef = {
 	end,
 }
 
-tubetool:register_node('pipeworks:injector', tooldef)
+-- sand tubes
+for i=1,8 do
+	metatool:register_node("pipeworks:sand_tube_" .. i, tooldef)
+end

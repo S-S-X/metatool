@@ -1,6 +1,6 @@
 
 globals = {
-	"tubetool",
+	"metatool",
 }
 
 read_globals = {
