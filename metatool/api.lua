@@ -4,9 +4,26 @@
 
 local S = string.format
 
+local transform_tool_name = function(name)
+	local parts = name:gsub('\\s',''):split(':')
+	if #parts > 2 or #parts < 1 then
+		print(S('Invalid metatool name %s', name))
+		return
+	elseif #parts == 2 then
+		-- this will strip leading colon
+		return parts[1] .. parts[2]
+	elseif #parts == 1 and parts[1] ~= 'metatool' then
+		return ':metatool:' .. parts[1]
+	else
+		print(S('Invalid metatool name %s', name))
+		return
+	end
+end
+
 local register_metatool_item = function(name, definition)
 
-	local itemname = 'metatool:' .. name
+	local itemname = transform_tool_name(name)
+	if not itemname then return end
 
 	local description = definition.description or "Weird surprise MetaTool, let's roll the dice..."
 	local texture = definition.texture or 'metatool_wand.png'
@@ -59,7 +76,7 @@ end
 metatool = {
 
 	-- Base directory for metatool mod
-	basedir = minetest.get_modpath('metatool'),
+	basedir = minetest.get_modpath('metatool'):gsub('/metatool$', ''),
 
 	-- Metatool registered tools
 	tools = {},
@@ -99,25 +116,23 @@ metatool = {
 	end,
 
 	-- Common node loading method for tools
-	load_node_definition = function(self, name)
+	load_node_definition = function(self, def)
 		if self == metatool then
 			-- Could go full OOP and actually check for tool object.. sorry about that
 			print('metatool:load_node invalid method call, requires tool context')
 			return
 		end
-		local basedir = self.basedir or (metatool.basedir .. '/tools')
-		local def = dofile(string.format('%s/%s/%s.lua', basedir, self.name, name))
 		if not def or type(def) ~= 'table' then
 			print(string.format(
-				'metatool:%s error in %s:load_node_definition invalid return value for %s',
-				self.name, self.name, name
+				'metatool:%s error in %s:load_node_definition invalid definition type: %s',
+				self.name, self.name, type(def)
 			))
 			return
 		end
 		if type(def.tooldef) ~= 'table' then
 			print(string.format(
-				'metatool:%s error in %s:load_node_definition invalid tooldef for %s',
-				self.name, self.name, name
+				'metatool:%s error in %s:load_node_definition invalid `tooldef` type: %s',
+				self.name, self.name, type(def.tooldef)
 			))
 			return
 		end
@@ -129,8 +144,8 @@ metatool = {
 			metatool:register_node(self.name, def.nodes, def.tooldef)
 		else
 			print(string.format(
-				'metatool:%s error in %s:load_node_definition invalid tooldef for %s',
-				self.name, self.name, name
+				'metatool:%s error in %s:load_node_definition invalid `nodes` type: %s',
+				self.name, self.name, type(def.nodes)
 			))
 			return
 		end
@@ -141,6 +156,7 @@ metatool = {
 			if type(definition) ~= 'table' then
 				print(S('metatool:register_tool invalid definition, must be table but was %s', type(definition)))
 			elseif validate_tool_definition(definition) then
+				register_metatool_item(name, definition)
 				self.tools[name] = {
 					itemdef = definition,
 					name = name,
@@ -150,7 +166,6 @@ metatool = {
 					copy = metatool.copy,
 					paste = metatool.paste,
 				}
-				register_metatool_item(name, definition)
 				print(S('metatool:register_tool registered tool "%s".', name))
 				return self.tools[name]
 			else

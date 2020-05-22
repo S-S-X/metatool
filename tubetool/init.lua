@@ -2,6 +2,8 @@
 -- tubetool:wand is in game tool that allows cloning pipeworks node data
 --
 
+local modpath = minetest.get_modpath('tubetool')
+
 local recipe = {
 	{ '', '', 'default:mese_crystal' },
 	{ '', 'pipeworks:lua_tube000000', '' },
@@ -10,7 +12,6 @@ local recipe = {
 
 --luacheck: ignore unused argument tooldef player pointed_thing node pos
 local tool = metatool:register_tool('tubetool', {
-	basedir = metatool.basedir .. '/tools',
 	description = 'TubeTool',
 	name = 'TubeTool',
 	texture = 'tubetool_wand.png',
@@ -28,7 +29,7 @@ local tool = metatool:register_tool('tubetool', {
 minetest.register_alias('tubetool:wand', 'metatool:tubetool')
 
 -- nodes
-tool:load_node_definition('mese_tube')
-tool:load_node_definition('teleport_tube')
---dofile(basedir .. '/tools/tubetool/sand_tube.lua')
---dofile(basedir .. '/tools/tubetool/injector.lua')
+tool:load_node_definition(dofile(modpath .. '/nodes/mese_tube.lua'))
+tool:load_node_definition(dofile(modpath .. '/nodes/teleport_tube.lua'))
+-- tool:load_node_definition(dofile(modpath .. '/nodes/sand_tube.lua')
+-- tool:load_node_definition(dofile(modpath .. '/nodes/injector.lua')
