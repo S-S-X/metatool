@@ -75,10 +75,44 @@ local validate_tool_definition = function(definition)
 	return F('on_read_node') and F('on_write_node') and T('recipe')
 end
 
+local get_privs = function(privs)
+	if privs and #privs > 0 then
+		-- return privs if length > 0
+		return privs
+	end
+end
+
 --luacheck: ignore unused argument self
 metatool = {
 	-- Metatool registered tools
 	tools = {},
+
+	is_protected = function(pos, player, privs)
+		local name = player:get_player_name()
+		if minetest.is_protected(pos, name) then
+			local bypass = privs and minetest.check_player_privs(player, privs) or false
+			-- node is protected record violation even with bypass priv
+			minetest.record_protection_violation(pos, name)
+			return not bypass
+		end
+		return false
+	end,
+
+	before_read = function(nodedef, pos, player)
+		local privs = get_privs(nodedef.protection_bypass_read)
+		if metatool.is_protected(pos, player, privs) then
+			return false
+		end
+		return true
+	end,
+
+	before_write = function(nodedef, pos, player)
+		local privs = get_privs(nodedef.protection_bypass_write)
+		if metatool.is_protected(pos, player, privs) then
+			return false
+		end
+		return true
+	end,
 
 	-- Called when registered tool is used
 	on_use = function(self, toolname, itemstack, player, pointed_thing)
@@ -88,26 +122,31 @@ metatool = {
 
 		local tooldef = self.tools[toolname]
 
-		local node, pos = metatool:get_node(tooldef, player, pointed_thing)
+		local node, pos, nodedef = metatool:get_node(tooldef, player, pointed_thing)
 		if not node then
 			return
 		end
 
 		local controls = player:get_player_control()
+
 		if controls.aux1 or controls.sneak then
-			-- Execute on_read_node when tool is used on node and special or sneak is held
-			local data, group, description = tooldef.itemdef.on_read_node(tooldef, player, pointed_thing, node, pos)
-			metatool.write_data(itemstack, {data=data,group=group}, description)
+			if nodedef.before_read(nodedef, pos, player) then
+				-- Execute on_read_node when tool is used on node and special or sneak is held
+				local data, group, description = tooldef.itemdef.on_read_node(tooldef, player, pointed_thing, node, pos)
+				metatool.write_data(itemstack, {data=data,group=group}, description)
+			end
 		else
-			local data = metatool.read_data(itemstack)
-			if type(data) == 'table' then
-				-- Execute on_write_node when tool is used on node and tool contains data
-				tooldef.itemdef.on_write_node(tooldef, data.data, data.group, player, pointed_thing, node, pos)
-			else
-				minetest.chat_send_player(
-					player:get_player_name(),
-					'no data stored in this wand, sneak+use or special+use to record data.'
-				)
+			if nodedef.before_write(nodedef, pos, player) then
+				local data = metatool.read_data(itemstack)
+				if type(data) == 'table' then
+					-- Execute on_write_node when tool is used on node and tool contains data
+					tooldef.itemdef.on_write_node(tooldef, data.data, data.group, player, pointed_thing, node, pos)
+				else
+					minetest.chat_send_player(
+						player:get_player_name(),
+						'no data stored in this wand, sneak+use or special+use to record data.'
+					)
+				end
 			end
 		end
 
@@ -188,6 +227,12 @@ metatool = {
 			elseif not minetest.registered_nodes[name] then
 				print(S('metatool:register_node node %s not registered for minetest, skipping registration.', name))
 			elseif type(definition.copy) == 'function' and type(definition.paste) == 'function' then
+				if type(definition.before_read) ~= 'function' then
+					definition.before_read = metatool.before_read
+				end
+				if type(definition.before_write) ~= 'function' then
+					definition.before_write = metatool.before_write
+				end
 				tooldef.nodes[name] = definition
 				print(S('metatool:register_node registered %s for tool %s with group %s.', name, tool, definition.group))
 			else
@@ -223,12 +268,6 @@ metatool = {
 			return
 		end
 
-		if minetest.is_protected(pos, name) then
-			-- node is protected
-			minetest.record_protection_violation(pos, name)
-			return
-		end
-
 		local definition = tool.nodes[node.name]
 		if not definition then
 			-- node is not registered for metatool
@@ -236,7 +275,7 @@ metatool = {
 			return
 		end
 
-		return node, pos
+		return node, pos, definition
 	end,
 
 	-- Save data for tool and update tool description

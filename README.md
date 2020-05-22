@@ -103,6 +103,20 @@ Example definition:
 	end,
 ```
 
+Parameter `protection_bypass_read = { "mytool_copy" }`
+Bypass all read protection checks when using tool if player has listed privs.
+
+Parameter `protection_bypass_write = { "mytool_admin" }`
+Bypass all write protection checks when using tool if player has listed privs.
+
+Callback `allowed = before_read(nodedef, pos, player)`
+Executed before node reading is called, this method can override all protection checks.
+Above protection_bypass_read parameters might not work if this is overridden.
+
+Callback `allowed = before_write(nodedef, pos, player)`
+Executed before node reading is called, this method can override all protection checks.
+Above protection_bypass_write parameters might not work if this is overridden.
+
 ### Metatool API methods (commonly used)
 
 `mytool = metatool:register_tool(name, definition)`
@@ -111,7 +125,7 @@ Example definition:
 
 ### Metatool API methods (for special needs)
 
-`node, pos = metatool:get_node(tool, player, pointed_thing)`
+`node, pos, nodedef = metatool:get_node(tool, player, pointed_thing)`
 
 `metatool.write_data(itemstack, data, description)`
 
