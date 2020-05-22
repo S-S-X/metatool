@@ -77,10 +77,6 @@ end
 
 --luacheck: ignore unused argument self
 metatool = {
-
-	-- Base directory for metatool mod
-	basedir = minetest.get_modpath('metatool'):gsub('/metatool$', ''),
-
 	-- Metatool registered tools
 	tools = {},
 
