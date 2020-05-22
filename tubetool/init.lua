@@ -13,7 +13,7 @@ local recipe = {
 --luacheck: ignore unused argument tooldef player pointed_thing node pos
 local tool = metatool:register_tool('tubetool', {
 	description = 'TubeTool',
-	name = 'TubeTool',
+	nice_name = 'TubeTool',
 	texture = 'tubetool_wand.png',
 	recipe = recipe,
 	on_read_node = function(tooldef, player, pointed_thing, node, pos)

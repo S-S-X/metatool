@@ -24,6 +24,7 @@ local register_metatool_item = function(name, definition)
 
 	local itemname = transform_tool_name(name)
 	if not itemname then return end
+	local itemname_clean = itemname:gsub('^:', '')
 
 	local description = definition.description or "Weird surprise MetaTool, let's roll the dice..."
 	local texture = definition.texture or 'metatool_wand.png'
@@ -42,20 +43,22 @@ local register_metatool_item = function(name, definition)
 		liquids_pointable = liquids_pointable,
 		node_placement_prediction = nil,
 		on_use = function(...)
-			return metatool:on_use(name, unpack({...}))
+			return metatool:on_use(itemname_clean, unpack({...}))
 		end,
 	})
 
 	minetest.register_craft({
-		output = string.format('%s %d', itemname, craft_count),
+		output = string.format('%s %d', itemname_clean, craft_count),
 		recipe = definition.recipe
 	})
 
 	minetest.register_craft({
 		type = "shapeless",
-		output = string.format('%s %d', itemname, 1),
-		recipe = { itemname }
+		output = string.format('%s %d', itemname_clean, 1),
+		recipe = { itemname_clean }
 	})
+
+	return itemname_clean
 end
 
 local validate_tool_definition = function(definition)
@@ -82,12 +85,12 @@ metatool = {
 	tools = {},
 
 	-- Called when registered tool is used
-	on_use = function(self, tool, itemstack, player, pointed_thing)
+	on_use = function(self, toolname, itemstack, player, pointed_thing)
 		if not player or type(player) == 'table' then
 			return
 		end
 
-		local tooldef = self.tools[tool]
+		local tooldef = self.tools[toolname]
 
 		local node, pos = metatool:get_node(tooldef, player, pointed_thing)
 		if not node then
@@ -156,18 +159,21 @@ metatool = {
 			if type(definition) ~= 'table' then
 				print(S('metatool:register_tool invalid definition, must be table but was %s', type(definition)))
 			elseif validate_tool_definition(definition) then
-				register_metatool_item(name, definition)
-				self.tools[name] = {
+				local itemname = register_metatool_item(name, definition)
+				if not itemname then
+					print(S('metatool:register_tool tool registration failed for "%s".', name))
+				end
+				self.tools[itemname] = {
 					itemdef = definition,
-					name = name,
+					name = itemname,
 					nice_name = definition.name or name,
 					nodes = {},
 					load_node_definition = metatool.load_node_definition,
 					copy = metatool.copy,
 					paste = metatool.paste,
 				}
-				print(S('metatool:register_tool registered tool "%s".', name))
-				return self.tools[name]
+				print(S('metatool:register_tool registered tool "%s".', itemname))
+				return self.tools[itemname]
 			else
 				print('metatool:register_tool invalid tool definition, missing required values.')
 			end

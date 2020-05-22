@@ -1,5 +1,6 @@
 --[[
-	Tubetool allows cloning pipeworks tube settings.
+	Metatool provides API to register tools used for
+	manipulating node metadata through copy/paste methods.
 --]]
 
 -- initialize namespace and core functions
