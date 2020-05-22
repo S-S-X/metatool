@@ -19,7 +19,7 @@ Left click with wand to apply new settings, chat will display confirmation messa
 
 ## How to add supported nodes
 
-Example to add node technic:injector for tubetool
+Example to add support for technic:injector
 
 ```
 local definition = {
@@ -39,10 +39,45 @@ local definition = {
 		meta:set_string("owner", data.myvalue)
 	end,
 }
-metatool:register_node(tool, "technic:injector", definition)
+```
+
+Supply above definition for tool, mytool variable is returned from metatool:register_tool method
+
+```
+mytool:load_node_definition(definition)
+```
+
+or by fully qualified tool name
+
+```
+metatool:register_node("metatool:tubetool", definition)
 ```
 
 That's all, now you can use tubetool wand to copy/paste metadata owner value from one injector to another.
+
+## API methods
+
+### Tool API methods (where `mytool` is registered tool)
+
+`mytool:load_node_definition(definition)`
+
+`mytool:on_use(toolname, itemstack, player, pointed_thing)`
+
+### Metatool API methods
+
+`metatool:register_tool(name, definition)`
+
+`metatool:register_node(definition)`
+
+`metatool:get_node(tool, player, pointed_thing)`
+
+`metatool.write_data(itemstack, data, description)`
+
+`metatool.read_data = function(itemstack)`
+
+`metatool:copy(node, pos, player)`
+
+`metatool:paste(node, pos, player, data, group)`
 
 ## Registered nodes included with tubetool
 
