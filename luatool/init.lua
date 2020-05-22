@@ -4,7 +4,7 @@
 
 local recipe = {
 	{ '', '', 'default:mese_crystal' },
-	{ '', 'mesecons:luacontroller_0000', '' },
+	{ '', 'mesecons_luacontroller:luacontroller0000', '' },
 	{ 'default:obsidian_shard', '', '' }
 }
 
