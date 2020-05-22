@@ -61,21 +61,63 @@ That's all, now you can use tubetool wand to copy/paste metadata owner value fro
 
 `mytool:load_node_definition(definition)`
 
-`mytool:on_use(toolname, itemstack, player, pointed_thing)`
+### Tool definition callback methods
 
-### Metatool API methods
+Callback `data, group, description = on_read_node(tooldef, player, pointed_thing, node, pos)`
 
-`metatool:register_tool(name, definition)`
+Example definition:
+```
+	on_read_node = function(tooldef, player, pointed_thing, node, pos)
+		local data, group = tooldef:copy(node, pos, player)
+		local description = type(data) == 'table' and data.description or ('Data from ' .. minetest.pos_to_string(pos))
+		return data, group, description
+	end,
+```
+
+Callback `on_write_node(tooldef, data, group, player, pointed_thing, node, pos)`
+
+Example definition:
+```
+	on_write_node = function(tooldef, data, group, player, pointed_thing, node, pos)
+		tooldef:paste(node, pos, player, data, group)
+	end,
+```
+
+### Node definition callback methods (see above technic:injector example)
+
+Callback `data = copy(node, pos, player)`
+
+Example definition:
+```
+	copy = function(node, pos, player)
+		return { description = "new description", myvalue = "any value" }
+	end,
+```
+
+Callback `paste(node, pos, player, data)`
+
+Example definition:
+```
+	paste = function(node, pos, player, data)
+		print("Used on " .. node.name .. " by " .. player:get_player_name())
+	end,
+```
+
+### Metatool API methods (commonly used)
+
+`mytool = metatool:register_tool(name, definition)`
 
 `metatool:register_node(definition)`
 
-`metatool:get_node(tool, player, pointed_thing)`
+### Metatool API methods (for special needs)
+
+`node, pos = metatool:get_node(tool, player, pointed_thing)`
 
 `metatool.write_data(itemstack, data, description)`
 
-`metatool.read_data = function(itemstack)`
+`data = metatool.read_data = function(itemstack)`
 
-`metatool:copy(node, pos, player)`
+`data = metatool:copy(node, pos, player)`
 
 `metatool:paste(node, pos, player, data, group)`
 
