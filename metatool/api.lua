@@ -75,24 +75,19 @@ local validate_tool_definition = function(definition)
 	return F('on_read_node') and F('on_write_node') and T('recipe')
 end
 
-local get_privs = function(privs)
-	if privs and #privs > 0 then
-		-- return privs if length > 0
-		return privs
-	end
-end
-
---luacheck: ignore unused argument self
 metatool = {
+	--luacheck: ignore unused argument self
+
 	-- Metatool registered tools
 	tools = {},
 
 	is_protected = function(pos, player, privs)
-		local name = player:get_player_name()
-		if privs and minetest.check_player_privs(player, privs) then
+		if privs and (minetest.check_player_privs(player, privs)) then
 			-- player is allowed to bypass protection checks
 			return false
-		elseif minetest.is_protected(pos, name) then
+		end
+		local name = player:get_player_name()
+		if minetest.is_protected(pos, name) then
 			-- node is protected record violation
 			minetest.record_protection_violation(pos, name)
 			return true
@@ -101,16 +96,14 @@ metatool = {
 	end,
 
 	before_read = function(nodedef, pos, player)
-		local privs = get_privs(nodedef.protection_bypass_read)
-		if metatool.is_protected(pos, player, privs) then
+		if metatool.is_protected(pos, player, nodedef.protection_bypass_read) then
 			return false
 		end
 		return true
 	end,
 
 	before_write = function(nodedef, pos, player)
-		local privs = get_privs(nodedef.protection_bypass_write)
-		if metatool.is_protected(pos, player, privs) then
+		if metatool.is_protected(pos, player, nodedef.protection_bypass_write) then
 			return false
 		end
 		return true
@@ -219,8 +212,8 @@ metatool = {
 		end
 	end,
 
-	register_node = function(self, tool, name, definition, override)
-		local tooldef = self.tools[tool]
+	register_node = function(self, toolname, name, definition, override)
+		local tooldef = self.tools[toolname]
 		if override or not tooldef.nodes[name] then
 			if type(definition) ~= 'table' then
 				print(S('metatool:register_node invalid definition, must be table but was %s', type(definition)))
@@ -236,7 +229,7 @@ metatool = {
 					definition.before_write = metatool.before_write
 				end
 				tooldef.nodes[name] = definition
-				print(S('metatool:register_node registered %s for tool %s with group %s.', name, tool, definition.group))
+				print(S('metatool:register_node registered %s for tool %s with group %s.', name, toolname, definition.group))
 			else
 				print(S('metatool:register_node invalid definition for %s: copy or paste function not defined.', name))
 			end
