@@ -129,6 +129,7 @@ metatool = {
 		if controls.aux1 or controls.sneak then
 			-- Execute on_read_node when tool is used on node and special or sneak is held
 			local data, group, description = tooldef.itemdef.on_read_node(tooldef, player, pointed_thing, node, pos)
+			local separated
 			itemstack, separated = separate_stack(itemstack)
 			metatool.write_data(separated or itemstack, {data=data,group=group}, description)
 			-- if stack was separated give missing items to player
