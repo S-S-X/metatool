@@ -30,7 +30,7 @@ local register_metatool_item = function(name, definition)
 	local texture = definition.texture or 'metatool_wand.png'
 	local liquids_pointable = definition.liquids_pointable == nil and false or definition.liquids_pointable
 	local craft_count = definition.craft_count or 1
-	local stack_max = definition.stack_max or 1
+	local stack_max = definition.stack_max or 99
 	craft_count = craft_count > stack_max and stack_max or craft_count
 
 	minetest.register_craftitem(itemname, {
@@ -41,7 +41,6 @@ local register_metatool_item = function(name, definition)
 		wield_image = texture,
 		wield_scale = { x = 0.8, y = 1, z = 0.8 },
 		liquids_pointable = liquids_pointable,
-		node_placement_prediction = nil,
 		on_use = function(...)
 			return metatool:on_use(itemname_clean, unpack({...}))
 		end,
@@ -59,6 +58,39 @@ local register_metatool_item = function(name, definition)
 	})
 
 	return itemname_clean
+end
+
+local separate_stack = function(itemstack)
+	if itemstack:get_count() > 1 then
+		local toolname = itemstack:get_name()
+		local separated = ItemStack(toolname)
+		separated:set_count(1)
+		itemstack:take_item(1)
+		return itemstack, separated
+	end
+	return itemstack, false
+end
+
+local return_itemstack = function(player, itemstack, separated)
+	if separated then
+		-- stack was separated, try to recombine
+		local meta1 = itemstack:get_meta()
+		local meta2 = separated:get_meta()
+		if meta1:equals(meta2) then
+			-- stacks can be recombinined, do it
+			itemstack:set_count(itemstack:get_count() + 1)
+		else
+			-- stacks cannot be recombined, give or drop new stack
+			local inv = player:get_inventory()
+			if inv:room_for_item("main", separated) then
+				-- item fits to inventory
+				inv:add_item("main", separated)
+			else
+				-- item will not fit to inventory
+				minetest.item_drop(separated, player, player:get_pos())
+			end
+		end
+	end
 end
 
 local validate_tool_definition = function(definition)
@@ -97,7 +129,10 @@ metatool = {
 		if controls.aux1 or controls.sneak then
 			-- Execute on_read_node when tool is used on node and special or sneak is held
 			local data, group, description = tooldef.itemdef.on_read_node(tooldef, player, pointed_thing, node, pos)
-			metatool.write_data(itemstack, {data=data,group=group}, description)
+			itemstack, separated = separate_stack(itemstack)
+			metatool.write_data(separated or itemstack, {data=data,group=group}, description)
+			-- if stack was separated give missing items to player
+			return_itemstack(player, itemstack, separated)
 		else
 			local data = metatool.read_data(itemstack)
 			if type(data) == 'table' then
