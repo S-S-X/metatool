@@ -89,11 +89,13 @@ metatool = {
 
 	is_protected = function(pos, player, privs)
 		local name = player:get_player_name()
-		if minetest.is_protected(pos, name) then
-			local bypass = privs and minetest.check_player_privs(player, privs) or false
-			-- node is protected record violation even with bypass priv
+		if privs and minetest.check_player_privs(player, privs) then
+			-- player is allowed to bypass protection checks
+			return false
+		elseif minetest.is_protected(pos, name) then
+			-- node is protected record violation
 			minetest.record_protection_violation(pos, name)
-			return not bypass
+			return true
 		end
 		return false
 	end,
