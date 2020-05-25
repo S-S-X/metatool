@@ -31,5 +31,5 @@ minetest.register_alias('tubetool:wand', 'metatool:tubetool')
 -- nodes
 tool:load_node_definition(dofile(modpath .. '/nodes/mese_tube.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/teleport_tube.lua'))
--- tool:load_node_definition(dofile(modpath .. '/nodes/sand_tube.lua')
+tool:load_node_definition(dofile(modpath .. '/nodes/sand_tube.lua')
 -- tool:load_node_definition(dofile(modpath .. '/nodes/injector.lua')

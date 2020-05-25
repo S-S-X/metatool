@@ -36,7 +36,7 @@ return {
 	nodes = nodes,
 	tooldef = {
 		group = 'sorting tube',
-
+		protection_bypass_read = "interact",
 		copy = function(node, pos, player)
 			local meta = minetest.get_meta(pos)
 			local inv = meta:get_inventory()
