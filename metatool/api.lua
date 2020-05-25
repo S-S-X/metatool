@@ -107,10 +107,39 @@ local validate_tool_definition = function(definition)
 	return F('on_read_node') and F('on_write_node') and T('recipe')
 end
 
---luacheck: ignore unused argument self
 metatool = {
+	--luacheck: ignore unused argument self
+
 	-- Metatool registered tools
 	tools = {},
+
+	is_protected = function(pos, player, privs)
+		if privs and (minetest.check_player_privs(player, privs)) then
+			-- player is allowed to bypass protection checks
+			return false
+		end
+		local name = player:get_player_name()
+		if minetest.is_protected(pos, name) then
+			-- node is protected record violation
+			minetest.record_protection_violation(pos, name)
+			return true
+		end
+		return false
+	end,
+
+	before_read = function(nodedef, pos, player)
+		if metatool.is_protected(pos, player, nodedef.protection_bypass_read) then
+			return false
+		end
+		return true
+	end,
+
+	before_write = function(nodedef, pos, player)
+		if metatool.is_protected(pos, player, nodedef.protection_bypass_write) then
+			return false
+		end
+		return true
+	end,
 
 	-- Called when registered tool is used
 	on_use = function(self, toolname, itemstack, player, pointed_thing)
@@ -120,30 +149,35 @@ metatool = {
 
 		local tooldef = self.tools[toolname]
 
-		local node, pos = metatool:get_node(tooldef, player, pointed_thing)
+		local node, pos, nodedef = metatool:get_node(tooldef, player, pointed_thing)
 		if not node then
 			return
 		end
 
 		local controls = player:get_player_control()
+
 		if controls.aux1 or controls.sneak then
-			-- Execute on_read_node when tool is used on node and special or sneak is held
-			local data, group, description = tooldef.itemdef.on_read_node(tooldef, player, pointed_thing, node, pos)
-			local separated
-			itemstack, separated = separate_stack(itemstack)
-			metatool.write_data(separated or itemstack, {data=data,group=group}, description)
-			-- if stack was separated give missing items to player
-			return_itemstack(player, itemstack, separated)
+			if nodedef.before_read(nodedef, pos, player) then
+				-- Execute on_read_node when tool is used on node and special or sneak is held
+				local data, group, description = tooldef.itemdef.on_read_node(tooldef, player, pointed_thing, node, pos)
+				local separated
+				itemstack, separated = separate_stack(itemstack)
+				metatool.write_data(separated or itemstack, {data=data,group=group}, description)
+				-- if stack was separated give missing items to player
+				return_itemstack(player, itemstack, separated)
+			end
 		else
-			local data = metatool.read_data(itemstack)
-			if type(data) == 'table' then
-				-- Execute on_write_node when tool is used on node and tool contains data
-				tooldef.itemdef.on_write_node(tooldef, data.data, data.group, player, pointed_thing, node, pos)
-			else
-				minetest.chat_send_player(
-					player:get_player_name(),
-					'no data stored in this wand, sneak+use or special+use to record data.'
-				)
+			if nodedef.before_write(nodedef, pos, player) then
+				local data = metatool.read_data(itemstack)
+				if type(data) == 'table' then
+					-- Execute on_write_node when tool is used on node and tool contains data
+					tooldef.itemdef.on_write_node(tooldef, data.data, data.group, player, pointed_thing, node, pos)
+				else
+					minetest.chat_send_player(
+						player:get_player_name(),
+						'no data stored in this wand, sneak+use or special+use to record data.'
+					)
+				end
 			end
 		end
 
@@ -214,8 +248,8 @@ metatool = {
 		end
 	end,
 
-	register_node = function(self, tool, name, definition, override)
-		local tooldef = self.tools[tool]
+	register_node = function(self, toolname, name, definition, override)
+		local tooldef = self.tools[toolname]
 		if override or not tooldef.nodes[name] then
 			if type(definition) ~= 'table' then
 				print(S('metatool:register_node invalid definition, must be table but was %s', type(definition)))
@@ -224,8 +258,14 @@ metatool = {
 			elseif not minetest.registered_nodes[name] then
 				print(S('metatool:register_node node %s not registered for minetest, skipping registration.', name))
 			elseif type(definition.copy) == 'function' and type(definition.paste) == 'function' then
+				if type(definition.before_read) ~= 'function' then
+					definition.before_read = metatool.before_read
+				end
+				if type(definition.before_write) ~= 'function' then
+					definition.before_write = metatool.before_write
+				end
 				tooldef.nodes[name] = definition
-				print(S('metatool:register_node registered %s for tool %s with group %s.', name, tool, definition.group))
+				print(S('metatool:register_node registered %s for tool %s with group %s.', name, toolname, definition.group))
 			else
 				print(S('metatool:register_node invalid definition for %s: copy or paste function not defined.', name))
 			end
@@ -259,12 +299,6 @@ metatool = {
 			return
 		end
 
-		if minetest.is_protected(pos, name) then
-			-- node is protected
-			minetest.record_protection_violation(pos, name)
-			return
-		end
-
 		local definition = tool.nodes[node.name]
 		if not definition then
 			-- node is not registered for metatool
@@ -272,7 +306,7 @@ metatool = {
 			return
 		end
 
-		return node, pos
+		return node, pos, definition
 	end,
 
 	-- Save data for tool and update tool description
