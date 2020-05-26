@@ -64,7 +64,7 @@ local metatool_privileged_list = function(name)
 	local player = minetest.get_player_by_name(name)
 	local available_tools = {}
 	for toolname,tooldef in pairs(metatool.privileged_tools) do
-		if minetest.check_player_privs(player, tooldef.privs) then
+		if metatool.check_privs(player, tooldef.privs) then
 			table.insert(available_tools, toolname)
 		end
 	end
