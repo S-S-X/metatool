@@ -2,7 +2,13 @@
 -- Global namespace metatool contains core functions and stored data
 --
 
-local S = string.format
+local S = metatool.S
+
+-- Metatool registered tools
+metatool.tools = {}
+
+-- Metatool privileged tools
+metatool.privileged_tools = {}
 
 local transform_tool_name = function(name)
 	local parts = name:gsub('\\s',''):split(':')
@@ -20,23 +26,57 @@ local transform_tool_name = function(name)
 	end
 end
 
-local register_metatool_item = function(name, definition)
+local register_privileged_tool = function(toolname, definition)
+	print(S("Registering %s as privileged tool", toolname))
+	metatool.privileged_tools[toolname] = definition
+end
 
-	local itemname = transform_tool_name(name)
+local remove_uncraftable_tool = function(player, tooldef)
+	if not tooldef.recipe then
+		-- take away tools that have no recipe
+		local inv = player:get_inventory()
+		local lists = inv:get_lists()
+		local ref = ItemStack(tooldef.itemname)
+		local rm = ItemStack(string.format('%s %d', tooldef.itemname, 99))
+		for list,_ in pairs(lists) do
+			-- look for at least single tool
+			while inv:contains_item(list, ref, false) do
+				-- take away 99 stacks at once
+				inv:remove_item(list, rm)
+			end
+		end
+		minetest.chat_send_player(
+			player:get_player_name(),
+			S('Privileged tools removed from inventory: %s', tooldef.itemname)
+		)
+		-- If calling through on_use empty itemstack must be returned
+		return ItemStack()
+	end
+end
+
+local register_metatool_item = function(itemname, definition)
+
 	if not itemname then return end
 	local itemname_clean = itemname:gsub('^:', '')
+
+	definition.itemname = itemname_clean
 
 	local description = definition.description or "Weird surprise MetaTool, let's roll the dice..."
 	local texture = definition.texture or 'metatool_wand.png'
 	local liquids_pointable = definition.liquids_pointable == nil and false or definition.liquids_pointable
 	local craft_count = definition.craft_count or 1
 	local stack_max = definition.stack_max or 99
+	local groups
+	if definition.recipe == nil then
+		groups = { not_in_creative_inventory = 1 }
+	end
+
 	craft_count = craft_count > stack_max and stack_max or craft_count
 
 	minetest.register_craftitem(itemname, {
 		description = description,
 		inventory_image = texture,
-		groups = {},
+		groups = groups,
 		stack_max = stack_max,
 		wield_image = texture,
 		wield_scale = { x = 0.8, y = 1, z = 0.8 },
@@ -46,16 +86,23 @@ local register_metatool_item = function(name, definition)
 		end,
 	})
 
-	minetest.register_craft({
-		output = string.format('%s %d', itemname_clean, craft_count),
-		recipe = definition.recipe
-	})
+	if definition.privs then
+		register_privileged_tool(itemname_clean, definition)
+		metatool.chat.register_command_give()
+	end
 
 	minetest.register_craft({
 		type = "shapeless",
 		output = string.format('%s %d', itemname_clean, 1),
 		recipe = { itemname_clean }
 	})
+
+	if definition.recipe then
+		minetest.register_craft({
+			output = string.format('%s %d', itemname_clean, craft_count),
+			recipe = definition.recipe
+		})
+	end
 
 	return itemname_clean
 end
@@ -93,266 +140,273 @@ local return_itemstack = function(player, itemstack, separated)
 	end
 end
 
-local validate_tool_definition = function(definition)
+local validate_tool_definition = function(tooldef)
 	local function F(key)
-		local res = type(definition[key]) == 'function'
-		if not res then print(string.format('missing function %s', key)) end
+		local res = type(tooldef[key]) == 'function'
+		if not res then print(string.format('%s missing function %s', tooldef.itemname, key)) end
 		return res
 	end
 	local function T(key)
-		local res = type(definition[key]) == 'table'
-		if not res then print(string.format('missing function %s', key)) end
+		local res = type(tooldef[key]) == 'table'
+		if not res then print(string.format('%s missing parameter %s', tooldef.itemname, key)) end
 		return res
 	end
-	return F('on_read_node') and F('on_write_node') and T('recipe')
+	return F('on_read_node') and F('on_write_node') and (tooldef.privs or T('recipe'))
 end
 
-metatool = {
-	--luacheck: ignore unused argument self
+--luacheck: ignore unused argument self
 
-	-- Metatool registered tools
-	tools = {},
+metatool.check_privs = function(player, privs)
+	local success,_ = minetest.check_player_privs(player, privs)
+	return success
+end
 
-	is_protected = function(pos, player, privs)
-		if privs and (minetest.check_player_privs(player, privs)) then
-			-- player is allowed to bypass protection checks
-			return false
-		end
-		local name = player:get_player_name()
-		if minetest.is_protected(pos, name) then
-			-- node is protected record violation
-			minetest.record_protection_violation(pos, name)
-			return true
-		end
+metatool.is_protected = function(pos, player, privs)
+	if privs and (metatool.check_privs(player, privs)) then
+		-- player is allowed to bypass protection checks
 		return false
-	end,
-
-	before_read = function(nodedef, pos, player)
-		if metatool.is_protected(pos, player, nodedef.protection_bypass_read) then
-			return false
-		end
+	end
+	local name = player:get_player_name()
+	if minetest.is_protected(pos, name) then
+		-- node is protected record violation
+		minetest.record_protection_violation(pos, name)
 		return true
-	end,
+	end
+	return false
+end
 
-	before_write = function(nodedef, pos, player)
-		if metatool.is_protected(pos, player, nodedef.protection_bypass_write) then
-			return false
+metatool.before_read = function(nodedef, pos, player)
+	if metatool.is_protected(pos, player, nodedef.protection_bypass_read) then
+		return false
+	end
+	return true
+end
+
+metatool.before_write = function(nodedef, pos, player)
+	if metatool.is_protected(pos, player, nodedef.protection_bypass_write) then
+		return false
+	end
+	return true
+end
+
+-- Called when registered tool is used
+metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
+	if not player or type(player) == 'table' then
+		return
+	end
+
+	local tooldef = self.tools[toolname]
+	if self.privileged_tools[toolname] then
+		if not metatool.check_privs(player, tooldef.itemdef.privs) then
+			minetest.chat_send_player(player:get_player_name(), 'You are not allowed to use this tool.')
+			return remove_uncraftable_tool(player, tooldef.itemdef)
 		end
-		return true
-	end,
+	end
 
-	-- Called when registered tool is used
-	on_use = function(self, toolname, itemstack, player, pointed_thing)
-		if not player or type(player) == 'table' then
-			return
+	local node, pos, nodedef = metatool:get_node(tooldef, player, pointed_thing)
+	if not node then
+		return
+	end
+
+	local controls = player:get_player_control()
+
+	if controls.aux1 or controls.sneak then
+		if nodedef.before_read(nodedef, pos, player) then
+			-- Execute on_read_node when tool is used on node and special or sneak is held
+			local data, group, description = tooldef.itemdef.on_read_node(tooldef, player, pointed_thing, node, pos)
+			local separated
+			itemstack, separated = separate_stack(itemstack)
+			metatool.write_data(separated or itemstack, {data=data,group=group}, description)
+			-- if stack was separated give missing items to player
+			return_itemstack(player, itemstack, separated)
 		end
-
-		local tooldef = self.tools[toolname]
-
-		local node, pos, nodedef = metatool:get_node(tooldef, player, pointed_thing)
-		if not node then
-			return
-		end
-
-		local controls = player:get_player_control()
-
-		if controls.aux1 or controls.sneak then
-			if nodedef.before_read(nodedef, pos, player) then
-				-- Execute on_read_node when tool is used on node and special or sneak is held
-				local data, group, description = tooldef.itemdef.on_read_node(tooldef, player, pointed_thing, node, pos)
-				local separated
-				itemstack, separated = separate_stack(itemstack)
-				metatool.write_data(separated or itemstack, {data=data,group=group}, description)
-				-- if stack was separated give missing items to player
-				return_itemstack(player, itemstack, separated)
-			end
-		else
-			if nodedef.before_write(nodedef, pos, player) then
-				local data = metatool.read_data(itemstack)
-				if type(data) == 'table' then
-					-- Execute on_write_node when tool is used on node and tool contains data
-					tooldef.itemdef.on_write_node(tooldef, data.data, data.group, player, pointed_thing, node, pos)
-				else
-					minetest.chat_send_player(
-						player:get_player_name(),
-						'no data stored in this wand, sneak+use or special+use to record data.'
-					)
-				end
-			end
-		end
-
-		return itemstack
-	end,
-
-	-- Common node loading method for tools
-	load_node_definition = function(self, def)
-		if self == metatool then
-			-- Could go full OOP and actually check for tool object.. sorry about that
-			print('metatool:load_node invalid method call, requires tool context')
-			return
-		end
-		if not def or type(def) ~= 'table' then
-			print(string.format(
-				'metatool:%s error in %s:load_node_definition invalid definition type: %s',
-				self.name, self.name, type(def)
-			))
-			return
-		end
-		if type(def.tooldef) ~= 'table' then
-			print(string.format(
-				'metatool:%s error in %s:load_node_definition invalid `tooldef` type: %s',
-				self.name, self.name, type(def.tooldef)
-			))
-			return
-		end
-		if type(def.nodes) == 'table' then
-			for _,nodename in ipairs(def.nodes) do
-				metatool:register_node(self.name, nodename, def.tooldef)
-			end
-		elseif type(def.nodes) == 'string' then
-			metatool:register_node(self.name, def.nodes, def.tooldef)
-		else
-			print(string.format(
-				'metatool:%s error in %s:load_node_definition invalid `nodes` type: %s',
-				self.name, self.name, type(def.nodes)
-			))
-			return
-		end
-	end,
-
-	register_tool = function(self, name, definition)
-		if not self.tools[name] then
-			if type(definition) ~= 'table' then
-				print(S('metatool:register_tool invalid definition, must be table but was %s', type(definition)))
-			elseif validate_tool_definition(definition) then
-				local itemname = register_metatool_item(name, definition)
-				if not itemname then
-					print(S('metatool:register_tool tool registration failed for "%s".', name))
-				end
-				self.tools[itemname] = {
-					itemdef = definition,
-					name = itemname,
-					nice_name = definition.name or name,
-					nodes = {},
-					load_node_definition = metatool.load_node_definition,
-					copy = metatool.copy,
-					paste = metatool.paste,
-				}
-				print(S('metatool:register_tool registered tool "%s".', itemname))
-				return self.tools[itemname]
+	else
+		if nodedef.before_write(nodedef, pos, player) then
+			local data = metatool.read_data(itemstack)
+			if type(data) == 'table' then
+				-- Execute on_write_node when tool is used on node and tool contains data
+				tooldef.itemdef.on_write_node(tooldef, data.data, data.group, player, pointed_thing, node, pos)
 			else
-				print('metatool:register_tool invalid tool definition, missing required values.')
+				minetest.chat_send_player(
+					player:get_player_name(),
+					'no data stored in this wand, sneak+use or special+use to record data.'
+				)
 			end
-		else
-			print(S('metatool:register_tool not registering tool %s because it is already registered.', name))
 		end
-	end,
+	end
 
-	register_node = function(self, toolname, name, definition, override)
-		local tooldef = self.tools[toolname]
-		if override or not tooldef.nodes[name] then
-			if type(definition) ~= 'table' then
-				print(S('metatool:register_node invalid definition, must be table but was %s', type(definition)))
-			elseif not definition.group then
-				print('metatool:register_node invalid definition, group must be defined.')
-			elseif not minetest.registered_nodes[name] then
-				print(S('metatool:register_node node %s not registered for minetest, skipping registration.', name))
-			elseif type(definition.copy) == 'function' and type(definition.paste) == 'function' then
-				if type(definition.before_read) ~= 'function' then
-					definition.before_read = metatool.before_read
-				end
-				if type(definition.before_write) ~= 'function' then
-					definition.before_write = metatool.before_write
-				end
-				tooldef.nodes[name] = definition
-				print(S('metatool:register_node registered %s for tool %s with group %s.', name, toolname, definition.group))
-			else
-				print(S('metatool:register_node invalid definition for %s: copy or paste function not defined.', name))
+	return itemstack
+end
+
+-- Common node loading method for tools
+metatool.load_node_definition = function(self, def)
+	if self == metatool then
+		-- Could go full OOP and actually check for tool object.. sorry about that
+		print('metatool:load_node invalid method call, requires tool context')
+		return
+	end
+	if not def or type(def) ~= 'table' then
+		print(string.format(
+			'metatool:%s error in %s:load_node_definition invalid definition type: %s',
+			self.name, self.name, type(def)
+		))
+		return
+	end
+	if type(def.tooldef) ~= 'table' then
+		print(string.format(
+			'metatool:%s error in %s:load_node_definition invalid `tooldef` type: %s',
+			self.name, self.name, type(def.tooldef)
+		))
+		return
+	end
+	if type(def.nodes) == 'table' then
+		for _,nodename in ipairs(def.nodes) do
+			metatool:register_node(self.name, nodename, def.tooldef)
+		end
+	elseif type(def.nodes) == 'string' then
+		metatool:register_node(self.name, def.nodes, def.tooldef)
+	else
+		print(string.format(
+			'metatool:%s error in %s:load_node_definition invalid `nodes` type: %s',
+			self.name, self.name, type(def.nodes)
+		))
+		return
+	end
+end
+
+metatool.register_tool = function(self, name, definition)
+	local itemname = transform_tool_name(name)
+	local itemname_clean = itemname:gsub('^:', '')
+	if not self.tools[itemname_clean] then
+		if type(definition) ~= 'table' then
+			print(S('metatool:register_tool invalid definition, must be table but was %s', type(definition)))
+		elseif validate_tool_definition(definition) then
+			if not register_metatool_item(itemname, definition) then
+				print(S('metatool:register_tool tool registration failed for "%s".', name))
+				return
 			end
+			self.tools[itemname_clean] = {
+				itemdef = definition,
+				name = itemname_clean,
+				nice_name = definition.name or name,
+				nodes = {},
+				load_node_definition = metatool.load_node_definition,
+				copy = metatool.copy,
+				paste = metatool.paste,
+			}
+			print(S('metatool:register_tool registered tool "%s".', itemname_clean))
+			return self.tools[itemname_clean]
 		else
-			print(S('metatool:register_node not registering node %s because it is already registered.', name))
+			print('metatool:register_tool invalid tool definition, missing required values.')
 		end
-	end,
+	else
+		print(S('metatool:register_tool not registering tool %s because it is already registered.', name))
+	end
+end
 
-	get_node = function(self, tool, player, pointed_thing)
-		if not player or type(player) == 'table' or not pointed_thing then
-			-- not valid player or fake player, fake player is not supported (yet)
-			return
+metatool.register_node = function(self, toolname, name, definition, override)
+	local tooldef = self.tools[toolname]
+	if override or not tooldef.nodes[name] then
+		if type(definition) ~= 'table' then
+			print(S('metatool:register_node invalid definition, must be table but was %s', type(definition)))
+		elseif not definition.group then
+			print('metatool:register_node invalid definition, group must be defined.')
+		elseif not minetest.registered_nodes[name] then
+			print(S('metatool:register_node node %s not registered for minetest, skipping registration.', name))
+		elseif type(definition.copy) == 'function' and type(definition.paste) == 'function' then
+			if type(definition.before_read) ~= 'function' then
+				definition.before_read = metatool.before_read
+			end
+			if type(definition.before_write) ~= 'function' then
+				definition.before_write = metatool.before_write
+			end
+			tooldef.nodes[name] = definition
+			print(S('metatool:register_node registered %s for tool %s with group %s.', name, toolname, definition.group))
+		else
+			print(S('metatool:register_node invalid definition for %s: copy or paste function not defined.', name))
 		end
+	else
+		print(S('metatool:register_node not registering node %s because it is already registered.', name))
+	end
+end
 
-		local name = player:get_player_name()
-		if not name or name == '' then
-			-- could not get real player name
-			return
-		end
+metatool.get_node = function(self, tool, player, pointed_thing)
+	if not player or type(player) == 'table' or not pointed_thing then
+		-- not valid player or fake player, fake player is not supported (yet)
+		return
+	end
 
-		local pos = minetest.get_pointed_thing_position(pointed_thing)
-		if not pos then
-			-- could not get definite position
-			minetest.chat_send_player(name, S('%s could not get valid position', tool.nice_name))
-			return
-		end
+	local name = player:get_player_name()
+	if not name or name == '' then
+		-- could not get real player name
+		return
+	end
 
-		local node = minetest.get_node_or_nil(pos)
-		if not node then
-			-- could not get valid node
-			return
-		end
+	local pos = minetest.get_pointed_thing_position(pointed_thing)
+	if not pos then
+		-- could not get definite position
+		minetest.chat_send_player(name, S('%s could not get valid position', tool.nice_name))
+		return
+	end
 
-		local definition = tool.nodes[node.name]
-		if not definition then
-			-- node is not registered for metatool
-			minetest.chat_send_player(name, S('%s cannot be used on %s', tool.nice_name, node.name))
-			return
-		end
+	local node = minetest.get_node_or_nil(pos)
+	if not node then
+		-- could not get valid node
+		return
+	end
 
-		return node, pos, definition
-	end,
+	local definition = tool.nodes[node.name]
+	if not definition then
+		-- node is not registered for metatool
+		minetest.chat_send_player(name, S('%s cannot be used on %s', tool.nice_name, node.name))
+		return
+	end
+
+	return node, pos, definition
+end
 
 	-- Save data for tool and update tool description
-	write_data = function(itemstack, data, description)
-		if not itemstack then
-			return
-		end
+metatool.write_data = function(itemstack, data, description)
+	if not itemstack then
+		return
+	end
 
-		local meta = itemstack:get_meta()
-		local datastring = minetest.serialize(data)
-		description = string.format('%s (%s)', (description or 'No description'), data.group)
-		meta:set_string('data', datastring)
-		meta:set_string('description', description)
-	end,
+	local meta = itemstack:get_meta()
+	local datastring = minetest.serialize(data)
+	description = string.format('%s (%s)', (description or 'No description'), data.group)
+	meta:set_string('data', datastring)
+	meta:set_string('description', description)
+end
 
 	-- Return data stored with tool
-	read_data = function(itemstack)
-		if not itemstack then
-			return
-		end
+metatool.read_data = function(itemstack)
+	if not itemstack then
+		return
+	end
 
-		local meta = itemstack:get_meta()
-		local datastring = meta:get_string('data')
-		return minetest.deserialize(datastring)
-	end,
+	local meta = itemstack:get_meta()
+	local datastring = meta:get_string('data')
+	return minetest.deserialize(datastring)
+end
 
-	copy = function(self, node, pos, player)
-		local definition = self.nodes[node.name]
-		if definition then
-			minetest.chat_send_player(player:get_player_name(), S('copying data for group %s', definition.group))
-			return definition.copy(node, pos, player), definition.group
-		end
-	end,
+metatool.copy = function(self, node, pos, player)
+	local definition = self.nodes[node.name]
+	if definition then
+		minetest.chat_send_player(player:get_player_name(), S('copying data for group %s', definition.group))
+		return definition.copy(node, pos, player), definition.group
+	end
+end
 
-	paste = function(self, node, pos, player, data, group)
-		local definition = self.nodes[node.name]
-		if definition.group ~= group then
-			minetest.chat_send_player(
-				player:get_player_name(),
-				S('metatool wand contains data for %s, cannot apply for %s', group, definition.group)
-			)
-			return
-		end
-		if definition and data then
-			return definition.paste(node, pos, player, data)
-		end
-	end,
-
-}
+metatool.paste = function(self, node, pos, player, data, group)
+	local definition = self.nodes[node.name]
+	if definition.group ~= group then
+		minetest.chat_send_player(
+			player:get_player_name(),
+			S('metatool wand contains data for %s, cannot apply for %s', group, definition.group)
+		)
+		return
+	end
+	if definition and data then
+		return definition.paste(node, pos, player, data)
+	end
+end
