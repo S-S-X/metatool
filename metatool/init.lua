@@ -4,6 +4,10 @@
 --]]
 
 -- initialize namespace and core functions
+metatool = {
+	S = string.format
+}
 dofile(minetest.get_modpath('metatool') .. '/api.lua')
+dofile(minetest.get_modpath('metatool') .. '/command.lua')
 
 print('[OK] MetaTool loaded')
