@@ -161,29 +161,31 @@ metatool.check_privs = function(player, privs)
 	return success
 end
 
-metatool.is_protected = function(pos, player, privs)
+metatool.is_protected = function(pos, player, privs, no_violation_record)
 	if privs and (metatool.check_privs(player, privs)) then
 		-- player is allowed to bypass protection checks
 		return false
 	end
 	local name = player:get_player_name()
 	if minetest.is_protected(pos, name) then
-		-- node is protected record violation
-		minetest.record_protection_violation(pos, name)
+		if not no_violation_record then
+			-- node is protected record violation
+			minetest.record_protection_violation(pos, name)
+		end
 		return true
 	end
 	return false
 end
 
-metatool.before_read = function(nodedef, pos, player)
-	if metatool.is_protected(pos, player, nodedef.protection_bypass_read) then
+metatool.before_read = function(nodedef, pos, player, no_violation_record)
+	if metatool.is_protected(pos, player, nodedef.protection_bypass_read, no_violation_record) then
 		return false
 	end
 	return true
 end
 
-metatool.before_write = function(nodedef, pos, player)
-	if metatool.is_protected(pos, player, nodedef.protection_bypass_write) then
+metatool.before_write = function(nodedef, pos, player, no_violation_record)
+	if metatool.is_protected(pos, player, nodedef.protection_bypass_write, no_violation_record) then
 		return false
 	end
 	return true
@@ -223,7 +225,7 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 	else
 		if nodedef.before_write(nodedef, pos, player) then
 			local data = metatool.read_data(itemstack)
-			if type(data) == 'table' then
+			if tooldef.itemdef.allow_use_empty or type(data) == 'table' then
 				-- Execute on_write_node when tool is used on node and tool contains data
 				tooldef.itemdef.on_write_node(tooldef, data.data, data.group, player, pointed_thing, node, pos)
 			else
@@ -285,10 +287,12 @@ metatool.register_tool = function(self, name, definition)
 				print(S('metatool:register_tool tool registration failed for "%s".', name))
 				return
 			end
+			metatool.merge_tool_settings(itemname_clean, definition)
 			self.tools[itemname_clean] = {
 				itemdef = definition,
 				name = itemname_clean,
 				nice_name = definition.name or name,
+				settings = definition.settings,
 				nodes = {},
 				load_node_definition = metatool.load_node_definition,
 				copy = metatool.copy,

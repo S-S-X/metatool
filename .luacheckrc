@@ -8,4 +8,5 @@ read_globals = {
 	"default",
 	"pipeworks",
 	"ItemStack",
+	"Settings",
 }
