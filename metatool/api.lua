@@ -227,7 +227,13 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 			local data = metatool.read_data(itemstack)
 			if tooldef.itemdef.allow_use_empty or type(data) == 'table' then
 				-- Execute on_write_node when tool is used on node and tool contains data
-				tooldef.itemdef.on_write_node(tooldef, data.data, data.group, player, pointed_thing, node, pos)
+				local tooldata
+				local group
+				if type(data) == 'table' then
+					tooldata = data.data
+					group = data.group
+				end
+				tooldef.itemdef.on_write_node(tooldef, tooldata, group, player, pointed_thing, node, pos)
 			else
 				minetest.chat_send_player(
 					player:get_player_name(),
