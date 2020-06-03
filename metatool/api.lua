@@ -10,16 +10,16 @@ metatool.tools = {}
 -- Metatool privileged tools
 metatool.privileged_tools = {}
 
-local transform_tool_name = function(name)
+local transform_tool_name = function(name, mtprefix)
 	local parts = name:gsub('\\s',''):split(':')
 	if #parts > 2 or #parts < 1 then
 		print(S('Invalid metatool name %s', name))
 		return
 	elseif #parts == 2 then
 		-- this will strip leading colon
-		return parts[1] .. parts[2]
+		return parts[1] .. ':' .. parts[2]
 	elseif #parts == 1 and parts[1] ~= 'metatool' then
-		return ':metatool:' .. parts[1]
+		return (mtprefix and ':' or '') .. 'metatool:' .. parts[1]
 	else
 		print(S('Invalid metatool name %s', name))
 		return
@@ -156,34 +156,57 @@ end
 
 --luacheck: ignore unused argument self
 
+metatool.tool = function(toolname)
+	local name = transform_tool_name(toolname)
+	if name and metatool.tools[name] then
+		return metatool.tools[name]
+	end
+end
+
+-- Create or retrieve tool namespace, sorry.. might seem bit hacky
+metatool.ns = function(self, data)
+	if type(self) == 'string' then
+		-- metatool.ns('mytool') / retrieve namespace
+		local tool = metatool.tool(self)
+		if tool then
+			return tool.namespace
+		end
+		return
+	end
+	-- mytool:ns({mydata}) / create namespace
+	self.namespace = data
+end
+
 metatool.check_privs = function(player, privs)
 	local success,_ = minetest.check_player_privs(player, privs)
 	return success
 end
 
-metatool.is_protected = function(pos, player, privs)
+metatool.is_protected = function(pos, player, privs, no_violation_record)
 	if privs and (metatool.check_privs(player, privs)) then
 		-- player is allowed to bypass protection checks
 		return false
 	end
 	local name = player:get_player_name()
 	if minetest.is_protected(pos, name) then
-		-- node is protected record violation
-		minetest.record_protection_violation(pos, name)
+		if not no_violation_record then
+			-- node is protected record violation
+			minetest.record_protection_violation(pos, name)
+		end
 		return true
 	end
 	return false
 end
 
-metatool.before_read = function(nodedef, pos, player)
-	if metatool.is_protected(pos, player, nodedef.protection_bypass_read) then
+metatool.before_read = function(nodedef, pos, player, no_violation_record)
+	if metatool.is_protected(pos, player, nodedef.protection_bypass_read, no_violation_record) then
 		return false
 	end
 	return true
 end
 
-metatool.before_write = function(nodedef, pos, player)
-	if metatool.is_protected(pos, player, nodedef.protection_bypass_write) then
+metatool.before_write = function(nodedef, pos, player, no_violation_record)
+	if metatool.is_protected(pos, player, nodedef.protection_bypass_write, no_violation_record) then
 		return false
 	end
 	return true
@@ -223,9 +246,15 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 	else
 		if nodedef.before_write(nodedef, pos, player) then
 			local data = metatool.read_data(itemstack)
-			if type(data) == 'table' then
+			if tooldef.itemdef.allow_use_empty or type(data) == 'table' then
 				-- Execute on_write_node when tool is used on node and tool contains data
-				tooldef.itemdef.on_write_node(tooldef, data.data, data.group, player, pointed_thing, node, pos)
+				local tooldata
+				local group
+				if type(data) == 'table' then
+					tooldata = data.data
+					group = data.group
+				end
+				tooldef.itemdef.on_write_node(tooldef, tooldata, group, player, pointed_thing, node, pos)
 			else
 				minetest.chat_send_player(
 					player:get_player_name(),
@@ -275,7 +304,7 @@ metatool.load_node_definition = function(self, def)
 end
 
 metatool.register_tool = function(self, name, definition)
-	local itemname = transform_tool_name(name)
+	local itemname = transform_tool_name(name, true)
 	local itemname_clean = itemname:gsub('^:', '')
 	if not self.tools[itemname_clean] then
 		if type(definition) ~= 'table' then
@@ -285,11 +314,14 @@ metatool.register_tool = function(self, name, definition)
 				print(S('metatool:register_tool tool registration failed for "%s".', name))
 				return
 			end
+			metatool.merge_tool_settings(itemname_clean, definition)
 			self.tools[itemname_clean] = {
 				itemdef = definition,
 				name = itemname_clean,
 				nice_name = definition.name or name,
+				settings = definition.settings,
 				nodes = {},
+				ns = metatool.ns,
 				load_node_definition = metatool.load_node_definition,
 				copy = metatool.copy,
 				paste = metatool.paste,
@@ -365,20 +397,23 @@ metatool.get_node = function(self, tool, player, pointed_thing)
 	return node, pos, definition
 end
 
-	-- Save data for tool and update tool description
+-- Save data for tool and update tool description
 metatool.write_data = function(itemstack, data, description)
 	if not itemstack then
 		return
 	end
 
 	local meta = itemstack:get_meta()
-	local datastring = minetest.serialize(data)
-	description = string.format('%s (%s)', (description or 'No description'), data.group)
-	meta:set_string('data', datastring)
-	meta:set_string('description', description)
+	if data.data or data.group then
+		local datastring = minetest.serialize(data)
+		meta:set_string('data', datastring)
+	end
+	if description then
+		meta:set_string('description', description)
+	end
 end
 
-	-- Return data stored with tool
+-- Return data stored with tool
 metatool.read_data = function(itemstack)
 	if not itemstack then
 		return
