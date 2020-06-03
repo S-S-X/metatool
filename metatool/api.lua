@@ -10,16 +10,16 @@ metatool.tools = {}
 -- Metatool privileged tools
 metatool.privileged_tools = {}
 
-local transform_tool_name = function(name)
+local transform_tool_name = function(name, mtprefix)
 	local parts = name:gsub('\\s',''):split(':')
 	if #parts > 2 or #parts < 1 then
 		print(S('Invalid metatool name %s', name))
 		return
 	elseif #parts == 2 then
 		-- this will strip leading colon
-		return parts[1] .. parts[2]
+		return parts[1] .. ':' .. parts[2]
 	elseif #parts == 1 and parts[1] ~= 'metatool' then
-		return ':metatool:' .. parts[1]
+		return (mtprefix and ':' or '') .. 'metatool:' .. parts[1]
 	else
 		print(S('Invalid metatool name %s', name))
 		return
@@ -156,6 +156,27 @@ end
 
 --luacheck: ignore unused argument self
 
+metatool.tool = function(toolname)
+	local name = transform_tool_name(toolname)
+	if name and metatool.tools[name] then
+		return metatool.tools[name]
+	end
+end
+
+-- Create or retrieve tool namespace, sorry.. might seem bit hacky
+metatool.ns = function(self, data)
+	if type(self) == 'string' then
+		-- metatool.ns('mytool') / retrieve namespace
+		local tool = metatool.tool(self)
+		if tool then
+			return tool.namespace
+		end
+		return
+	end
+	-- mytool:ns({mydata}) / create namespace
+	self.namespace = data
+end
+
 metatool.check_privs = function(player, privs)
 	local success,_ = minetest.check_player_privs(player, privs)
 	return success
@@ -283,7 +304,7 @@ metatool.load_node_definition = function(self, def)
 end
 
 metatool.register_tool = function(self, name, definition)
-	local itemname = transform_tool_name(name)
+	local itemname = transform_tool_name(name, true)
 	local itemname_clean = itemname:gsub('^:', '')
 	if not self.tools[itemname_clean] then
 		if type(definition) ~= 'table' then
@@ -300,6 +321,7 @@ metatool.register_tool = function(self, name, definition)
 				nice_name = definition.name or name,
 				settings = definition.settings,
 				nodes = {},
+				ns = metatool.ns,
 				load_node_definition = metatool.load_node_definition,
 				copy = metatool.copy,
 				paste = metatool.paste,
@@ -375,20 +397,23 @@ metatool.get_node = function(self, tool, player, pointed_thing)
 	return node, pos, definition
 end
 
-	-- Save data for tool and update tool description
+-- Save data for tool and update tool description
 metatool.write_data = function(itemstack, data, description)
 	if not itemstack then
 		return
 	end
 
 	local meta = itemstack:get_meta()
-	local datastring = minetest.serialize(data)
-	description = string.format('%s (%s)', (description or 'No description'), data.group)
-	meta:set_string('data', datastring)
-	meta:set_string('description', description)
+	if data.data or data.group then
+		local datastring = minetest.serialize(data)
+		meta:set_string('data', datastring)
+	end
+	if description then
+		meta:set_string('description', description)
+	end
 end
 
-	-- Return data stored with tool
+-- Return data stored with tool
 metatool.read_data = function(itemstack)
 	if not itemstack then
 		return

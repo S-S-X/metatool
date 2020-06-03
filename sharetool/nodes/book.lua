@@ -21,21 +21,8 @@ end
 table.insert(nodes, "homedecor:book")
 table.insert(nodes, "homedecor:book_open")
 
--- Shared account name
-local shared_account = metatool.settings('sharetool', 'shared_account')
-
-local can_bypass = function(pos, player)
-	-- Allow bypass protection if owner is shared or tool user
-	local name = player:get_player_name()
-	local meta = minetest.get_meta(pos)
-	local owner = meta:get_string('owner')
-	local shared = meta:get_int('sharetool_shared_node')
-	local allowed = name == owner or owner == shared_account or shared == 1
-	if not allowed then
-		minetest.record_protection_violation(pos, name)
-	end
-	return allowed
-end
+-- get namespace defined at sharetool init.lua
+local ns = metatool.ns('sharetool')
 
 --luacheck: ignore unused argument node player
 return {
@@ -44,19 +31,19 @@ return {
 		group = 'shared book',
 
 		before_read = function(nodedef, pos, player)
-			if metatool.before_read(nodedef, pos, player, true) then
-				-- Player is allowed to operate in area without need to bypass protections
+			if ns:can_bypass(pos, player, 'owner') or metatool.before_read(nodedef, pos, player, true) then
+				-- Player is allowed to bypass protections or operate in area
 				return true
 			end
-			return can_bypass(pos, player)
+			return false
 		end,
 
 		before_write = function(nodedef, pos, player)
-			if metatool.before_write(nodedef, pos, player, true) then
-				-- Player is allowed to operate in area without need to bypass protections
+			if ns:can_bypass(pos, player, 'owner') or metatool.before_write(nodedef, pos, player, true) then
+				-- Player is allowed to bypass protections or operate in area
 				return true
 			end
-			return can_bypass(pos, player)
+			return false
 		end,
 
 		copy = function(node, pos, player)
@@ -67,7 +54,7 @@ return {
 			local name = player:get_player_name()
 
 			-- change ownership and mark as shared node
-			meta:set_int('sharetool_shared_node', 1)
+			ns.mark_shared(meta)
 			meta:set_string("owner", name)
 
 			-- return new description for tool
@@ -84,8 +71,8 @@ return {
 			local meta = minetest.get_meta(pos)
 
 			-- change ownership and mark as shared node
-			meta:set_int('sharetool_shared_node', 1)
-			meta:set_string("owner", shared_account)
+			ns.mark_shared(meta)
+			meta:set_string("owner", ns.shared_account)
 		end,
 	}
 }
