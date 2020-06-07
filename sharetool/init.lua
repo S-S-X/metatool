@@ -77,7 +77,7 @@ tool:ns({
 		owner = owner or self.shared_account
 		local name = player:get_player_name()
 		local meta = minetest.get_meta(pos)
-		local current_owner = meta:set_string('owner', owner)
+		local current_owner = meta:get_string('owner')
 		if owner == current_owner then
 			-- Nothing to do, current_owner is same as new owner
 			return true
@@ -94,22 +94,22 @@ tool:ns({
 			minetest.chat_send_player(name, S('Too many travelnets attached to network %s owned by %s.', network, owner))
 			return false
 		end
-		for netstation,_ in pairs(travelnet.targets[owner][network]) do
-			if netstation == station then
-				local x = travelnet.targets[owner][network][station].pos.x
-				local y = travelnet.targets[owner][network][station].pos.y
-				local z = travelnet.targets[owner][network][station].pos.z
-				if x ~= pos.x or y ~= pos.y or z ~= pos.z then
+		for stname,stdata in pairs(travelnet.targets[owner][network]) do
+			if stname == station then
+				if stdata.pos.x ~= pos.x or stdata.pos.y ~= pos.y or stdata.pos.z ~= pos.z then
 					-- Station already exists on network and is at different location
 					minetest.chat_send_player(name, S(
-						'Travelnet network %s owned by %s already has station %s.', network, owner, station
+						'Travelnet network %s owned by %s already has station %s at %s.',
+						network, owner, station, minetest.pos_to_string(stdata.pos)
 					))
 					return false
 				end
 			end
 		end
 		-- Remove old network link
-		travelnet.targets[name][network][station] = nil
+		if travelnet.targets[current_owner] and travelnet.targets[current_owner][network] then
+			travelnet.targets[current_owner][network][station] = nil
+        end
 		-- Update owner
 		meta:set_string('owner', owner)
 		-- Attach to network
