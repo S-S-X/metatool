@@ -5,9 +5,13 @@
 
 -- initialize namespace and core functions
 metatool = {
+	configuration_file = minetest.get_worldpath() .. '/metatool.cfg',
+	export_default_config = false,
+	modpath = minetest.get_modpath('metatool'),
 	S = string.format
 }
-dofile(minetest.get_modpath('metatool') .. '/api.lua')
-dofile(minetest.get_modpath('metatool') .. '/command.lua')
+dofile(metatool.modpath .. '/settings.lua')
+dofile(metatool.modpath .. '/api.lua')
+dofile(metatool.modpath .. '/command.lua')
 
 print('[OK] MetaTool loaded')

@@ -1,6 +1,7 @@
 
 globals = {
 	"metatool",
+        "travelnet",
 }
 
 read_globals = {
@@ -8,4 +9,5 @@ read_globals = {
 	"default",
 	"pipeworks",
 	"ItemStack",
+	"Settings",
 }
