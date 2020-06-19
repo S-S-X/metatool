@@ -29,6 +29,7 @@ local nodes = {}
 for i=0,15 do
 	table.insert(nodes, nodenameprefix .. lpadcut(d2b(i), '0', 4))
 end
+table.insert(nodes, nodenameprefix .. '_burnt')
 
 --luacheck: ignore unused argument node player
 return {
