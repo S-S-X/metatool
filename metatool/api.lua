@@ -219,10 +219,11 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 	end
 
 	local tooldef = self.tools[toolname]
+	local tool = tooldef.itemdef
 	if self.privileged_tools[toolname] then
-		if not metatool.check_privs(player, tooldef.itemdef.privs) then
+		if not metatool.check_privs(player, tool.privs) then
 			minetest.chat_send_player(player:get_player_name(), 'You are not allowed to use this tool.')
-			return remove_uncraftable_tool(player, tooldef.itemdef)
+			return remove_uncraftable_tool(player, tool)
 		end
 	end
 
@@ -234,9 +235,19 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 	local controls = player:get_player_control()
 
 	if controls.aux1 or controls.sneak then
-		if nodedef.before_read(nodedef, pos, player) then
+		local can_read = nodedef.before_read(nodedef, pos, player)
+		if can_read and controls.sneak and (tool.on_read_info or nodedef.info) then
+			-- Execute on_read_node when tool is used on node and sneak is held
+			if tool.on_read_info then
+				-- Tool info method defined, call through it and let it handle nodes
+				tool.on_read_info(tooldef, player, pointed_thing, node, pos, nodedef)
+			else
+				-- Only node definition had info method available, use it directly
+				nodedef.info(node, pos, player)
+			end
+		elseif can_read then
 			-- Execute on_read_node when tool is used on node and special or sneak is held
-			local data, group, description = tooldef.itemdef.on_read_node(tooldef, player, pointed_thing, node, pos)
+			local data, group, description = tool.on_read_node(tooldef, player, pointed_thing, node, pos, nodedef)
 			local separated
 			itemstack, separated = separate_stack(itemstack)
 			metatool.write_data(separated or itemstack, {data=data,group=group}, description)
@@ -246,7 +257,7 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 	else
 		if nodedef.before_write(nodedef, pos, player) then
 			local data = metatool.read_data(itemstack)
-			if tooldef.itemdef.allow_use_empty or type(data) == 'table' then
+			if tool.allow_use_empty or type(data) == 'table' then
 				-- Execute on_write_node when tool is used on node and tool contains data
 				local tooldata
 				local group
@@ -254,7 +265,7 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 					tooldata = data.data
 					group = data.group
 				end
-				tooldef.itemdef.on_write_node(tooldef, tooldata, group, player, pointed_thing, node, pos)
+				tool.on_write_node(tooldef, tooldata, group, player, pointed_thing, node, pos, nodedef)
 			else
 				minetest.chat_send_player(
 					player:get_player_name(),

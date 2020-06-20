@@ -13,5 +13,6 @@ metatool = {
 dofile(metatool.modpath .. '/settings.lua')
 dofile(metatool.modpath .. '/api.lua')
 dofile(metatool.modpath .. '/command.lua')
+dofile(metatool.modpath .. '/formspec.lua')
 
 print('[OK] MetaTool loaded')
