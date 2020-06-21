@@ -2,6 +2,8 @@
 -- Register teleport tube for tubetool
 --
 
+local S = metatool.S
+
 local nodenameprefix = "pipeworks:teleport_tube_"
 
 --luacheck: ignore unused argument node player
@@ -11,23 +13,42 @@ for i=1,10 do
 	table.insert(nodes, nodenameprefix .. i)
 end
 
+local tp_tube_form_index = {}
+
 metatool.form.register_form(
 	'tubetool:teleport_tube_list',
 	function(player, data)
-		local player_pos = player:get_pos()
 		local list = ""
 		for _,tube in ipairs(data.tubes) do
-			list = list ..
-				"," .. math.floor(vector.distance(tube.pos, player_pos)) .. "m" ..
+			list = list .. ",1" ..
+				"," .. math.floor(vector.distance(tube.pos, data.pos)) .. "m" ..
 				"," .. minetest.formspec_escape(string.format("%d,%d,%d",tube.pos.x,tube.pos.y,tube.pos.z)) ..
-				",   " .. (tube.can_receive and "yes" or "no")
+				"," .. (tube.can_receive and "yes" or "no")
 		end
-		local header = minetest.formspec_escape(data.channel) .. ", total " .. #data.tubes .. " tubes]"
-		return "size[8,10;]" ..
-			"label[0,0;Teleport tubes on channel " .. header ..
+		return "formspec_version[3]size[8,10;]label[0.1,0.5;" ..
+			"Found " .. #data.tubes .. " teleport tubes, channel: " ..
+			minetest.formspec_escape(data.channel) .. "]" ..
+			"button_exit[0,9;4,1;wp;Waypoint]" ..
 			"button_exit[4,9;4,1;exit;Exit]" ..
-			"tablecolumns[text;text;text]" ..
-			"table[0,0.5;7.7,8.5;items;Distance            ,Coords            ,Receive" .. list .. ";]"
+			"tablecolumns[indent;text,width=15;text,width=15;text,align=center]" ..
+			"table[0,1;8,8;items;1,Distance,Location,Receive" .. list .. ";]"
+	end,
+	function(player, fields, data)
+		local name = player:get_player_name()
+		local evt = minetest.explode_table_event(fields.items)
+		if tp_tube_form_index[name] and (evt.type == "DCL" or (fields.wp and fields.quit)) then
+			local tube = data.tubes[tp_tube_form_index[name]]
+			local id = player:hud_add({
+				hud_elem_type = "waypoint",
+				name = S("%s\n\nReceive: %s", data.channel, tube.can_receive and "yes" or "no"),
+				text = "m",
+				number = 0xE0B020,
+				world_pos = tube.pos
+			})
+			minetest.after(60, function() if player then player:hud_remove(id) end end)
+		elseif evt.type == "CHG" or evt.type == "DCL" then
+			tp_tube_form_index[name] = evt.row > 1 and evt.row - 1 or nil
+		end
 	end
 )
 
@@ -63,7 +84,7 @@ return {
 					})
 				end
 			end
-			metatool.form.show(player, 'tubetool:teleport_tube_list', {channel = channel, tubes = tubes})
+			metatool.form.show(player, 'tubetool:teleport_tube_list', {pos = pos, channel = channel, tubes = tubes})
 		end,
 
 		copy = function(node, pos, player)
