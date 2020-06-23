@@ -7,6 +7,7 @@ local ns = metatool.ns('sharetool')
 
 --luacheck: ignore unused argument node player
 return {
+	name = 'travelnet',
 	nodes = {
 		'travelnet:travelnet',
 		'locked_travelnet:travelnet',

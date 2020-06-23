@@ -198,6 +198,13 @@ metatool.is_protected = function(pos, player, privs, no_violation_record)
 	return false
 end
 
+metatool.before_info = function(nodedef, pos, player, no_violation_record)
+	if metatool.is_protected(pos, player, nodedef.protection_bypass_info, no_violation_record) then
+		return false
+	end
+	return true
+end
+
 metatool.before_read = function(nodedef, pos, player, no_violation_record)
 	if metatool.is_protected(pos, player, nodedef.protection_bypass_read, no_violation_record) then
 		return false
@@ -235,8 +242,8 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 	local controls = player:get_player_control()
 
 	if controls.aux1 or controls.sneak then
-		local can_read = nodedef.before_read(nodedef, pos, player)
-		if can_read and controls.sneak and (tool.on_read_info or nodedef.info) then
+		local use_info = controls.sneak and (tool.on_read_info or nodedef.info)
+		if use_info and nodedef.before_info(nodedef, pos, player) then
 			-- Execute on_read_node when tool is used on node and sneak is held
 			if tool.on_read_info then
 				-- Tool info method defined, call through it and let it handle nodes
@@ -245,7 +252,7 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 				-- Only node definition had info method available, use it directly
 				nodedef.info(node, pos, player)
 			end
-		elseif can_read then
+		elseif not use_info and nodedef.before_read(nodedef, pos, player) then
 			-- Execute on_read_node when tool is used on node and special or sneak is held
 			local data, group, description = tool.on_read_node(tooldef, player, pointed_thing, node, pos, nodedef)
 			local separated
@@ -299,11 +306,14 @@ metatool.load_node_definition = function(self, def)
 		))
 		return
 	end
-	if type(def.nodes) == 'table' then
+	local nodedef_name
+	if type(def.nodes) == 'table' and #def.nodes > 0 then
+		nodedef_name = def.nodes[1]
 		for _,nodename in ipairs(def.nodes) do
 			metatool:register_node(self.name, nodename, def.tooldef)
 		end
 	elseif type(def.nodes) == 'string' then
+		nodedef_name = def.nodes
 		metatool:register_node(self.name, def.nodes, def.tooldef)
 	else
 		print(string.format(
@@ -312,6 +322,7 @@ metatool.load_node_definition = function(self, def)
 		))
 		return
 	end
+	metatool.merge_node_settings(self.name, def.name or nodedef_name, def.tooldef)
 end
 
 metatool.register_tool = function(self, name, definition)
@@ -357,6 +368,9 @@ metatool.register_node = function(self, toolname, name, definition, override)
 		elseif not minetest.registered_nodes[name] then
 			print(S('metatool:register_node node %s not registered for minetest, skipping registration.', name))
 		elseif type(definition.copy) == 'function' and type(definition.paste) == 'function' then
+			if type(definition.before_info) ~= 'function' then
+				definition.before_info = metatool.before_info
+			end
 			if type(definition.before_read) ~= 'function' then
 				definition.before_read = metatool.before_read
 			end
@@ -433,6 +447,16 @@ metatool.read_data = function(itemstack)
 	local meta = itemstack:get_meta()
 	local datastring = meta:get_string('data')
 	return minetest.deserialize(datastring)
+end
+
+-- TODO: Remove metatool.info, metatool.copy and metatool.paste and
+-- update tools to call these directly using nodedef event
+-- handler argument provided through metatool.on_use.
+metatool.info = function(self, node, pos, player)
+	local definition = self.nodes[node.name]
+	if definition then
+		definition.info(node, pos, player)
+	end
 end
 
 metatool.copy = function(self, node, pos, player)

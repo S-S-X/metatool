@@ -32,6 +32,7 @@ end
 
 --luacheck: ignore unused argument node player
 return {
+	name = 'microcontroller',
 	nodes = nodes,
 	tooldef = {
 		group = 'microcontroller',
