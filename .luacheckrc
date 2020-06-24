@@ -1,3 +1,6 @@
+exclude_files = {
+	"**/spec/**",
+}
 
 globals = {
 	"metatool",
