@@ -13,7 +13,6 @@
 package.path = "../?.lua;spec/fixtures/?.lua;spec/helpers/?.lua;" .. package.path
 
 require("settings_globals")
-require("misc_helpers")
 require("settings")
 
 describe("metatool_settings", function()

@@ -1,0 +1,3 @@
+
+require("minetest")
+require("metatool")
