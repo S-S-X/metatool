@@ -1,5 +1,5 @@
 
-require("minetest")
+fixture("minetest")
 
 local players = {}
 
@@ -31,6 +31,9 @@ _G.Player = function(name, privs)
 	local player = {
 		_name = name or "SX",
 		_privs = privs or { test_priv=1 },
+		get_player_control = function(self)
+			return {}
+		end,
 		get_player_name = function(self)
 			return self._name
 		end

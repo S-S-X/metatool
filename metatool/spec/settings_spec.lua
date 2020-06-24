@@ -10,12 +10,12 @@
 		- No configuration file at, not even empty file
 --]]
 
-package.path = "../?.lua;spec/fixtures/?.lua;spec/helpers/?.lua;" .. package.path
+dofile("spec/test_helpers.lua")
+fixture("metatool")
 
-require("settings_globals")
 require("settings")
 
-describe("metatool_settings", function()
+describe("Metatool settings file loading", function()
 
 	it("Returns top level configuration value", function()
 		local value = metatool.settings("metatool:sharetool", "privs")

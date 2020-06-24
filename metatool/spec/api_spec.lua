@@ -10,11 +10,12 @@
 		- No configuration file at, not even empty file
 --]]
 
-package.path = "../?.lua;spec/fixtures/?.lua;spec/helpers/?.lua;" .. package.path
+dofile("spec/test_helpers.lua")
+fixture("minetest")
+fixture("minetest/player")
+fixture("minetest/protection")
+fixture("metatool")
 
-require("api_globals")
-require("player")
-require("protection")
 require("api")
 
 describe("Metatool API protection", function()
