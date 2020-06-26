@@ -64,7 +64,7 @@ local register_metatool_item = function(itemname, definition)
 	local craft_count = definition.craft_count or 1
 	local stack_max = definition.stack_max or 99
 	local groups
-	if definition.recipe == nil then
+	if not definition.recipe then
 		groups = { not_in_creative_inventory = 1 }
 	end
 
@@ -85,7 +85,9 @@ local register_metatool_item = function(itemname, definition)
 
 	if definition.privs then
 		register_privileged_tool(definition.itemname, definition)
-		metatool.chat.register_command_give()
+		if not definition.recipe then
+			metatool.chat.register_command_give()
+		end
 	end
 
 	minetest.register_craft({
@@ -337,11 +339,11 @@ metatool.register_tool = function(self, name, definition)
 		end
 		definition.itemname = itemname_clean
 		if validate_tool_definition(definition) then
+			metatool.merge_tool_settings(itemname_clean, definition)
 			if not register_metatool_item(itemname, definition) then
 				print(S('metatool:register_tool tool registration failed for "%s".', name))
 				return
 			end
-			metatool.merge_tool_settings(itemname_clean, definition)
 			self.tools[itemname_clean] = {
 				itemdef = definition,
 				name = itemname_clean,

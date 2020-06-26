@@ -17,6 +17,7 @@ fixture("minetest/protection")
 fixture("metatool")
 
 require("settings")
+require("command")
 require("api")
 
 describe("Metatool API protection", function()

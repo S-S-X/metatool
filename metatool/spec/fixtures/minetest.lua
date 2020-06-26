@@ -9,6 +9,12 @@ _G.minetest.registered_nodes = {
 	testnode2 = {},
 }
 
+_G.minetest.registered_chatcommands = {}
+
+_G.minetest.register_chatcommand = function(...)
+	-- noop
+end
+
 _G.minetest.chat_send_player = function(name, text)
 	-- TODO: Collect chat messages so that those can be included in tests
 end
