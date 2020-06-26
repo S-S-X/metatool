@@ -4,7 +4,10 @@ _G.minetest = {}
 
 fixture("minetest/misc_helpers")
 
-_G.minetest.registered_nodes = {}
+_G.minetest.registered_nodes = {
+	testnode1 = {},
+	testnode2 = {},
+}
 
 _G.minetest.chat_send_player = function(name, text)
 	-- TODO: Collect chat messages so that those can be included in tests

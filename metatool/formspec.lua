@@ -62,17 +62,18 @@ end
 
 metatool.form.on_create = function(player, formname, data)
 	if has_form(formname) then
-		-- call actual form handler
-		if metatool.form.handlers[formname].on_create then
+		if type(metatool.form.handlers[formname].on_create) == "function" then
+			-- Use callback to get formspec definition
 			return metatool.form.handlers[formname].on_create(player, data)
 		end
-		return metatool.form.handlers[formname].formspec
+		-- Assume that on_create is literal formspec definition (string)
+		return metatool.form.handlers[formname].on_create
 	end
 end
 
--- Either on_create for dynamic formspecs or formspec for static formspecs.
--- on_create will be priorized if both defined
-metatool.form.register_form = function(formname, on_create, on_receive, formspec)
+-- on_create can be either string for static formspecs or function for dynamic formspecs.
+-- on_receive is function that receives fields when form is submitted, can be nil.
+metatool.form.register_form = function(formname, on_create, on_receive)
 	local name = get_formname(formname)
 	if not name then
 		print(S("metatool.form.register_form Registration failed, invalid formname: %s", formname))
@@ -81,12 +82,13 @@ metatool.form.register_form = function(formname, on_create, on_receive, formspec
 	metatool.form.register_global_handler()
 	print(S("metatool.form.register_form Registering form: %s", name))
 	metatool.form.handlers[name] = {
-		formspec = formspec,
 		on_create = on_create,
 		on_receive = on_receive,
 	}
 end
 
+-- display formspec to player, if optional data variable is given then it will be
+-- saved and forwarded to on_create and on_receive form handler callback functions.
 metatool.form.show = function(player, formname, data)
 	local name = get_formname(formname)
 	if has_form(name) then

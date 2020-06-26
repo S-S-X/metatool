@@ -11,6 +11,7 @@
 --]]
 
 dofile("spec/test_helpers.lua")
+fixture("minetest")
 fixture("metatool")
 
 require("settings")
@@ -18,54 +19,54 @@ require("settings")
 describe("Metatool settings file loading", function()
 
 	it("Returns top level configuration value", function()
-		local value = metatool.settings("metatool:sharetool", "privs")
-		assert.same("test_sharetool_privs", value)
+		local value = metatool.settings("metatool:testtool1", "privs")
+		assert.same("test_testtool1_privs", value)
 	end)
 
 	it("Returns top level configuration value without prefix", function()
-		local value = metatool.settings("sharetool", "privs")
-		assert.same("test_sharetool_privs", value)
+		local value = metatool.settings("testtool1", "privs")
+		assert.same("test_testtool1_privs", value)
 	end)
 
 	it("Returns configuration values as table", function()
 		local expected = {
-			privs = "test_sharetool_privs",
-			shared_account = "test_sharetool_shared_account",
+			privs = "test_testtool1_privs",
+			shared_account = "test_testtool1_shared_account",
 		}
-		local value = metatool.settings("sharetool")
+		local value = metatool.settings("testtool1")
 		assert.same(expected, value)
 	end)
 
-	it("sharetool configuration as table", function()
+	it("testtool1 configuration as table", function()
 		local expected = {
-			shared_account = "test_sharetool_shared_account",
-			privs = "test_sharetool_privs",
+			shared_account = "test_testtool1_shared_account",
+			privs = "test_testtool1_privs",
 		}
-		local value = metatool.settings("sharetool")
+		local value = metatool.settings("testtool1")
 		assert.same(expected, value)
 	end)
 
-	it("tubetool configuration as table", function()
+	it("testtool2 configuration as table", function()
 		local expected = {
-			privs = "test_tubetool_privs",
-			extra_config_key = "tubetool_extra_config_value",
+			privs = "test_testtool2_privs",
+			extra_config_key = "testtool2_extra_config_value",
 			nodes = {
-				mese_tube = {
-					protection_bypass_write = "tubetool_mese_tube_bypass_write",
-					protection_bypass_info = "tubetool_mese_tube_bypass_info",
-					protection_bypass_read = "tubetool_mese_tube_bypass_read",
+				testnode2 = {
+					protection_bypass_write = "testtool2_testnode2_bypass_write",
+					protection_bypass_info = "testtool2_testnode2_bypass_info",
+					protection_bypass_read = "testtool2_testnode2_bypass_read",
 				},
 			},
 		}
-		local value = metatool.settings("tubetool")
+		local value = metatool.settings("testtool2")
 		assert.same(expected, value)
 	end)
 
-	it("luatool configuration as table", function()
+	it("testtool3 configuration as table", function()
 		local expected = {
-			configuration1 = "luatool_configuration1_value",
+			configuration1 = "testtool3_configuration1_value",
 		}
-		local value = metatool.settings("luatool")
+		local value = metatool.settings("testtool3")
 		assert.same(expected, value)
 	end)
 

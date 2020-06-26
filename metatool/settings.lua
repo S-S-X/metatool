@@ -111,6 +111,9 @@ metatool.merge_node_settings = function(toolname, nodename, nodedef)
 		if nodedef[key] then
 			update_setting(node_settings, path, key, nodedef[key])
 		end
+		if node_settings[key] then
+			nodedef[key] = node_settings[key]
+		end
 	end
 	if type(nodedef.settings) == 'table' then
 		-- Merge default tool settings
@@ -124,7 +127,7 @@ metatool.merge_node_settings = function(toolname, nodename, nodedef)
 	end
 end
 
-local tool_specials = { "privs" }
+local tool_specials = { privs = 1 }
 metatool.merge_tool_settings = function(toolname, tooldef)
 	-- Merges default setting values for tool using tooldef.settings table.
 	-- Should be called once during tool registration, assuming settings_data is kept
@@ -133,18 +136,25 @@ metatool.merge_tool_settings = function(toolname, tooldef)
 	print(S('metatool.merge_tool_settings merging settings for tool %s', name))
 
 	local tool_settings = get_table(parsed_settings, name)
-	for _,key in ipairs(tool_specials) do
+	for key,_ in pairs(tool_specials) do
 		if tooldef[key] then
 			update_setting(tool_settings, name, key, tooldef[key])
 		end
+		tooldef[key] = tool_settings[key]
 	end
 	if type(tooldef.settings) == 'table' then
 		-- Merge default tool settings
 		for key, value in pairs(tooldef.settings) do
 			update_setting(tool_settings, name, key, value)
 		end
+	else
+		tooldef.settings = {}
 	end
-	tooldef.settings = tool_settings
+	for key, value in pairs(tool_settings) do
+		if not tool_specials[key] and key ~= 'nodes' then
+			tooldef.settings[key] = value
+		end
+	end
 	if metatool.export_default_config then
 		settings:write()
 	end

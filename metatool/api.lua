@@ -57,9 +57,6 @@ end
 local register_metatool_item = function(itemname, definition)
 
 	if not itemname then return end
-	local itemname_clean = itemname:gsub('^:', '')
-
-	definition.itemname = itemname_clean
 
 	local description = definition.description or "Weird surprise MetaTool, let's roll the dice..."
 	local texture = definition.texture or 'metatool_wand.png'
@@ -82,29 +79,29 @@ local register_metatool_item = function(itemname, definition)
 		wield_scale = { x = 0.8, y = 1, z = 0.8 },
 		liquids_pointable = liquids_pointable,
 		on_use = function(...)
-			return metatool:on_use(itemname_clean, unpack({...}))
+			return metatool:on_use(definition.itemname, unpack({...}))
 		end,
 	})
 
 	if definition.privs then
-		register_privileged_tool(itemname_clean, definition)
+		register_privileged_tool(definition.itemname, definition)
 		metatool.chat.register_command_give()
 	end
 
 	minetest.register_craft({
 		type = "shapeless",
-		output = string.format('%s %d', itemname_clean, 1),
-		recipe = { itemname_clean }
+		output = string.format('%s %d', definition.itemname, 1),
+		recipe = { definition.itemname }
 	})
 
 	if definition.recipe then
 		minetest.register_craft({
-			output = string.format('%s %d', itemname_clean, craft_count),
+			output = string.format('%s %d', definition.itemname, craft_count),
 			recipe = definition.recipe
 		})
 	end
 
-	return itemname_clean
+	return definition.itemname
 end
 
 local separate_stack = function(itemstack)
@@ -151,7 +148,7 @@ local validate_tool_definition = function(tooldef)
 		if not res then print(string.format('%s missing parameter %s', tooldef.itemname, key)) end
 		return res
 	end
-	return F('on_read_node') and F('on_write_node') and (tooldef.privs or T('recipe'))
+	return tooldef and F('on_read_node') and F('on_write_node') and (tooldef.privs or T('recipe'))
 end
 
 --luacheck: ignore unused argument self
@@ -171,10 +168,15 @@ metatool.ns = function(self, data)
 		if tool then
 			return tool.namespace
 		end
+		print(S('Invalid or nonexistent namespace requested: %s', self))
+		return
+	elseif type(self) == 'table' and self.name then
+		-- mytool:ns({mydata}) / create namespace
+		print(S('Namespace created for: %s', self.name))
+		self.namespace = data
 		return
 	end
-	-- mytool:ns({mydata}) / create namespace
-	self.namespace = data
+	print('metatool.ns called with invalid arguments')
 end
 
 metatool.check_privs = function(player, privs)
@@ -331,7 +333,10 @@ metatool.register_tool = function(self, name, definition)
 	if not self.tools[itemname_clean] then
 		if type(definition) ~= 'table' then
 			print(S('metatool:register_tool invalid definition, must be table but was %s', type(definition)))
-		elseif validate_tool_definition(definition) then
+			return
+		end
+		definition.itemname = itemname_clean
+		if validate_tool_definition(definition) then
 			if not register_metatool_item(itemname, definition) then
 				print(S('metatool:register_tool tool registration failed for "%s".', name))
 				return
