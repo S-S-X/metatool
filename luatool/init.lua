@@ -27,3 +27,5 @@ local tool = metatool:register_tool('luatool', {
 -- nodes
 local modpath = minetest.get_modpath('luatool')
 tool:load_node_definition(dofile(modpath .. '/nodes/luatube.lua'))
+tool:load_node_definition(dofile(modpath .. '/nodes/luacontroller.lua'))
+tool:load_node_definition(dofile(modpath .. '/nodes/microcontroller.lua'))

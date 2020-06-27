@@ -33,6 +33,7 @@ end
 
 --luacheck: ignore unused argument node player
 return {
+	name = 'mese_tube',
 	nodes = nodes,
 	tooldef = {
 		group = 'sorting tube',

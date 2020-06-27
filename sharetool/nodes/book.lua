@@ -26,6 +26,7 @@ local ns = metatool.ns('sharetool')
 
 --luacheck: ignore unused argument node player
 return {
+	name = 'book',
 	nodes = nodes,
 	tooldef = {
 		group = 'shared book',

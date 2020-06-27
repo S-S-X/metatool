@@ -4,6 +4,7 @@
 
 --luacheck: ignore unused argument node player
 return {
+	name = 'filter',
 	nodes = {
 		"pipeworks:filter",
 		"pipeworks:mese_filter",

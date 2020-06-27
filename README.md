@@ -63,22 +63,31 @@ That's all, now you can use tubetool wand to copy/paste metadata owner value fro
 
 ### Tool definition callback methods
 
-Callback `data, group, description = on_read_node(tooldef, player, pointed_thing, node, pos)`
+Callback `on_read_info(tooldef, player, pointed_thing, node, pos, nodedef)`
 
 Example definition:
 ```
-	on_read_node = function(tooldef, player, pointed_thing, node, pos)
+	on_read_info = function(tooldef, player, pointed_thing, node, pos, nodedef)
+		tooldef:info(node, pos, player)
+	end,
+```
+
+Callback `data, group, description = on_read_node(tooldef, player, pointed_thing, node, pos, nodedef)`
+
+Example definition:
+```
+	on_read_node = function(tooldef, player, pointed_thing, node, pos, nodedef)
 		local data, group = tooldef:copy(node, pos, player)
 		local description = type(data) == 'table' and data.description or ('Data from ' .. minetest.pos_to_string(pos))
 		return data, group, description
 	end,
 ```
 
-Callback `on_write_node(tooldef, data, group, player, pointed_thing, node, pos)`
+Callback `on_write_node(tooldef, data, group, player, pointed_thing, node, pos, nodedef)`
 
 Example definition:
 ```
-	on_write_node = function(tooldef, data, group, player, pointed_thing, node, pos)
+	on_write_node = function(tooldef, data, group, player, pointed_thing, node, pos, nodedef)
 		tooldef:paste(node, pos, player, data, group)
 	end,
 ```
@@ -103,11 +112,18 @@ Example definition:
 	end,
 ```
 
-Parameter `protection_bypass_read = { "mytool_copy" }`
+Parameter `protection_bypass_info = "privilege1,privilege2"`
+Bypass all info protection checks when using tool if player has listed privs.
+
+Parameter `protection_bypass_read = "privilege1,privilege2"`
 Bypass all read protection checks when using tool if player has listed privs.
 
-Parameter `protection_bypass_write = { "mytool_admin" }`
+Parameter `protection_bypass_write = { "privilege1,privilege2" }`
 Bypass all write protection checks when using tool if player has listed privs.
+
+Callback `allowed = before_info(nodedef, pos, player)`
+Executed before node info is called, this method can override all protection checks.
+Above protection_bypass_info parameters might not work if this is overridden.
 
 Callback `allowed = before_read(nodedef, pos, player)`
 Executed before node reading is called, this method can override all protection checks.
