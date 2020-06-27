@@ -18,6 +18,7 @@ local ns = metatool.ns('sharetool')
 
 --luacheck: ignore unused argument node player
 return {
+	name = 'poi',
 	nodes = nodes,
 	tooldef = {
 		group = 'shared poi',

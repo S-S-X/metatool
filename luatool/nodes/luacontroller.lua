@@ -33,6 +33,7 @@ table.insert(nodes, nodenameprefix .. '_burnt')
 
 --luacheck: ignore unused argument node player
 return {
+	name = 'luacontroller',
 	nodes = nodes,
 	tooldef = {
 		group = 'lua controller',

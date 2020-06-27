@@ -53,6 +53,7 @@ metatool.form.register_form(
 )
 
 return {
+	name = 'teleport_tube',
 	nodes = nodes,
 	tooldef = {
 		group = 'teleport tube',
