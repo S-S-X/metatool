@@ -96,15 +96,15 @@ describe("Metatool API tool registration", function()
 		assert.is_table(tool)
 		assert.equals("metatool:testtool0", tool.name)
 
-		assert.is_table(tool.itemdef)
-		assert.equals(definition.description, tool.itemdef.description)
-		assert.equals(definition.name, tool.itemdef.name)
-		assert.equals(definition.on_read_node, tool.itemdef.on_read_node)
-		assert.equals(definition.on_write_node, tool.itemdef.on_write_node)
+		assert.is_table(tool)
+		assert.equals(definition.description, tool.description)
+		assert.equals(definition.name, tool.nice_name)
+		assert.equals(definition.on_read_node, tool.on_read_node)
+		assert.equals(definition.on_write_node, tool.on_write_node)
 
 		-- Test configurable tool attributes
-		assert.is_nil(tool.itemdef.privs)
-		assert.same({}, tool.itemdef.settings)
+		assert.is_nil(tool.privs)
+		assert.same({}, tool.settings)
 
 		-- Namespace creation
 		local mult = function(a,b) return a * b end
@@ -136,18 +136,18 @@ describe("Metatool API tool registration", function()
 		assert.is_table(tool)
 		assert.equals("metatool:testtool2", tool.name)
 
-		assert.is_table(tool.itemdef)
-		assert.equals(definition.description, tool.itemdef.description)
-		assert.equals(definition.name, tool.itemdef.name)
-		assert.equals(definition.on_read_node, tool.itemdef.on_read_node)
-		assert.equals(definition.on_write_node, tool.itemdef.on_write_node)
+		assert.is_table(tool)
+		assert.equals(definition.description, tool.description)
+		assert.equals(definition.name, tool.nice_name)
+		assert.equals(definition.on_read_node, tool.on_read_node)
+		assert.equals(definition.on_write_node, tool.on_write_node)
 
 		-- Test configurable tool attributes
-		assert.equals("test_testtool2_privs", tool.itemdef.privs)
+		assert.equals("test_testtool2_privs", tool.privs)
 		local expected_settings = {
 			extra_config_key = "testtool2_extra_config_value",
 		}
-		assert.same(expected_settings, tool.itemdef.settings)
+		assert.same(expected_settings, tool.settings)
 
 		-- Namespace creation
 		local sum = function(a,b) return a + b end
@@ -167,7 +167,7 @@ describe("Metatool API node registration", function()
 		local tool = metatool.tool("testtool0")
 		assert.is_table(tool)
 		assert.equals("metatool:testtool0", tool.name)
-		assert.is_table(tool.itemdef)
+		assert.is_table(tool)
 
 		local definition = {
 			name = 'testnode1',
@@ -215,7 +215,7 @@ describe("Metatool API node registration", function()
 		local tool = metatool.tool("testtool2")
 		assert.is_table(tool)
 		assert.equals("metatool:testtool2", tool.name)
-		assert.is_table(tool.itemdef)
+		assert.is_table(tool)
 
 		local definition = {
 			name = 'testnode2',

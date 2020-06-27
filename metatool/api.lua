@@ -145,12 +145,7 @@ local validate_tool_definition = function(tooldef)
 		if not res then print(string.format('%s missing function %s', tooldef.itemname, key)) end
 		return res
 	end
-	local function T(key)
-		local res = type(tooldef[key]) == 'table'
-		if not res then print(string.format('%s missing parameter %s', tooldef.itemname, key)) end
-		return res
-	end
-	return tooldef and F('on_read_node') and F('on_write_node') and (tooldef.privs or T('recipe'))
+	return tooldef and F('on_read_node') and F('on_write_node')
 end
 
 --luacheck: ignore unused argument self
@@ -229,8 +224,7 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 		return
 	end
 
-	local tooldef = self.tools[toolname]
-	local tool = tooldef.itemdef
+	local tool = self.tools[toolname]
 	if self.privileged_tools[toolname] then
 		if not metatool.check_privs(player, tool.privs) then
 			minetest.chat_send_player(player:get_player_name(), 'You are not allowed to use this tool.')
@@ -238,7 +232,7 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 		end
 	end
 
-	local node, pos, nodedef = metatool:get_node(tooldef, player, pointed_thing)
+	local node, pos, nodedef = metatool:get_node(tool, player, pointed_thing)
 	if not node then
 		return
 	end
@@ -251,14 +245,14 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 			-- Execute on_read_node when tool is used on node and sneak is held
 			if tool.on_read_info then
 				-- Tool info method defined, call through it and let it handle nodes
-				tool.on_read_info(tooldef, player, pointed_thing, node, pos, nodedef)
+				tool.on_read_info(tool, player, pointed_thing, node, pos, nodedef)
 			else
 				-- Only node definition had info method available, use it directly
 				nodedef.info(node, pos, player)
 			end
 		elseif not use_info and nodedef.before_read(nodedef, pos, player) then
 			-- Execute on_read_node when tool is used on node and special or sneak is held
-			local data, group, description = tool.on_read_node(tooldef, player, pointed_thing, node, pos, nodedef)
+			local data, group, description = tool.on_read_node(tool, player, pointed_thing, node, pos, nodedef)
 			local separated
 			itemstack, separated = separate_stack(itemstack)
 			metatool.write_data(separated or itemstack, {data=data,group=group}, description)
@@ -276,7 +270,7 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 					tooldata = data.data
 					group = data.group
 				end
-				tool.on_write_node(tooldef, tooldata, group, player, pointed_thing, node, pos, nodedef)
+				tool.on_write_node(tool, tooldata, group, player, pointed_thing, node, pos, nodedef)
 			else
 				minetest.chat_send_player(
 					player:get_player_name(),
@@ -344,16 +338,25 @@ metatool.register_tool = function(self, name, definition)
 				print(S('metatool:register_tool tool registration failed for "%s".', name))
 				return
 			end
+			-- TODO: Keep just 2 of these: name, itemname and nice_name.
+			-- Maybe remove nice_name, use name for fancy definition.name and itemname for itemname_clean.
+			-- TODO: Keep everything given in original definition and then just override all keys used by API.
 			self.tools[itemname_clean] = {
-				itemdef = definition,
 				name = itemname_clean,
+				itemname = itemname_clean,
 				nice_name = definition.name or name,
+				description = definition.description,
+				allow_use_empty = definition.allow_use_empty,
+				privs = definition.privs,
 				settings = definition.settings,
-				nodes = {},
+				recipe = definition.recipe,
 				ns = metatool.ns,
 				load_node_definition = metatool.load_node_definition,
+				nodes = {},
 				copy = metatool.copy,
 				paste = metatool.paste,
+				on_read_node = definition.on_read_node,
+				on_write_node = definition.on_write_node,
 			}
 			print(S('metatool:register_tool registered tool "%s".', itemname_clean))
 			return self.tools[itemname_clean]
