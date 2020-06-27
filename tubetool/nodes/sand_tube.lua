@@ -12,6 +12,7 @@ end
 
 --luacheck: ignore unused argument node player
 return {
+	name = 'vacuum_tube',
 	nodes = nodes,
 	tooldef = {
 		group = 'vacuum tube',
