@@ -15,6 +15,7 @@ return {
 	nodes = nodes,
 	tooldef = {
 		group = 'vacuum tube',
+		protection_bypass_read = "interact",
 
 		copy = function(node, pos, player)
 			local meta = minetest.get_meta(pos)
