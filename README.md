@@ -1,43 +1,52 @@
+![luacheck](https://github.com/S-S-X/metatool/workflows/luacheck/badge.svg)
+![busted](https://github.com/S-S-X/metatool/workflows/busted/badge.svg)
+
 ## What metatool? And why?
 
 Metatool Minetest mod provides API for registering metadata manipulation tools and other tools primarily focused on special node data operations.
 
-## How to use metatool:tubetool
+## How to use tools
 
-Tubetool is made available for cloning pipeworks node configurations like sorting tube configuration.
-Other registered metatool tools might work in similar way allowing to copy data from one node to another.
+Basic functionality for tools come as two primary functions: copy and paste.
 
-#### Copy configuration from pipeworks node
+* Special+left click for copy function.
+* Left click for paste function.
+* Sneak+left click for optional "info" function which might not be available for all nodes.
+  If third function is not implemented then sneak+left click triggers copy function.
 
-Hold wand in your hand and point node that you want to copy configuration from, hold special or sneak button and left click on node to copy settings.
-Chat will display confirmation message when configuration is copied to wand.
+For more complete and tool specific documentation go see README.md files in subdirectories.
 
-#### Apply copied configuration to pipeworks node
+* Metatool API [API_REFERENCE.md](API_REFERENCE.md)
+* Luatool [luatool/README.md](luatool/README.md)
+* Tubetool [tubetool/README.md](tubetool/README.md)
+* Sharetool [sharetool/README.md](sharetool/README.md)
 
-Hold wand containing desired configuation in you hand and point node that you want apply settings to.
-Left click with wand to apply new settings, chat will display confirmation message when settings are applied to pointed node.
-
-## How to add supported nodes
+## How to add supported nodes for tools
 
 Example to add support for technic:injector
 
 ```
 local definition = {
-	group = "technic injector",
-	copy = function(node, pos, player)
-		-- add code for copying data from pointed injector node
-		-- for example get some metadata and store it in wand memory
-		-- also set some nice description of wand
-		local meta = minetest.get_meta(pos)
-		return {
-			description = "This wand has some injector data",
-			myvalue = meta:get_string("owner")
-		}
-	end,
-	paste = function(node, pos, player, data)
-		local meta = minetest.get_meta(pos)
-		meta:set_string("owner", data.myvalue)
-	end,
+	name = "sci",
+	nodes = "technic:injector",
+	tooldef = {
+		group = "technic injector",
+		copy = function(node, pos, player)
+			-- Get some metadata from injector node and store it within
+			-- tool memory and also set new nice description for tool.
+			local meta = minetest.get_meta(pos)
+			return {
+				description = "This wand has some injector data",
+				myvalue = meta:get_string("owner")
+			}
+		end,
+
+		paste = function(node, pos, player, data)
+			-- Restore SCI metatdata from tool memory
+			local meta = minetest.get_meta(pos)
+			meta:set_string("owner", data.myvalue)
+		end,
+	}
 }
 ```
 
@@ -45,12 +54,6 @@ Supply above definition for tool, mytool variable is returned from metatool:regi
 
 ```
 mytool:load_node_definition(definition)
-```
-
-or by fully qualified tool name
-
-```
-metatool:register_node("metatool:tubetool", definition)
 ```
 
 That's all, now you can use tubetool wand to copy/paste metadata owner value from one injector to another.
@@ -151,11 +154,9 @@ Above protection_bypass_write parameters might not work if this is overridden.
 
 `metatool:paste(node, pos, player, data, group)`
 
-## Registered nodes included with tubetool
-
-In nodes subdirectory there is few predefined pipeworks components.
-
 ## Minetest protection checks
 
-Protection checks are done automatically for all wand uses, node registration does not need any protection checks.
-Wand cannot be used to read settings from protected nodes and it cannot be used to write settings to protected nodes.
+Protection checks are done automatically for all tool uses, node registration does not need any protection checks.
+By default tools cannot be used to read data from protected nodes and cannot be used to write data to protected nodes.
+
+Tools can override protection settings and also configuration can be used to override default protection behavior.
