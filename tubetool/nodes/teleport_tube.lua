@@ -56,7 +56,8 @@ return {
 	name = 'teleport_tube',
 	nodes = nodes,
 	tooldef = {
-		group = 'teleport tube',
+		group = "teleport tube",
+		protection_bypass_read = "interact",
 
 		info = function(node, pos, player)
 			if not pipeworks.tptube or not pipeworks.tptube.get_db then
@@ -94,10 +95,16 @@ return {
 			-- get and store channel and receive setting
 			local channel = meta:get_string("channel")
 			local receive = meta:get_int("can_receive")
+			local description
+			if channel == "" then
+				description = "Teleport tube configuration cleaner"
+			else
+				description = meta:get_string("infotext")
+			end
 
 			-- return data required for replicating this tube settings
 			return {
-				description = string.format("Channel: %s Receive: %d", channel, receive),
+				description = description,
 				channel = channel,
 				receive = receive,
 			}
@@ -107,7 +114,7 @@ return {
 			-- restore settings and update tube, no api available
 			local fields = {
 				channel = data.channel,
-				['cr' .. data.receive] = data.receive,
+				["cr" .. data.receive] = data.receive,
 			}
 			local nodedef = minetest.registered_nodes[node.name]
 			nodedef.on_receive_fields(pos, "", fields, player)
