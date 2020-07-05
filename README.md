@@ -1,3 +1,6 @@
+![luacheck](https://github.com/S-S-X/metatool/workflows/luacheck/badge.svg)
+![busted](https://github.com/S-S-X/metatool/workflows/busted/badge.svg)
+
 ## What metatool? And why?
 
 Metatool Minetest mod provides API for registering metadata manipulation tools and other tools primarily focused on special node data operations.
