@@ -14,6 +14,11 @@ Basic functionality for tools come as two primary functions: copy and paste.
 * Sneak+left click for optional "info" function which might not be available for all nodes.
   If third function is not implemented then sneak+left click triggers copy function.
 
+Privileged tools without recipe will be given by using special `/metatool:give` command.
+* `/metatool:give` does not require `give` privs.
+* `/metatool:give` without arguments will list tools player can get.
+* Each tool can have custom required privilege, for example sharetool requires `ban` by default.
+
 For more complete and tool specific documentation go see README.md files in subdirectories.
 
 * Metatool API [API_REFERENCE.md](API_REFERENCE.md)
