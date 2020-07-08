@@ -60,7 +60,7 @@ local register_metatool_item = function(itemname, definition)
 
 	local description = definition.description or "Weird surprise MetaTool, let's roll the dice..."
 	local texture = definition.texture or 'metatool_wand.png'
-	local liquids_pointable = definition.liquids_pointable == nil and false or definition.liquids_pointable
+	local liquids_pointable = definition.liquids_pointable
 	local craft_count = definition.craft_count or 1
 	local stack_max = definition.stack_max or 99
 	local groups
@@ -375,7 +375,7 @@ metatool.register_node = function(self, toolname, name, definition, override)
 			print(S('metatool:register_node invalid definition, must be table but was %s', type(definition)))
 		elseif not definition.group then
 			print('metatool:register_node invalid definition, group must be defined.')
-		elseif not minetest.registered_nodes[name] then
+		elseif name ~= '*' and not minetest.registered_nodes[name] then
 			print(S('metatool:register_node node %s not registered for minetest, skipping registration.', name))
 		elseif type(definition.copy) == 'function' and type(definition.paste) == 'function' then
 			if type(definition.before_info) ~= 'function' then
@@ -422,7 +422,7 @@ metatool.get_node = function(self, tool, player, pointed_thing)
 		return
 	end
 
-	local definition = tool.nodes[node.name]
+	local definition = tool.nodes[node.name] or tool.nodes['*']
 	if not definition then
 		-- node is not registered for metatool
 		minetest.chat_send_player(name, S('%s cannot be used on %s', tool.nice_name, node.name))
@@ -463,14 +463,14 @@ end
 -- update tools to call these directly using nodedef event
 -- handler argument provided through metatool.on_use.
 metatool.info = function(self, node, pos, player)
-	local definition = self.nodes[node.name]
+	local definition = self.nodes[node.name] or self.nodes['*']
 	if definition then
 		definition.info(node, pos, player)
 	end
 end
 
 metatool.copy = function(self, node, pos, player)
-	local definition = self.nodes[node.name]
+	local definition = self.nodes[node.name] or self.nodes['*']
 	if definition then
 		minetest.chat_send_player(player:get_player_name(), S('copying data for group %s', definition.group))
 		return definition.copy(node, pos, player), definition.group
@@ -478,7 +478,7 @@ metatool.copy = function(self, node, pos, player)
 end
 
 metatool.paste = function(self, node, pos, player, data, group)
-	local definition = self.nodes[node.name]
+	local definition = self.nodes[node.name] or self.nodes['*']
 	if definition.group ~= group then
 		minetest.chat_send_player(
 			player:get_player_name(),
