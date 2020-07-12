@@ -60,7 +60,6 @@ local register_metatool_item = function(itemname, definition)
 
 	local description = definition.description or "Weird surprise MetaTool, let's roll the dice..."
 	local texture = definition.texture or 'metatool_wand.png'
-	local liquids_pointable = definition.liquids_pointable
 	local craft_count = definition.craft_count or 1
 	local stack_max = definition.stack_max or 99
 	local groups
@@ -77,7 +76,7 @@ local register_metatool_item = function(itemname, definition)
 		stack_max = stack_max,
 		wield_image = texture,
 		wield_scale = { x = 0.8, y = 1, z = 0.8 },
-		liquids_pointable = liquids_pointable,
+		liquids_pointable = definition.liquids_pointable,
 		on_use = function(...)
 			return metatool:on_use(definition.itemname, unpack({...}))
 		end,
