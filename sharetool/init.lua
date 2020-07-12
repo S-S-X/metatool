@@ -127,4 +127,5 @@ tool:ns({
 -- nodes
 tool:load_node_definition(dofile(modpath .. '/nodes/book.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/travelnet.lua'))
--- tool:load_node_definition(dofile(modpath .. '/nodes/poi.lua')
+tool:load_node_definition(dofile(modpath .. '/nodes/missions.lua'))
+tool:load_node_definition(dofile(modpath .. '/nodes/mapserver.lua'))

@@ -1,16 +1,7 @@
 --
--- Register POI for sharetool
+-- Register missions for sharetool
 --
 
--- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
--- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
---
--- FIXME: THIS IS JUST CLEANED UP COPY OF book.lua
---
--- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
--- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-
--- POI nodes
 local nodes = {}
 
 -- get namespace defined at sharetool init.lua
@@ -18,12 +9,10 @@ local ns = metatool.ns('sharetool')
 
 --luacheck: ignore unused argument node player
 return {
-	name = 'poi',
-	nodes = nodes,
+	name = 'book',
+	nodes = 'missions:mission',
 	tooldef = {
-		group = 'shared poi',
-		protection_bypass_read = 'ban',
-		protection_bypass_write = 'ban',
+		group = 'shared mission',
 
 		before_read = function(nodedef, pos, player)
 			if ns:can_bypass(pos, player, 'owner') or metatool.before_read(nodedef, pos, player, true) then
@@ -52,7 +41,7 @@ return {
 			ns.mark_shared(meta)
 			meta:set_string("owner", name)
 
-			-- return data required for replicating this tube settings
+			-- return new description for tool
 			return {
 				description = string.format("Claimed ownership of %s at %s", node.name, minetest.pos_to_string(pos))
 			}
@@ -60,8 +49,8 @@ return {
 
 		--luacheck: ignore unused argument data
 		paste = function(node, pos, player, data)
-			-- Copy function does not really copy anything here
-			-- but instead it will claim ownership of pointed
+			-- Paste function does not really paste anything here
+			-- but instead it will restore ownership of pointed
 			-- node and mark it as shared node
 			local meta = minetest.get_meta(pos)
 
