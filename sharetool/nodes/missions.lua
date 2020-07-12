@@ -2,8 +2,6 @@
 -- Register missions for sharetool
 --
 
-local nodes = {}
-
 -- get namespace defined at sharetool init.lua
 local ns = metatool.ns('sharetool')
 
