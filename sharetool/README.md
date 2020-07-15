@@ -34,9 +34,6 @@ Pointed node is now owned by shared account and node is marked as shared.
 * travelnet:travelnet
 * travelnet:travelnet_private
 * locked_travelnet:travelnet
-
-Planned but not yet added (https://github.com/S-S-X/metatool/issues/16):
-
 * Mission block
 * Mapserver POI
 * Mapserver markers
