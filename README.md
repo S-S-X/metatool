@@ -1,5 +1,6 @@
 ![luacheck](https://github.com/S-S-X/metatool/workflows/luacheck/badge.svg)
 ![busted](https://github.com/S-S-X/metatool/workflows/busted/badge.svg)
+[![ContentDB](https://content.minetest.net/packages/-SX-/metatool/shields/downloads/)](https://content.minetest.net/packages/-SX-/metatool/)
 
 ## What metatool? And why?
 
