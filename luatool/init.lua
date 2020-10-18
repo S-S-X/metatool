@@ -14,6 +14,9 @@ local tool = metatool:register_tool('luatool', {
 	name = 'LuaTool',
 	texture = 'luatool_wand.png',
 	recipe = recipe,
+	settings = {
+		machine_use_priv = 'server'
+	},
 	on_read_node = function(tooldef, player, pointed_thing, node, pos)
 		local data, group = tooldef:copy(node, pos, player)
 		local description = type(data) == 'table' and data.description or ('Data from ' .. minetest.pos_to_string(pos))
