@@ -219,11 +219,18 @@ end
 
 -- Called when registered tool is used
 metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
-	if not player or type(player) == 'table' then
-		return
-	end
 
 	local tool = self.tools[toolname]
+	if not player or not tool then return end
+
+	if type(player) ~= 'userdata' then
+		-- if tool has machine_use_priv and player has it allow using tool even if player is not userdata (fake player)
+		local machine_use_priv = tool.settings.machine_use_priv
+		if not machine_use_priv or not metatool.check_privs(player, machine_use_priv) then
+			return
+		end
+	end
+
 	if self.privileged_tools[toolname] then
 		if not metatool.check_privs(player, tool.privs) then
 			minetest.chat_send_player(player:get_player_name(), 'You are not allowed to use this tool.')
@@ -397,8 +404,8 @@ metatool.register_node = function(self, toolname, name, definition, override)
 end
 
 metatool.get_node = function(self, tool, player, pointed_thing)
-	if not player or type(player) == 'table' or not pointed_thing then
-		-- not valid player or fake player, fake player is not supported (yet)
+	if not player or not pointed_thing then
+		-- not valid player or pointed_thing
 		return
 	end
 
