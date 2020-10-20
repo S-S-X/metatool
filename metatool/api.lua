@@ -251,10 +251,10 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 			-- Execute on_read_node when tool is used on node and sneak is held
 			if tool.on_read_info then
 				-- Tool info method defined, call through it and let it handle nodes
-				tool.on_read_info(tool, player, pointed_thing, node, pos, nodedef)
+				tool.on_read_info(tool, player, pointed_thing, node, pos, nodedef, itemstack)
 			else
 				-- Only node definition had info method available, use it directly
-				nodedef.info(node, pos, player)
+				nodedef.info(node, pos, player, itemstack)
 			end
 		elseif not use_info and nodedef.before_read(nodedef, pos, player) then
 			-- Execute on_read_node when tool is used on node and special or sneak is held
