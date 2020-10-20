@@ -26,6 +26,21 @@ local tool = metatool:register_tool('tubetool', {
 	end,
 })
 
+-- Create namespace containing tubetool common functions
+tool:ns({
+	pipeworks_tptube_api_check = function(player)
+		if not pipeworks.tptube or not pipeworks.tptube.get_db then
+			minetest.chat_send_player(
+				player:get_player_name(),
+				'Installed pipeworks version does not have required tptube.get_db function.'
+			)
+			return false
+		end
+		return true
+	end,
+})
+
+-- TODO: Very early name for metatool:tubetool, probably not found anywhere in wild and could be removed
 minetest.register_alias('tubetool:wand', 'metatool:tubetool')
 
 -- nodes
@@ -33,3 +48,4 @@ tool:load_node_definition(dofile(modpath .. '/nodes/mese_tube.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/teleport_tube.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/sand_tube.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/injector.lua'))
+tool:load_node_definition(dofile(modpath .. '/nodes/any.lua'))

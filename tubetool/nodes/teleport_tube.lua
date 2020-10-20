@@ -13,6 +13,8 @@ for i=1,10 do
 	table.insert(nodes, nodenameprefix .. i)
 end
 
+local ns = metatool.ns('tubetool')
+
 local tp_tube_form_index = {}
 
 metatool.form.register_form(
@@ -60,13 +62,7 @@ return {
 		protection_bypass_read = "interact",
 
 		info = function(node, pos, player)
-			if not pipeworks.tptube or not pipeworks.tptube.get_db then
-				minetest.chat_send_player(
-					player:get_player_name(),
-					'Installed pipeworks version does not have required tptube.get_db function.'
-				)
-				return
-			end
+			if not ns.pipeworks_tptube_api_check(player) then return end
 			local meta = minetest.get_meta(pos)
 			local channel = meta:get_string("channel")
 			if channel == "" then
