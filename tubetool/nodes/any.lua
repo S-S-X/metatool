@@ -1,8 +1,6 @@
 --
--- Register fallback node handler (wildcard node) for sharetool
+-- Register fallback node handler (wildcard node) for tubetool
 --
-
-local S = metatool.S
 
 local ns = metatool.ns('tubetool')
 
