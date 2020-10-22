@@ -14,4 +14,5 @@ read_globals = {
 	"vector",
 	"ItemStack",
 	"Settings",
+	"dump",
 }
