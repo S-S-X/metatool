@@ -13,9 +13,13 @@ return {
 	tooldef = {
 		group = 'text',
 		copy = function(node, pos, player)
+			local meta = minetest.get_meta(pos)
+			local nicename = minetest.registered_nodes[node.name].description or node.name
 			return {
-				description = "NOT IMPLEMENTED",
-				content = "NOT IMPLEMENTED",
+				description = ("%s at %s"):format(nicename, minetest.pos_to_string(pos)),
+				content = meta:get( "station_name" ),
+				title = meta:get_string( "station_network" ),
+				source = meta:get( "owner" ),
 			}
 		end,
 	}
