@@ -20,7 +20,7 @@ return {
 			local meta = minetest.get_meta(pos)
 			local spos = scramble(pos)
 			return {
-				description = ("Geocache at %s"):format(node.name, minetest.pos_to_string(pos)),
+				description = ("Geocache at %s"):format(minetest.pos_to_string(pos)),
 				source = meta:get("owner"),
 				title = ("Geocache near %d,%d,%d"):format(spos.x,spos.y,spos.z),
 				content = meta:get("log"),
