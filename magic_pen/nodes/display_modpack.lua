@@ -3,7 +3,7 @@
 -- https://github.com/pyrollo/display_modpack
 --
 
-local S = signs.intllib
+local S = signs and signs.intllib or string.format
 
 -- Collected nodes that will be registered for tool
 local nodes = {}
