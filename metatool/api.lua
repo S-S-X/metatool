@@ -477,7 +477,7 @@ end
 
 metatool.copy = function(self, node, pos, player)
 	local definition = self.nodes[node.name] or self.nodes['*']
-	if definition then
+	if definition and type(definition.copy) == "function" then
 		minetest.chat_send_player(player:get_player_name(), S('copying data for group %s', definition.group))
 		return definition.copy(node, pos, player), definition.group
 	end
@@ -485,14 +485,12 @@ end
 
 metatool.paste = function(self, node, pos, player, data, group)
 	local definition = self.nodes[node.name] or self.nodes['*']
-	if definition.group ~= group then
+	if data and definition and definition.group == group and type(definition.paste) == "function" then
+		return definition.paste(node, pos, player, data)
+	else
 		minetest.chat_send_player(
 			player:get_player_name(),
 			S('metatool wand contains data for %s, cannot apply for %s', group, definition.group)
 		)
-		return
-	end
-	if definition and data then
-		return definition.paste(node, pos, player, data)
 	end
 end
