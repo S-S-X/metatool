@@ -18,11 +18,18 @@ return {
 		protection_bypass_read = "interact",
 		copy = function(node, pos, player)
 			local meta = minetest.get_meta(pos)
-			local spos = scramble(pos)
+			local source = meta:get("owner")
+			local title
+			if player:get_player_name() == source then
+				title = ("Geocache at %d,%d,%d"):format(pos.x,pos.y,pos.z)
+			else
+				local spos = scramble(pos)
+				title = ("Geocache near %d,%d,%d"):format(spos.x,spos.y,spos.z)
+			end
 			return {
-				description = ("Geocache at %s"):format(minetest.pos_to_string(pos)),
-				source = meta:get("owner"),
-				title = ("Geocache near %d,%d,%d"):format(spos.x,spos.y,spos.z),
+				description = title,
+				source = source,
+				title = title,
 				content = meta:get("log"),
 			}
 		end,
