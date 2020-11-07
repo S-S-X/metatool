@@ -2,7 +2,6 @@
 -- Register lcd for Magic pen
 --
 
---luacheck: ignore unused argument node player
 return {
 	name = 'lcd',
 	nodes = "digilines:lcd",

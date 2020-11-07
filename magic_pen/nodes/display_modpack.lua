@@ -38,7 +38,6 @@ local function set_content(keys, meta, value) if keys[1] and value then meta:set
 local function set_title(keys, meta, value) if keys[2] and value then meta:set_string(keys[2], value) end end
 --local function set_author(keys, meta, value) if keys[3] and value then meta:set_string(keys[3], value) end end
 
---luacheck: ignore unused argument node player
 return {
 	name = 'display_modpack',
 	nodes = nodes,

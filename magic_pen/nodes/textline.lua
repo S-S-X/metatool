@@ -2,7 +2,6 @@
 -- Register textline for Magic pen
 --
 
---luacheck: ignore unused argument node player
 return {
 	name = 'textline',
 	nodes = "textline:text",

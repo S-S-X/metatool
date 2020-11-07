@@ -10,7 +10,6 @@ local function scramble(pos)
 	}
 end
 
---luacheck: ignore unused argument node player
 return {
 	name = 'geocache',
 	nodes = "geocache:block",

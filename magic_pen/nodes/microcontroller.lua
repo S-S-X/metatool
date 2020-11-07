@@ -30,7 +30,6 @@ for i=0,15 do
 	table.insert(nodes, nodenameprefix .. lpadcut(d2b(i), '0', 4))
 end
 
---luacheck: ignore unused argument node player
 return {
 	name = 'microcontroller',
 	nodes = nodes,

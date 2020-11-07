@@ -35,7 +35,6 @@ local tool = metatool:register_tool('magic_pen', {
 local modpath = minetest.get_modpath('magic_pen')
 tool:load_node_definition(dofile(modpath .. '/nodes/lcd.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/book.lua'))
-tool:load_node_definition(dofile(modpath .. '/nodes/signs.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/geocache.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/textline.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/digiterms.lua'))

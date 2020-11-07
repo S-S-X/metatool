@@ -2,7 +2,6 @@
 -- Register travelnet for Magic pen
 --
 
---luacheck: ignore unused argument node player
 return {
 	name = 'travelnet',
 	nodes = {

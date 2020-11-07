@@ -22,7 +22,6 @@ end
 table.insert(nodes, "homedecor:book")
 table.insert(nodes, "homedecor:book_open")
 
---luacheck: ignore unused argument node player
 return {
 	name = 'book',
 	nodes = nodes,

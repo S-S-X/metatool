@@ -12,7 +12,6 @@ local function add_field(t, f)
 	end
 end
 
---luacheck: ignore unused argument node player
 return {
 	name = 'touchscreen',
 	nodes = "digistuff:touchscreen",
@@ -31,6 +30,7 @@ return {
 			return {
 				description = ("%s at %s"):format(nicename, minetest.pos_to_string(pos)),
 				content = table.concat(content, "\n"),
+				source = meta:get("owner"),
 			}
 		end,
 	}

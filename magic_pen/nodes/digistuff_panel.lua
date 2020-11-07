@@ -2,7 +2,6 @@
 -- Register Digistuff panel for Magic pen
 --
 
---luacheck: ignore unused argument node player
 return {
 	name = 'digistuff_panel',
 	nodes = "digistuff:panel",
@@ -15,6 +14,7 @@ return {
 			return {
 				description = ("%s at %s"):format(nicename, minetest.pos_to_string(pos)),
 				content = meta:get("text"),
+				source = meta:get("owner"),
 			}
 		end,
 	}

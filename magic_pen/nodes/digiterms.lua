@@ -12,7 +12,6 @@ for nodename, nodedef in pairs(minetest.registered_nodes) do
 	end
 end
 
---luacheck: ignore unused argument node player
 return {
 	name = 'digiterms',
 	nodes = nodes,
@@ -21,10 +20,14 @@ return {
 		protection_bypass_read = "interact",
 		copy = function(node, pos, player)
 			local meta = minetest.get_meta(pos)
+			local content = meta:get("display_text")
+			if type(content) == "string" then
+				content = content:gsub("(\r?\n)%s+\r?\n","%1")
+			end
 			local nicename = minetest.registered_nodes[node.name].description or node.name
 			return {
 				description = ("%s at %s"):format(nicename, minetest.pos_to_string(pos)),
-				content = meta:get("display_text"),
+				content = content,
 				source = meta:get("owner"),
 			}
 		end,

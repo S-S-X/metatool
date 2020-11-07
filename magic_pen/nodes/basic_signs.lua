@@ -11,8 +11,28 @@ for nodename,_ in pairs(minetest.registered_nodes) do
 		table.insert(nodes, nodename)
 	end
 end
+if minetest.registered_nodes["default:sign_wall_wood"] then
+	table.insert(nodes, "default:sign_wall_wood")
+end
+if minetest.registered_nodes["default:sign_wall_steel"] then
+	table.insert(nodes, "default:sign_wall_steel")
+end
 
---luacheck: ignore unused argument nodedef node player
+local paste
+if signs_lib then
+	paste = function(node, pos, player, data)
+		signs_lib.update_sign(pos, { text = data.content })
+	end
+else
+	paste = function(node, pos, player, data)
+		if data.content then
+			local meta = minetest.get_meta(pos)
+			meta:set_string("text", data.content)
+			meta:set_string("infotext", data.content)
+		end
+	end
+end
+
 return {
 	name = 'basic_signs',
 	nodes = nodes,
@@ -32,8 +52,6 @@ return {
 			}
 		end,
 		--luacheck: ignore unused argument data
-		paste = function(node, pos, player, data)
-			signs_lib.update_sign(pos, { text = data.content })
-		end,
+		paste = paste
 	}
 }

@@ -39,7 +39,6 @@ for i=0,63 do
 end
 table.insert(nodes, "pipeworks:lua_tube_burnt")
 
---luacheck: ignore unused argument node player
 return {
 	name = 'luacontroller',
 	nodes = nodes,
@@ -55,7 +54,6 @@ return {
 			}
 		end,
 		paste = function(node, pos, player, data)
-			local meta = minetest.get_meta(pos)
 			local content = data.content
 			if data.source then
 				content = ("-- Author: %s\n%s"):format(data.source, content)
