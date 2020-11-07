@@ -383,7 +383,7 @@ metatool.register_node = function(self, toolname, name, definition, override)
 			print('metatool:register_node invalid definition, group must be defined.')
 		elseif name ~= '*' and not minetest.registered_nodes[name] then
 			print(S('metatool:register_node node %s not registered for minetest, skipping registration.', name))
-		elseif type(definition.copy) == 'function' and type(definition.paste) == 'function' then
+		elseif type(definition.copy) == 'function' or type(definition.paste) == 'function' then
 			if type(definition.before_info) ~= 'function' then
 				definition.before_info = metatool.before_info
 			end
