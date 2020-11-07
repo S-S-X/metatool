@@ -1,5 +1,6 @@
 --
 -- Register books for Magic pen
+-- https://gitlab.com/VanessaE/homedecor_modpack/-/tree/master/homedecor_books
 --
 
 -- books
@@ -31,17 +32,22 @@ return {
 		copy = function(node, pos, player)
 			local meta = minetest.get_meta(pos)
 			return {
-				description = ("%s at %s"):format(node.name, minetest.position_to_string(pos)),
-				source = meta:get_string("owner"),
-				title = meta:get_string("title"),
-				content = meta:get_string("text"),
+				description = ("%s at %s"):format(node.name, minetest.pos_to_string(pos)),
+				source = meta:get("owner"),
+				title = meta:get("title"),
+				content = meta:get("text"),
 			}
 		end,
 		--luacheck: ignore unused argument data
 		paste = function(node, pos, player, data)
 			local meta = minetest.get_meta(pos)
-			meta:set_string("title", data.title or "")
-			meta:set_string("text", data.content or "")
+			if data.title then
+				meta:set_string("title", data.title)
+				meta:set_string("infotext", data.title)
+			end
+			if data.content then
+				meta:set_string("text", data.content)
+			end
 		end,
 	}
 }

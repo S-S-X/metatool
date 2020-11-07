@@ -1,5 +1,5 @@
 --
--- Register lua controller for Magic pen
+-- Register lua controller and lua tube for Magic pen
 --
 
 local o2b_lookup = {
@@ -18,18 +18,26 @@ end
 local d2b = function(d)
 	return o2b(string.format('%o', d))
 end
+local lpad = function(s, c, n)
+	return c:rep(n - #s) .. s
+end
 local lpadcut = function(s, c, n)
-	return (c:rep(n - #s) .. s):sub(math.max(0, #s - n + 1), #s + 1)
+	return lpad(s,c,n):sub(math.max(0, #s - n + 1), #s + 1)
 end
 
-local nodenameprefix = "mesecons_luacontroller:luacontroller"
+local nodes = {}
 
 -- lua controller, 16 different nodes
-local nodes = {}
 for i=0,15 do
-	table.insert(nodes, nodenameprefix .. lpadcut(d2b(i), '0', 4))
+	table.insert(nodes, "mesecons_luacontroller:luacontroller" .. lpadcut(d2b(i), '0', 4))
 end
-table.insert(nodes, nodenameprefix .. '_burnt')
+table.insert(nodes, "mesecons_luacontroller:luacontroller_burnt")
+
+-- lua tubes, 64 different nodes
+for i=0,63 do
+	table.insert(nodes, "pipeworks:lua_tube" .. lpad(d2b(i), '0', 6))
+end
+table.insert(nodes, "pipeworks:lua_tube_burnt")
 
 --luacheck: ignore unused argument node player
 return {
@@ -40,17 +48,24 @@ return {
 		protection_bypass_read = "interact",
 		copy = function(node, pos, player)
 			local meta = minetest.get_meta(pos)
+			local nicename = minetest.registered_nodes[node.name].description or node.name
 			return {
-				description = string.format("Lua controller at %s", minetest.pos_to_string(pos)),
+				description = ("%s at %s"):format(nicename, minetest.pos_to_string(pos)),
 				content = meta:get_string("code"),
 			}
 		end,
 		paste = function(node, pos, player, data)
-			-- restore settings and update lua controller, no api available
 			local meta = minetest.get_meta(pos)
+			local content = data.content
+			if data.source then
+				content = ("-- Author: %s\n%s"):format(data.source, content)
+			end
+			if data.title then
+				content = ("-- Description: %s\n%s"):format(data.title, content)
+			end
 			local fields = {
 				program = 1,
-				code = data.content,
+				code = content,
 			}
 			local nodedef = minetest.registered_nodes[node.name]
 			nodedef.on_receive_fields(pos, "", fields, player)
