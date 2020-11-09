@@ -24,11 +24,12 @@ for _,needle in ipairs(needles) do
 	end
 end
 
--- Get metadata keys for content and title
+-- Get metadata keys for content and title, max_size is only when pasting and only for content
+-- Format { content, title, author, max_size }
 local metakeys = {
-	["signs:paper_poster"] = {"text", "display_text", nil},
+	["signs:paper_poster"] = {"text", "display_text", nil, nil},
 }
-setmetatable(metakeys, { __index = function() return {"display_text", nil, nil} end })
+setmetatable(metakeys, { __index = function() return {"display_text", nil, "owner", 512} end })
 
 local function get_content(keys, meta) return keys[1] and meta:get(keys[1]) end
 local function get_title(keys, meta) return keys[2] and meta:get(keys[2]) end
@@ -37,6 +38,8 @@ local function get_author(keys, meta) return keys[3] and meta:get(keys[3]) end
 local function set_content(keys, meta, value) if keys[1] and value then meta:set_string(keys[1], value) end end
 local function set_title(keys, meta, value) if keys[2] and value then meta:set_string(keys[2], value) end end
 --local function set_author(keys, meta, value) if keys[3] and value then meta:set_string(keys[3], value) end end
+
+local truncate = metatool.ns('magic_pen').truncate
 
 return {
 	name = 'display_modpack',
@@ -58,15 +61,17 @@ return {
 		paste = function(node, pos, player, data)
 			local meta = minetest.get_meta(pos)
 			local keys = metakeys[node.name]
+			-- Truncate content if needed
+			local content = truncate(data.content, keys[4])
 			-- Set infotext. Update node and text entity
 			if keys[2] then
-				set_content(keys, meta, data.content)
+				set_content(keys, meta, content)
 				set_title(keys, meta, data.title)
 				if data.title then
 					meta:set_string("infotext", "\"".. data.title .."\"\n"..S("(right-click to read more text)"))
 				end
-			elseif data.content then
-				signs_api.set_display_text(pos, data.content)
+			elseif content then
+				signs_api.set_display_text(pos, content)
 			end
 			display_api.update_entities(pos)
 		end,

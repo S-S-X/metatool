@@ -19,7 +19,8 @@ local tool = metatool:register_tool('magic_pen', {
 	texture = texture,
 	recipe = recipe,
 	settings = {
-		machine_use_priv = 'server'
+		machine_use_priv = 'server',
+		storage_size = 1024 * 16,
 	},
 	on_read_node = function(tooldef, player, pointed_thing, node, pos)
 		local data, group = tooldef:copy(node, pos, player)
@@ -28,6 +29,15 @@ local tool = metatool:register_tool('magic_pen', {
 	end,
 	on_write_node = function(tooldef, data, group, player, pointed_thing, node, pos)
 		tooldef:paste(node, pos, player, data, group)
+	end,
+})
+
+tool:ns({
+	truncate = function(value, length)
+		if type(value) == 'string' and type(length) == 'number' and #value > length then
+			value = value:sub(1, length)
+		end
+		return value
 	end,
 })
 

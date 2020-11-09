@@ -74,8 +74,8 @@ local register_metatool_item = function(itemname, definition)
 		inventory_image = texture,
 		groups = groups,
 		stack_max = stack_max,
-		wield_image = texture,
-		wield_scale = { x = 0.8, y = 1, z = 0.8 },
+		wield_image = definition.wield_image or texture,
+		wield_scale = definition.wield_scale or { x = 0.8, y = 1, z = 0.8 },
 		liquids_pointable = definition.liquids_pointable,
 		on_use = function(...)
 			return metatool:on_use(definition.itemname, unpack({...}))
@@ -261,7 +261,10 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 			local data, group, description = tool.on_read_node(tool, player, pointed_thing, node, pos, nodedef)
 			local separated
 			itemstack, separated = separate_stack(itemstack)
-			metatool.write_data(separated or itemstack, {data=data,group=group}, description)
+			local result = metatool.write_data(separated or itemstack, {data=data,group=group}, description, tool)
+			if type(result) == 'string' then
+				minetest.chat_send_player(player:get_player_name(), result)
+			end
 			-- if stack was separated give missing items to player
 			return_itemstack(player, itemstack, separated)
 		end
@@ -439,7 +442,7 @@ metatool.get_node = function(self, tool, player, pointed_thing)
 end
 
 -- Save data for tool and update tool description
-metatool.write_data = function(itemstack, data, description)
+metatool.write_data = function(itemstack, data, description, tool)
 	if not itemstack then
 		return
 	end
@@ -447,6 +450,11 @@ metatool.write_data = function(itemstack, data, description)
 	local meta = itemstack:get_meta()
 	if data.data or data.group then
 		local datastring = minetest.serialize(data)
+		local storage_size = tool and tonumber(tool.settings.storage_size)
+		if storage_size and #datastring > storage_size then
+			return S('Cannot store %d bytes, max storage for %s is %d bytes',
+				#datastring, tool.nice_name, tool.settings.storage_size)
+		end
 		meta:set_string('data', datastring)
 	end
 	if description then

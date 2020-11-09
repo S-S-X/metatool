@@ -18,16 +18,20 @@ if minetest.registered_nodes["default:sign_wall_steel"] then
 	table.insert(nodes, "default:sign_wall_steel")
 end
 
+local truncate = metatool.ns('magic_pen').truncate
+
 local paste
 if signs_lib then
 	paste = function(node, pos, player, data)
-		signs_lib.update_sign(pos, { text = data.content })
+		if data.content then
+			signs_lib.update_sign(pos, { text = truncate(data.content, 512) })
+		end
 	end
 else
 	paste = function(node, pos, player, data)
 		if data.content then
 			local meta = minetest.get_meta(pos)
-			meta:set_string("text", data.content)
+			meta:set_string("text", truncate(data.content, 512))
 			meta:set_string("infotext", data.content)
 		end
 	end
