@@ -18,6 +18,7 @@ return {
 			return {
 				description = ("%s at %s"):format(nicename, minetest.pos_to_string(pos)),
 				content = content,
+				title = title,
 			}
 		end,
 	}
