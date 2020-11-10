@@ -40,7 +40,11 @@ tool:ns({
 		return value
 	end,
 	get_content_title = function(content)
-		return content and content:gmatch("[\t ]*([^\r\n]+)[\r\n]")()
+		local title = content and content:gmatch("[\t ]*([^\r\n]+)[\r\n]")()
+		if type(title) == 'string' and #title > 40 then
+			title = title:sub(1, 40)
+		end
+		return title
 	end,
 })
 
