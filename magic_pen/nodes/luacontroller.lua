@@ -48,7 +48,9 @@ local function parse_comments(content)
 	local title, author
 	while line and (line:find("^%s*%-%-[%s%p]*[%a%d]") or line:find("^%s*$")) do
 		if not title then
-			title = truncate(line:gmatch("[Dd][Ee][Ss][Cc]%a*[%s]*%p[%s%p]*([%a%d][%a%d%p%s]+)")(), 80)
+			title = truncate(
+				line:gmatch("[Dd][Ee][Ss][Cc]%a*[%s]*%p[%s%p]*([%a%d][%a%d%p%s]+)")()
+				or line:gmatch("[Tt][Ii][Tt][Ll][Ee][%s]*%p[%s%p]*([%a%d][%a%d%p%s]+)")(), 80)
 		end
 		if not author then
 			author = truncate(line:gmatch("[Aa][Uu][Tt][Hh][Oo][Rr][%s]*%p[%s%p]*([%a%d][%a%d%p%s]+)")(), 80)
