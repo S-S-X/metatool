@@ -39,6 +39,8 @@ local function set_content(keys, meta, value) if keys[1] and value then meta:set
 local function set_title(keys, meta, value) if keys[2] and value then meta:set_string(keys[2], value) end end
 --local function set_author(keys, meta, value) if keys[3] and value then meta:set_string(keys[3], value) end end
 
+local get_content_title = metatool.ns('magic_pen').get_content_title
+
 local truncate = metatool.ns('magic_pen').truncate
 
 return {
@@ -50,12 +52,14 @@ return {
 		copy = function(node, pos, player)
 			local meta = minetest.get_meta(pos)
 			local keys = metakeys[node.name]
+			local content = get_content(keys, meta)
+			local title = get_title(keys, meta) or get_content_title(content)
 			local nicename = minetest.registered_nodes[node.name].description or node.name
 			return {
 				description = ("%s at %s"):format(nicename, minetest.pos_to_string(pos)),
-				content = get_content(keys, meta),
+				content = content,
 				source = get_author(keys, meta),
-				title = get_title(keys, meta),
+				title = title,
 			}
 		end,
 		paste = function(node, pos, player, data)

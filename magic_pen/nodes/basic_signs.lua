@@ -19,6 +19,7 @@ if minetest.registered_nodes["default:sign_wall_steel"] then
 end
 
 local truncate = metatool.ns('magic_pen').truncate
+local get_content_title = metatool.ns('magic_pen').get_content_title
 
 local paste
 if signs_lib then
@@ -48,10 +49,12 @@ return {
 		end,
 		copy = function(node, pos, player)
 			local meta = minetest.get_meta(pos)
+			local content = meta:get("text")
 			local nicename = minetest.registered_nodes[node.name].description or node.name
 			return {
 				description = ("%s at %s"):format(nicename, minetest.pos_to_string(pos)),
-				content = meta:get("text"),
+				content = content,
+				title = get_content_title(content),
 				source = meta:get("owner"),
 			}
 		end,

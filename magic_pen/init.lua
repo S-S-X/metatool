@@ -39,6 +39,9 @@ tool:ns({
 		end
 		return value
 	end,
+	get_content_title = function(content)
+		return content and content:gmatch("[\t ]*([^\r\n]+)[\r\n]")()
+	end,
 })
 
 -- nodes

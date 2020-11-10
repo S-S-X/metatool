@@ -39,6 +39,26 @@ for i=0,63 do
 end
 table.insert(nodes, "pipeworks:lua_tube_burnt")
 
+local truncate = metatool.ns('magic_pen').truncate
+
+local function parse_comments(content)
+	if type(content) ~= "string" then return end
+	local m = content:gmatch("[^\r\n]+")
+	local line = m()
+	local title, author
+	while line and (line:find("^--[%s%p]*[%a%d]") or line:find("^%s*$")) do
+		if not title then
+			title = truncate(line:gmatch("[Dd][Ee][Ss][Cc]%a*[%s]*%p[%s%p]*([%a%d][%a%d%p%s]+)")(), 80)
+		end
+		if not author then
+			author = truncate(line:gmatch("[Aa][Uu][Tt][Hh][Oo][Rr][%s]*%p[%s%p]*([%a%d][%a%d%p%s]+)")(), 80)
+		end
+		if title and author then break end
+		line = m()
+	end
+	return title, author
+end
+
 return {
 	name = 'luacontroller',
 	nodes = nodes,
@@ -47,18 +67,26 @@ return {
 		protection_bypass_read = "interact",
 		copy = function(node, pos, player)
 			local meta = minetest.get_meta(pos)
+			local content = meta:get_string("code")
+			local title, author = parse_comments(content)
 			local nicename = minetest.registered_nodes[node.name].description or node.name
+			local description = title
+				and ("%s: %s"):format(nicename, title)
+				or ("%s at %s"):format(nicename, minetest.pos_to_string(pos))
 			return {
-				description = ("%s at %s"):format(nicename, minetest.pos_to_string(pos)),
-				content = meta:get_string("code"),
+				description = description,
+				content = content,
+				title = title,
+				source = author,
 			}
 		end,
 		paste = function(node, pos, player, data)
 			local content = data.content
-			if data.source then
+			local title, author = parse_comments(content)
+			if not author and data.source then
 				content = ("-- Author: %s\n%s"):format(data.source, content)
 			end
-			if data.title then
+			if not title and data.title then
 				content = ("-- Description: %s\n%s"):format(data.title, content)
 			end
 			local fields = {
