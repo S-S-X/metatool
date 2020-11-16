@@ -26,4 +26,4 @@ local tool = metatool:register_tool('containertool', {
 
 -- nodes
 local modpath = minetest.get_modpath('containertool')
---tool:load_node_definition(dofile(modpath .. '/nodes/nodename.lua'))
+tool:load_node_definition(dofile(modpath .. '/nodes/technic_chests.lua'))

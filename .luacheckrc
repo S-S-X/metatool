@@ -10,11 +10,14 @@ globals = {
 }
 
 read_globals = {
+	-- Engine
 	"minetest",
-	"default",
-	"pipeworks",
 	"vector",
 	"ItemStack",
 	"Settings",
 	"dump",
+	-- Mods
+	"default",
+	"pipeworks",
+	"technic",
 }
