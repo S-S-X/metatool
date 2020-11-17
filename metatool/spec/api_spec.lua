@@ -281,6 +281,11 @@ describe("Metatool API node registration", function()
 				settings = {
 					allow_doing_x = true,
 					message_for_y = "test y message",
+					boolean_test1 = true,
+					boolean_test2 = true,
+					boolean_test3 = true,
+					number_test1 = 0,
+					number_test2 = 0,
 				},
 				copy = function(node, pos, player)
 					print("nodedef copy callback executed")
@@ -316,8 +321,12 @@ describe("Metatool API node registration", function()
 			protection_bypass_read = "default_bypass_read_priv",
 			allow_doing_x = true,
 			message_for_y = "test y message",
+			boolean_test1 = false,
+			boolean_test2 = true,
+			boolean_test3 = false,
+			number_test1 = 42,
+			number_test2 = 0,
 		}
-		assert.same(expected_settings, tool.nodes.testnode3.settings)
 		assert.same(expected_settings, tool.nodes.testnode3.settings)
 
 	end)
