@@ -6,8 +6,8 @@
 		- Only default configuration
 		- Configuration only for single tool
 		- Metatool core/API configuration
-		- No configuration (empty file)
-		- No configuration file at, not even empty file
+		- No configuration, empty file
+		- No configuration, not even empty file
 --]]
 
 dofile("spec/test_helpers.lua")
