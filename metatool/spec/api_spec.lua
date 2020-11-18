@@ -266,6 +266,71 @@ describe("Metatool API node registration", function()
 
 	end)
 
+	it("Register node with extended configuration", function()
+		local tool = metatool.tool("testtool2")
+		assert.is_table(tool)
+		assert.equals("metatool:testtool2", tool.name)
+		assert.is_table(tool)
+
+		local definition = {
+			name = 'testnode3',
+			nodes = "testnode3",
+			tooldef = {
+				group = 'test node',
+				protection_bypass_read = "default_bypass_read_priv",
+				settings = {
+					allow_doing_x = true,
+					message_for_y = "test y message",
+					boolean_test1 = true,
+					boolean_test2 = true,
+					boolean_test3 = true,
+					number_test1 = 0,
+					number_test2 = 0,
+				},
+				copy = function(node, pos, player)
+					print("nodedef copy callback executed")
+				end,
+				paste = function(node, pos, player, data)
+					print("nodedef paste callback executed")
+				end,
+			}
+		}
+		tool:load_node_definition(definition)
+
+		assert.is_table(tool.nodes)
+		assert.is_table(tool.nodes.testnode1)
+		assert.is_table(tool.nodes.testnode2)
+		assert.is_table(tool.nodes.testnode3)
+
+		assert.is_function(tool.nodes.testnode3.before_read)
+		assert.is_function(tool.nodes.testnode3.before_write)
+
+		assert.not_equals(definition.tooldef.copy, tool.nodes.testnode1.copy)
+		assert.equals(definition.tooldef.copy, tool.nodes.testnode3.copy)
+		assert.equals(definition.tooldef.paste, tool.nodes.testnode3.paste)
+		assert.equals("testtool2_testnode2_bypass_write", tool.nodes.testnode1.protection_bypass_write)
+		assert.equals("testtool2_testnode2_bypass_write", tool.nodes.testnode2.protection_bypass_write)
+		assert.is_nil(tool.nodes.testnode3.protection_bypass_write)
+		assert.equals("default_bypass_read_priv", tool.nodes.testnode3.protection_bypass_read)
+		assert.equals("default_bypass_read_priv", tool.nodes.testnode3.settings.protection_bypass_read)
+		assert.equals(true, tool.nodes.testnode3.settings.allow_doing_x)
+		assert.equals("test y message", tool.nodes.testnode3.settings.message_for_y)
+		assert.is_nil(tool.nodes.testnode3.message_for_y)
+
+		local expected_settings = {
+			protection_bypass_read = "default_bypass_read_priv",
+			allow_doing_x = true,
+			message_for_y = "test y message",
+			boolean_test1 = false,
+			boolean_test2 = true,
+			boolean_test3 = false,
+			number_test1 = 42,
+			number_test2 = 0,
+		}
+		assert.same(expected_settings, tool.nodes.testnode3.settings)
+
+	end)
+
 end)
 
 --[[

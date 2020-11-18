@@ -23,6 +23,24 @@ local slice = function(source, index)
 	return res
 end
 
+local convert = function(value, to_type)
+	if to_type == "boolean" then
+		-- False values are "", "0", "n", "no", "false" and everything else is true
+		return not (
+			value == "" or
+			value == "0" or
+			value == "n" or
+			value == "no" or
+			value == "false"
+		)
+	elseif to_type == "number" then
+		-- For number types always return number, return 0 if conversion fails
+		return tonumber(value) or 0
+	end
+	-- Unknown to_type, no conversion available
+	return value
+end
+
 local get_table = function(t, key)
 	if t[key] == nil then
 		t[key] = {}
@@ -89,13 +107,16 @@ metatool.settings = function(toolname, key)
 end
 
 local update_setting = function(target, name, key, value)
-	-- If key is not set use provided value and export it if asked to
 	if target[key] == nil then
+		-- If key is not set use provided value and export it if asked to
 		target[key] = value
-		-- Export default configuration to settings file
-		if metatool.export_default_config then
-			settings:set(makekey(name, key), value)
-		end
+	else
+		-- If key is set convert configuration value to type of default setting
+		target[key] = convert(target[key], type(value))
+	end
+	-- Export default configuration to settings file
+	if metatool.export_default_config then
+		settings:set(makekey(name, key), value)
 	end
 end
 

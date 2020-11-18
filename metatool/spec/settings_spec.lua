@@ -6,8 +6,8 @@
 		- Only default configuration
 		- Configuration only for single tool
 		- Metatool core/API configuration
-		- No configuration (empty file)
-		- No configuration file at, not even empty file
+		- No configuration, empty file
+		- No configuration, not even empty file
 --]]
 
 dofile("spec/test_helpers.lua")
@@ -46,7 +46,8 @@ describe("Metatool settings file loading", function()
 		assert.same(expected, value)
 	end)
 
-	it("testtool2 configuration as table", function()
+	it("testtool2 configuration with merge_node_settings", function()
+		--pending("FIXME: Test does not work correctly because testnode3 configuration is not merged yet")
 		local expected = {
 			privs = "test_testtool2_privs",
 			extra_config_key = "testtool2_extra_config_value",
@@ -56,8 +57,30 @@ describe("Metatool settings file loading", function()
 					protection_bypass_info = "testtool2_testnode2_bypass_info",
 					protection_bypass_read = "testtool2_testnode2_bypass_read",
 				},
+				testnode3 = {
+					boolean_test1 = false,
+					boolean_test2 = true,
+					boolean_test3 = false,
+					number_test1 = 42,
+					number_test2 = 0,
+					string_test = "some text",
+					protection_bypass_read = "default_bypass_read_priv",
+				},
 			},
 		}
+		local nodedef = {
+			group = 'test node',
+			protection_bypass_read = "default_bypass_read_priv",
+			settings = {
+				string_test = "some text",
+				boolean_test1 = true,
+				boolean_test2 = true,
+				boolean_test3 = true,
+				number_test1 = 0,
+				number_test2 = 0,
+			},
+		}
+		metatool.merge_node_settings("testtool2", "testnode3", nodedef)
 		local value = metatool.settings("testtool2")
 		assert.same(expected, value)
 	end)
