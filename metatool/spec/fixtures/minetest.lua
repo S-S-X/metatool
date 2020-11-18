@@ -7,6 +7,7 @@ fixture("minetest/misc_helpers")
 _G.minetest.registered_nodes = {
 	testnode1 = {},
 	testnode2 = {},
+	testnode3 = {},
 }
 
 _G.minetest.registered_chatcommands = {}
