@@ -157,7 +157,7 @@ metatool.tool = function(toolname)
 end
 
 -- Create or retrieve tool namespace, sorry.. might seem bit hacky
-metatool.ns = function(self, data)
+function metatool:ns(data)
 	if type(self) == 'string' then
 		-- metatool.ns('mytool') / retrieve namespace
 		local tool = metatool.tool(self)
@@ -196,21 +196,21 @@ metatool.is_protected = function(pos, player, privs, no_violation_record)
 	return false
 end
 
-metatool.before_info = function(nodedef, pos, player, no_violation_record)
+function metatool:before_info(nodedef, pos, player, no_violation_record)
 	if metatool.is_protected(pos, player, nodedef.protection_bypass_info, no_violation_record) then
 		return false
 	end
 	return true
 end
 
-metatool.before_read = function(nodedef, pos, player, no_violation_record)
+function metatool:before_read(nodedef, pos, player, no_violation_record)
 	if metatool.is_protected(pos, player, nodedef.protection_bypass_read, no_violation_record) then
 		return false
 	end
 	return true
 end
 
-metatool.before_write = function(nodedef, pos, player, no_violation_record)
+function metatool:before_write(nodedef, pos, player, no_violation_record)
 	if metatool.is_protected(pos, player, nodedef.protection_bypass_write, no_violation_record) then
 		return false
 	end
@@ -218,7 +218,7 @@ metatool.before_write = function(nodedef, pos, player, no_violation_record)
 end
 
 -- Called when registered tool is used
-metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
+function metatool:on_use(toolname, itemstack, player, pointed_thing)
 
 	local tool = self.tools[toolname]
 	if not player or not tool then return end
@@ -290,7 +290,7 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 end
 
 -- Common node loading method for tools
-metatool.load_node_definition = function(self, def)
+function metatool:load_node_definition(def)
 	if self == metatool then
 		-- Could go full OOP and actually check for tool object.. sorry about that
 		print('metatool:load_node invalid method call, requires tool context')
@@ -322,7 +322,7 @@ metatool.load_node_definition = function(self, def)
 	metatool.merge_node_settings(self.name, def.name or nodedef_name, def)
 end
 
-metatool.register_tool = function(self, name, definition)
+function metatool:register_tool(name, definition)
 	local itemname = transform_tool_name(name, true)
 	local itemname_clean = itemname:gsub('^:', '')
 	if not self.tools[itemname_clean] then
@@ -367,7 +367,7 @@ metatool.register_tool = function(self, name, definition)
 	end
 end
 
-metatool.register_node = function(self, toolname, name, definition, override)
+function metatool:register_node(toolname, name, definition, override)
 	local tooldef = self.tools[toolname]
 	if override or not tooldef.nodes[name] then
 		if type(definition) ~= 'table' then
@@ -396,7 +396,7 @@ metatool.register_node = function(self, toolname, name, definition, override)
 	end
 end
 
-metatool.get_node = function(self, tool, player, pointed_thing)
+function metatool:get_node(tool, player, pointed_thing)
 	if not player or not pointed_thing then
 		-- not valid player or pointed_thing
 		return
@@ -461,14 +461,14 @@ end
 -- TODO: Remove metatool.info, metatool.copy and metatool.paste and
 -- update tools to call these directly using nodedef event
 -- handler argument provided through metatool.on_use.
-metatool.info = function(self, node, pos, player)
+function metatool:info(node, pos, player)
 	local nodedef = self.nodes[node.name] or self.nodes['*']
 	if nodedef then
 		nodedef:info(node, pos, player)
 	end
 end
 
-metatool.copy = function(self, node, pos, player)
+function metatool:copy(node, pos, player)
 	local nodedef = self.nodes[node.name] or self.nodes['*']
 	if nodedef then
 		minetest.chat_send_player(player:get_player_name(), S('copying data for group %s', nodedef.group))
@@ -476,7 +476,7 @@ metatool.copy = function(self, node, pos, player)
 	end
 end
 
-metatool.paste = function(self, node, pos, player, data, group)
+function metatool:paste(node, pos, player, data, group)
 	local nodedef = self.nodes[node.name] or self.nodes['*']
 	if nodedef.group ~= group then
 		minetest.chat_send_player(
