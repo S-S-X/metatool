@@ -6,7 +6,6 @@ local S = metatool.S
 
 local nodenameprefix = "pipeworks:teleport_tube_"
 
---luacheck: ignore unused argument node player
 -- teleport tubes
 local nodes = {}
 for i=1,10 do
@@ -54,66 +53,68 @@ metatool.form.register_form(
 	end
 )
 
+local nodedef = {
+	group = "teleport tube",
+	protection_bypass_read = "interact",
+}
+
+function nodedef:info(node, pos, player)
+	if not ns.pipeworks_tptube_api_check(player) then return end
+	local meta = minetest.get_meta(pos)
+	local channel = meta:get_string("channel")
+	if channel == "" then
+		minetest.chat_send_player(
+			player:get_player_name(),
+			'Invalid channel, impossible to list connected tubes.'
+		)
+		return
+	end
+	local db = pipeworks.tptube.get_db()
+	local tubes = {}
+	for hash,data in pairs(db) do
+		if data.channel == channel then
+			table.insert(tubes, {
+				pos = minetest.get_position_from_hash(hash),
+				can_receive = data.cr == 1,
+			})
+		end
+	end
+	metatool.form.show(player, 'tubetool:teleport_tube_list', {pos = pos, channel = channel, tubes = tubes})
+end
+
+function nodedef:copy(node, pos, player)
+	local meta = minetest.get_meta(pos)
+
+	-- get and store channel and receive setting
+	local channel = meta:get_string("channel")
+	local receive = meta:get_int("can_receive")
+	local description
+	if channel == "" then
+		description = "Teleport tube configuration cleaner"
+	else
+		description = meta:get_string("infotext")
+	end
+
+	-- return data required for replicating this tube settings
+	return {
+		description = description,
+		channel = channel,
+		receive = receive,
+	}
+end
+
+function nodedef:paste(node, pos, player, data)
+	-- restore settings and update tube, no api available
+	local fields = {
+		channel = data.channel,
+		["cr" .. data.receive] = data.receive,
+	}
+	local nodedef = minetest.registered_nodes[node.name]
+	nodedef.on_receive_fields(pos, "", fields, player)
+end
+
 return {
 	name = 'teleport_tube',
 	nodes = nodes,
-	tooldef = {
-		group = "teleport tube",
-		protection_bypass_read = "interact",
-
-		info = function(node, pos, player)
-			if not ns.pipeworks_tptube_api_check(player) then return end
-			local meta = minetest.get_meta(pos)
-			local channel = meta:get_string("channel")
-			if channel == "" then
-				minetest.chat_send_player(
-					player:get_player_name(),
-					'Invalid channel, impossible to list connected tubes.'
-				)
-				return
-			end
-			local db = pipeworks.tptube.get_db()
-			local tubes = {}
-			for hash,data in pairs(db) do
-				if data.channel == channel then
-					table.insert(tubes, {
-						pos = minetest.get_position_from_hash(hash),
-						can_receive = data.cr == 1,
-					})
-				end
-			end
-			metatool.form.show(player, 'tubetool:teleport_tube_list', {pos = pos, channel = channel, tubes = tubes})
-		end,
-
-		copy = function(node, pos, player)
-			local meta = minetest.get_meta(pos)
-
-			-- get and store channel and receive setting
-			local channel = meta:get_string("channel")
-			local receive = meta:get_int("can_receive")
-			local description
-			if channel == "" then
-				description = "Teleport tube configuration cleaner"
-			else
-				description = meta:get_string("infotext")
-			end
-
-			-- return data required for replicating this tube settings
-			return {
-				description = description,
-				channel = channel,
-				receive = receive,
-			}
-		end,
-
-		paste = function(node, pos, player, data)
-			-- restore settings and update tube, no api available
-			local fields = {
-				channel = data.channel,
-				["cr" .. data.receive] = data.receive,
-			}
-			local nodedef = minetest.registered_nodes[node.name]
-			nodedef.on_receive_fields(pos, "", fields, player)
-		end,
-	}
+	tooldef = nodedef,
 }

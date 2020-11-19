@@ -247,16 +247,16 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 
 	if controls.aux1 or controls.sneak then
 		local use_info = controls.sneak and (tool.on_read_info or nodedef.info)
-		if use_info and nodedef.before_info(nodedef, pos, player) then
+		if use_info and nodedef:before_info(nodedef, pos, player) then
 			-- Execute on_read_node when tool is used on node and sneak is held
 			if tool.on_read_info then
 				-- Tool info method defined, call through it and let it handle nodes
 				tool.on_read_info(tool, player, pointed_thing, node, pos, nodedef, itemstack)
 			else
 				-- Only node definition had info method available, use it directly
-				nodedef.info(node, pos, player, itemstack)
+				nodedef:info(node, pos, player, itemstack)
 			end
-		elseif not use_info and nodedef.before_read(nodedef, pos, player) then
+		elseif not use_info and nodedef:before_read(nodedef, pos, player) then
 			-- Execute on_read_node when tool is used on node and special or sneak is held
 			local data, group, description = tool.on_read_node(tool, player, pointed_thing, node, pos, nodedef)
 			local separated
@@ -266,7 +266,7 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 			return_itemstack(player, itemstack, separated)
 		end
 	else
-		if nodedef.before_write(nodedef, pos, player) then
+		if nodedef:before_write(nodedef, pos, player) then
 			local data = metatool.read_data(itemstack)
 			if tool.allow_use_empty or type(data) == 'table' then
 				-- Execute on_write_node when tool is used on node and tool contains data
@@ -471,7 +471,7 @@ end
 metatool.info = function(self, node, pos, player)
 	local definition = self.nodes[node.name] or self.nodes['*']
 	if definition then
-		definition.info(node, pos, player)
+		definition:info(node, pos, player)
 	end
 end
 
@@ -479,7 +479,7 @@ metatool.copy = function(self, node, pos, player)
 	local definition = self.nodes[node.name] or self.nodes['*']
 	if definition then
 		minetest.chat_send_player(player:get_player_name(), S('copying data for group %s', definition.group))
-		return definition.copy(node, pos, player), definition.group
+		return definition:copy(node, pos, player), definition.group
 	end
 end
 
@@ -493,6 +493,6 @@ metatool.paste = function(self, node, pos, player, data, group)
 		return
 	end
 	if definition and data then
-		return definition.paste(node, pos, player, data)
+		return definition:paste(node, pos, player, data)
 	end
 end

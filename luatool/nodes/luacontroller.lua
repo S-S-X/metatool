@@ -33,43 +33,44 @@ table.insert(nodes, nodenameprefix .. '_burnt')
 
 local ns = metatool.ns('luatool')
 
---luacheck: ignore unused argument node player
+local nodedef = {
+	group = 'lua controller',
+	protection_bypass_read = "interact",
+}
+
+function nodedef:info(node, pos, player, itemstack)
+	return ns.info(node, pos, player, itemstack, 'lua controller')
+end
+
+function nodedef:copy(node, pos, player)
+	local meta = minetest.get_meta(pos)
+
+	-- get and store lua code
+	local code = meta:get_string("code")
+
+	-- return data required for replicating this controller settings
+	return {
+		description = string.format("Lua controller at %s", minetest.pos_to_string(pos)),
+		code = code,
+	}
+end
+
+function nodedef:paste(node, pos, player, data)
+	-- restore settings and update lua controller, no api available
+	local meta = minetest.get_meta(pos)
+	if data.mem_stored then
+		meta:set_string("lc_memory", data.mem)
+	end
+	local fields = {
+		program = 1,
+		code = data.code or meta:get_string("code"),
+	}
+	local nodedef = minetest.registered_nodes[node.name]
+	nodedef.on_receive_fields(pos, "", fields, player)
+end
+
 return {
 	name = 'luacontroller',
 	nodes = nodes,
-	tooldef = {
-		group = 'lua controller',
-		protection_bypass_read = "interact",
-
-		info = function(node, pos, player, itemstack)
-			return ns.info(node, pos, player, itemstack, 'lua controller')
-		end,
-
-		copy = function(node, pos, player)
-			local meta = minetest.get_meta(pos)
-
-			-- get and store lua code
-			local code = meta:get_string("code")
-
-			-- return data required for replicating this controller settings
-			return {
-				description = string.format("Lua controller at %s", minetest.pos_to_string(pos)),
-				code = code,
-			}
-		end,
-
-		paste = function(node, pos, player, data)
-			-- restore settings and update lua controller, no api available
-			local meta = minetest.get_meta(pos)
-			if data.mem_stored then
-				meta:set_string("lc_memory", data.mem)
-			end
-			local fields = {
-				program = 1,
-				code = data.code or meta:get_string("code"),
-			}
-			local nodedef = minetest.registered_nodes[node.name]
-			nodedef.on_receive_fields(pos, "", fields, player)
-		end,
-	}
+	tooldef = nodedef,
 }

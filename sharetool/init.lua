@@ -28,7 +28,7 @@ local tool = metatool:register_tool('sharetool', {
 	on_read_node = function(tooldef, player, pointed_thing, node, pos)
 		local definition = tooldef.nodes[node.name]
 		if definition then
-			local res = definition.copy(node, pos, player)
+			local res = definition:copy(node, pos, player)
 			local name = player:get_player_name()
 			local success = type(res) ~= 'table' or res.success or res.success == nil
 			if success then
@@ -43,7 +43,7 @@ local tool = metatool:register_tool('sharetool', {
 	on_write_node = function(tooldef, data, group, player, pointed_thing, node, pos)
 		local definition = tooldef.nodes[node.name]
 		if definition then
-			local res = definition.paste(node, pos, player)
+			local res = definition:paste(node, pos, player)
 			local name = player:get_player_name()
 			local sname = tooldef.settings.shared_account
 			local success = type(res) ~= 'table' or res.success or res.success == nil

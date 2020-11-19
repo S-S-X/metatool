@@ -169,6 +169,16 @@ describe("Metatool API node registration", function()
 		assert.equals("metatool:testtool0", tool.name)
 		assert.is_table(tool)
 
+		local nodedef = {
+			group = 'test node',
+			protection_bypass_write = "default_bypass_write_priv",
+		}
+		function nodedef:copy(node, pos, player)
+			print("nodedef copy callback executed")
+		end
+		function nodedef:paste(node, pos, player, data)
+			print("nodedef paste callback executed")
+		end
 		local definition = {
 			name = 'testnode1',
 			nodes = {
@@ -177,16 +187,7 @@ describe("Metatool API node registration", function()
 				"testnode2",
 				"nonexistent2",
 			},
-			tooldef = {
-				group = 'test node',
-				protection_bypass_write = "default_bypass_write_priv",
-				copy = function(node, pos, player)
-					print("nodedef copy callback executed")
-				end,
-				paste = function(node, pos, player, data)
-					print("nodedef paste callback executed")
-				end,
-			}
+			tooldef = nodedef,
 		}
 		tool:load_node_definition(definition)
 
@@ -217,6 +218,16 @@ describe("Metatool API node registration", function()
 		assert.equals("metatool:testtool2", tool.name)
 		assert.is_table(tool)
 
+		local nodedef = {
+			group = 'test node',
+			protection_bypass_write = "default_bypass_write_priv",
+		}
+		function nodedef:copy(node, pos, player)
+			print("nodedef copy callback executed")
+		end
+		function nodedef:paste(node, pos, player, data)
+			print("nodedef paste callback executed")
+		end
 		local definition = {
 			name = 'testnode2',
 			nodes = {
@@ -225,16 +236,7 @@ describe("Metatool API node registration", function()
 				"testnode2",
 				"nonexistent2",
 			},
-			tooldef = {
-				group = 'test node',
-				protection_bypass_write = "default_bypass_write_priv",
-				copy = function(node, pos, player)
-					print("nodedef copy callback executed")
-				end,
-				paste = function(node, pos, player, data)
-					print("nodedef paste callback executed")
-				end,
-			}
+			tooldef = nodedef,
 		}
 		tool:load_node_definition(definition)
 
@@ -272,28 +274,29 @@ describe("Metatool API node registration", function()
 		assert.equals("metatool:testtool2", tool.name)
 		assert.is_table(tool)
 
+		local nodedef = {
+			group = 'test node',
+			protection_bypass_read = "default_bypass_read_priv",
+			settings = {
+				allow_doing_x = true,
+				message_for_y = "test y message",
+				boolean_test1 = true,
+				boolean_test2 = true,
+				boolean_test3 = true,
+				number_test1 = 0,
+				number_test2 = 0,
+			},
+		}
+		function nodedef:copy(node, pos, player)
+			print("nodedef copy callback executed")
+		end
+		function nodedef:paste(node, pos, player, data)
+			print("nodedef paste callback executed")
+		end
 		local definition = {
 			name = 'testnode3',
 			nodes = "testnode3",
-			tooldef = {
-				group = 'test node',
-				protection_bypass_read = "default_bypass_read_priv",
-				settings = {
-					allow_doing_x = true,
-					message_for_y = "test y message",
-					boolean_test1 = true,
-					boolean_test2 = true,
-					boolean_test3 = true,
-					number_test1 = 0,
-					number_test2 = 0,
-				},
-				copy = function(node, pos, player)
-					print("nodedef copy callback executed")
-				end,
-				paste = function(node, pos, player, data)
-					print("nodedef paste callback executed")
-				end,
-			}
+			tooldef = nodedef,
 		}
 		tool:load_node_definition(definition)
 

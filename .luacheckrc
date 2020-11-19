@@ -2,6 +2,8 @@ exclude_files = {
 	"**/spec/**",
 }
 
+files["**/nodes/*.lua"] = { ignore = {"212"} }
+
 globals = {
 	"metatool",
         "travelnet",
