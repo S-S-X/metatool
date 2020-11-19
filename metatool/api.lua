@@ -303,22 +303,15 @@ metatool.load_node_definition = function(self, def)
 		))
 		return
 	end
-	if type(def.tooldef) ~= 'table' then
-		print(string.format(
-			'metatool:%s error in %s:load_node_definition invalid `tooldef` type: %s',
-			self.name, self.name, type(def.tooldef)
-		))
-		return
-	end
 	local nodedef_name
 	if type(def.nodes) == 'table' and #def.nodes > 0 then
 		nodedef_name = def.nodes[1]
 		for _,nodename in ipairs(def.nodes) do
-			metatool:register_node(self.name, nodename, def.tooldef)
+			metatool:register_node(self.name, nodename, def)
 		end
 	elseif type(def.nodes) == 'string' then
 		nodedef_name = def.nodes
-		metatool:register_node(self.name, def.nodes, def.tooldef)
+		metatool:register_node(self.name, def.nodes, def)
 	else
 		print(string.format(
 			'metatool:%s error in %s:load_node_definition invalid `nodes` type: %s',
@@ -326,7 +319,7 @@ metatool.load_node_definition = function(self, def)
 		))
 		return
 	end
-	metatool.merge_node_settings(self.name, def.name or nodedef_name, def.tooldef)
+	metatool.merge_node_settings(self.name, def.name or nodedef_name, def)
 end
 
 metatool.register_tool = function(self, name, definition)
@@ -469,30 +462,30 @@ end
 -- update tools to call these directly using nodedef event
 -- handler argument provided through metatool.on_use.
 metatool.info = function(self, node, pos, player)
-	local definition = self.nodes[node.name] or self.nodes['*']
-	if definition then
-		definition:info(node, pos, player)
+	local nodedef = self.nodes[node.name] or self.nodes['*']
+	if nodedef then
+		nodedef:info(node, pos, player)
 	end
 end
 
 metatool.copy = function(self, node, pos, player)
-	local definition = self.nodes[node.name] or self.nodes['*']
-	if definition then
-		minetest.chat_send_player(player:get_player_name(), S('copying data for group %s', definition.group))
-		return definition:copy(node, pos, player), definition.group
+	local nodedef = self.nodes[node.name] or self.nodes['*']
+	if nodedef then
+		minetest.chat_send_player(player:get_player_name(), S('copying data for group %s', nodedef.group))
+		return nodedef:copy(node, pos, player), nodedef.group
 	end
 end
 
 metatool.paste = function(self, node, pos, player, data, group)
-	local definition = self.nodes[node.name] or self.nodes['*']
-	if definition.group ~= group then
+	local nodedef = self.nodes[node.name] or self.nodes['*']
+	if nodedef.group ~= group then
 		minetest.chat_send_player(
 			player:get_player_name(),
-			S('metatool wand contains data for %s, cannot apply for %s', group, definition.group)
+			S('metatool wand contains data for %s, cannot apply for %s', group, nodedef.group)
 		)
 		return
 	end
-	if definition and data then
-		return definition:paste(node, pos, player, data)
+	if nodedef and data then
+		return nodedef:paste(node, pos, player, data)
 	end
 end

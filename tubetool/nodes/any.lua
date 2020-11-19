@@ -4,17 +4,19 @@
 
 local ns = metatool.ns('tubetool')
 
-local nodedef = {
+local definition = {
+	name = '*',
+	nodes = '*',
 	group = '*',
 }
 
-function nodedef:before_read() return false end
-function nodedef:before_write() return false end
-function nodedef:before_info() return true end
-function nodedef:copy() end
-function nodedef:paste() end
+function definition:before_read() return false end
+function definition:before_write() return false end
+function definition:before_info() return true end
+function definition:copy() end
+function definition:paste() end
 
-function nodedef:info(node, pos, player, itemstack)
+function definition:info(node, pos, player, itemstack)
 	-- Display teleport tubes form if tool has teleport tube data
 	local tooldata = metatool.read_data(itemstack)
 	if not tooldata or tooldata.group ~= 'teleport tube' then return end
@@ -41,8 +43,4 @@ function nodedef:info(node, pos, player, itemstack)
 	metatool.form.show(player, 'tubetool:teleport_tube_list', {pos = pos, channel = channel, tubes = tubes})
 end
 
-return {
-	name = '*',
-	nodes = '*',
-	tooldef = nodedef,
-}
+return definition

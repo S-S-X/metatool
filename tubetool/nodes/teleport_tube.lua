@@ -53,12 +53,14 @@ metatool.form.register_form(
 	end
 )
 
-local nodedef = {
+local definition = {
+	name = 'teleport_tube',
+	nodes = nodes,
 	group = "teleport tube",
 	protection_bypass_read = "interact",
 }
 
-function nodedef:info(node, pos, player)
+function definition:info(node, pos, player)
 	if not ns.pipeworks_tptube_api_check(player) then return end
 	local meta = minetest.get_meta(pos)
 	local channel = meta:get_string("channel")
@@ -82,7 +84,7 @@ function nodedef:info(node, pos, player)
 	metatool.form.show(player, 'tubetool:teleport_tube_list', {pos = pos, channel = channel, tubes = tubes})
 end
 
-function nodedef:copy(node, pos, player)
+function definition:copy(node, pos, player)
 	local meta = minetest.get_meta(pos)
 
 	-- get and store channel and receive setting
@@ -103,7 +105,7 @@ function nodedef:copy(node, pos, player)
 	}
 end
 
-function nodedef:paste(node, pos, player, data)
+function definition:paste(node, pos, player, data)
 	-- restore settings and update tube, no api available
 	local fields = {
 		channel = data.channel,
@@ -113,8 +115,4 @@ function nodedef:paste(node, pos, player, data)
 	nodedef.on_receive_fields(pos, "", fields, player)
 end
 
-return {
-	name = 'teleport_tube',
-	nodes = nodes,
-	tooldef = nodedef,
-}
+return definition

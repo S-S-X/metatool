@@ -30,12 +30,14 @@ for i=0,15 do
 	table.insert(nodes, nodenameprefix .. lpadcut(d2b(i), '0', 4))
 end
 
-local nodedef = {
+local definition = {
+	name = 'microcontroller',
+	nodes = nodes,
 	group = 'microcontroller',
 	protection_bypass_read = "interact",
 }
 
-function nodedef:copy(node, pos, player)
+function definition:copy(node, pos, player)
 	local meta = minetest.get_meta(pos)
 
 	-- get and store lua code
@@ -48,7 +50,7 @@ function nodedef:copy(node, pos, player)
 	}
 end
 
-function nodedef:paste(node, pos, player, data)
+function definition:paste(node, pos, player, data)
 	-- restore settings and update tube, no api available
 	local fields = {
 		code = data.code,
@@ -57,8 +59,4 @@ function nodedef:paste(node, pos, player, data)
 	nodedef.on_receive_fields(pos, "", fields, player)
 end
 
-return {
-	name = 'microcontroller',
-	nodes = nodes,
-	tooldef = nodedef,
-}
+return definition

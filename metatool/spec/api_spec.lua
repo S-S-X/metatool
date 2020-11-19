@@ -169,16 +169,6 @@ describe("Metatool API node registration", function()
 		assert.equals("metatool:testtool0", tool.name)
 		assert.is_table(tool)
 
-		local nodedef = {
-			group = 'test node',
-			protection_bypass_write = "default_bypass_write_priv",
-		}
-		function nodedef:copy(node, pos, player)
-			print("nodedef copy callback executed")
-		end
-		function nodedef:paste(node, pos, player, data)
-			print("nodedef paste callback executed")
-		end
 		local definition = {
 			name = 'testnode1',
 			nodes = {
@@ -187,8 +177,15 @@ describe("Metatool API node registration", function()
 				"testnode2",
 				"nonexistent2",
 			},
-			tooldef = nodedef,
+			group = 'test node',
+			protection_bypass_write = "default_bypass_write_priv",
 		}
+		function definition:copy(node, pos, player)
+			print("nodedef copy callback executed")
+		end
+		function definition:paste(node, pos, player, data)
+			print("nodedef paste callback executed")
+		end
 		tool:load_node_definition(definition)
 
 		assert.is_table(tool.nodes)
@@ -200,9 +197,9 @@ describe("Metatool API node registration", function()
 		assert.is_function(tool.nodes.testnode1.before_read)
 		assert.is_function(tool.nodes.testnode2.before_write)
 
-		assert.equals(definition.tooldef.copy, tool.nodes.testnode1.copy)
-		assert.equals(definition.tooldef.paste, tool.nodes.testnode2.paste)
-		assert.equals("default_bypass_write_priv", definition.tooldef.protection_bypass_write)
+		assert.equals(definition.copy, tool.nodes.testnode1.copy)
+		assert.equals(definition.paste, tool.nodes.testnode2.paste)
+		assert.equals("default_bypass_write_priv", definition.protection_bypass_write)
 
 		local expected_settings = {
 			protection_bypass_write = "default_bypass_write_priv"
@@ -218,16 +215,6 @@ describe("Metatool API node registration", function()
 		assert.equals("metatool:testtool2", tool.name)
 		assert.is_table(tool)
 
-		local nodedef = {
-			group = 'test node',
-			protection_bypass_write = "default_bypass_write_priv",
-		}
-		function nodedef:copy(node, pos, player)
-			print("nodedef copy callback executed")
-		end
-		function nodedef:paste(node, pos, player, data)
-			print("nodedef paste callback executed")
-		end
 		local definition = {
 			name = 'testnode2',
 			nodes = {
@@ -236,8 +223,15 @@ describe("Metatool API node registration", function()
 				"testnode2",
 				"nonexistent2",
 			},
-			tooldef = nodedef,
+			group = 'test node',
+			protection_bypass_write = "default_bypass_write_priv",
 		}
+		function definition:copy(node, pos, player)
+			print("nodedef copy callback executed")
+		end
+		function definition:paste(node, pos, player, data)
+			print("nodedef paste callback executed")
+		end
 		tool:load_node_definition(definition)
 
 		assert.is_table(tool.nodes)
@@ -249,8 +243,8 @@ describe("Metatool API node registration", function()
 		assert.is_function(tool.nodes.testnode1.before_read)
 		assert.is_function(tool.nodes.testnode2.before_write)
 
-		assert.equals(definition.tooldef.copy, tool.nodes.testnode1.copy)
-		assert.equals(definition.tooldef.paste, tool.nodes.testnode2.paste)
+		assert.equals(definition.copy, tool.nodes.testnode1.copy)
+		assert.equals(definition.paste, tool.nodes.testnode2.paste)
 		assert.equals("testtool2_testnode2_bypass_write", tool.nodes.testnode1.protection_bypass_write)
 		assert.equals("testtool2_testnode2_bypass_write", tool.nodes.testnode2.protection_bypass_write)
 		assert.equals("testtool2_testnode2_bypass_info", tool.nodes.testnode1.protection_bypass_info)
@@ -274,7 +268,9 @@ describe("Metatool API node registration", function()
 		assert.equals("metatool:testtool2", tool.name)
 		assert.is_table(tool)
 
-		local nodedef = {
+		local definition = {
+			name = 'testnode3',
+			nodes = "testnode3",
 			group = 'test node',
 			protection_bypass_read = "default_bypass_read_priv",
 			settings = {
@@ -287,17 +283,12 @@ describe("Metatool API node registration", function()
 				number_test2 = 0,
 			},
 		}
-		function nodedef:copy(node, pos, player)
+		function definition:copy(node, pos, player)
 			print("nodedef copy callback executed")
 		end
-		function nodedef:paste(node, pos, player, data)
+		function definition:paste(node, pos, player, data)
 			print("nodedef paste callback executed")
 		end
-		local definition = {
-			name = 'testnode3',
-			nodes = "testnode3",
-			tooldef = nodedef,
-		}
 		tool:load_node_definition(definition)
 
 		assert.is_table(tool.nodes)
@@ -308,9 +299,9 @@ describe("Metatool API node registration", function()
 		assert.is_function(tool.nodes.testnode3.before_read)
 		assert.is_function(tool.nodes.testnode3.before_write)
 
-		assert.not_equals(definition.tooldef.copy, tool.nodes.testnode1.copy)
-		assert.equals(definition.tooldef.copy, tool.nodes.testnode3.copy)
-		assert.equals(definition.tooldef.paste, tool.nodes.testnode3.paste)
+		assert.not_equals(definition.copy, tool.nodes.testnode1.copy)
+		assert.equals(definition.copy, tool.nodes.testnode3.copy)
+		assert.equals(definition.paste, tool.nodes.testnode3.paste)
 		assert.equals("testtool2_testnode2_bypass_write", tool.nodes.testnode1.protection_bypass_write)
 		assert.equals("testtool2_testnode2_bypass_write", tool.nodes.testnode2.protection_bypass_write)
 		assert.is_nil(tool.nodes.testnode3.protection_bypass_write)

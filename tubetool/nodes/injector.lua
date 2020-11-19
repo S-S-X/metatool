@@ -2,12 +2,17 @@
 -- Register injectors tube for tubetool
 --
 
-local nodedef = {
+local definition = {
+	name = 'filter',
+	nodes = {
+		"pipeworks:filter",
+		"pipeworks:mese_filter",
+	},
 	group = 'injector',
 	protection_bypass_read = "interact",
 }
 
-function nodedef:copy(node, pos, player)
+function definition:copy(node, pos, player)
 	local meta = minetest.get_meta(pos)
 	local inv = meta:get_inventory()
 
@@ -39,7 +44,7 @@ function nodedef:copy(node, pos, player)
 	}
 end
 
-function nodedef:paste(node, pos, player, data)
+function definition:paste(node, pos, player, data)
 	local meta = minetest.get_meta(pos)
 	local inv = meta:get_inventory()
 
@@ -59,11 +64,4 @@ function nodedef:paste(node, pos, player, data)
 	nodedef.on_receive_fields(pos, "", {}, player)
 end
 
-return {
-	name = 'filter',
-	nodes = {
-		"pipeworks:filter",
-		"pipeworks:mese_filter",
-	},
-	tooldef = nodedef,
-}
+return definition

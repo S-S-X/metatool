@@ -31,12 +31,14 @@ for i=0,63 do
 	table.insert(nodes, nodenameprefix .. lpad(d2b(i), '0', 6))
 end
 
-local nodedef = {
+local definition = {
+	name = 'mese_tube',
+	nodes = nodes,
 	group = 'sorting tube',
 	protection_bypass_read = "interact",
 }
 
-function nodedef:copy(node, pos, player)
+function definition:copy(node, pos, player)
 	local meta = minetest.get_meta(pos)
 	local inv = meta:get_inventory()
 
@@ -71,7 +73,7 @@ function nodedef:copy(node, pos, player)
 	}
 end
 
-function nodedef:paste(node, pos, player, data)
+function definition:paste(node, pos, player, data)
 	local meta = minetest.get_meta(pos)
 	local inv = meta:get_inventory()
 
@@ -92,8 +94,4 @@ function nodedef:paste(node, pos, player, data)
 	nodedef.on_receive_fields(pos, "", {}, player)
 end
 
-return {
-	name = 'mese_tube',
-	nodes = nodes,
-	tooldef = nodedef,
-}
+return definition

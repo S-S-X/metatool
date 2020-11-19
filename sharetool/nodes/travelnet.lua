@@ -5,11 +5,18 @@
 -- get namespace defined at sharetool init.lua
 local ns = metatool.ns('sharetool')
 
-local nodedef = {
+local definition = {
+	name = 'travelnet',
+	nodes = {
+		'travelnet:travelnet',
+		'locked_travelnet:travelnet',
+		'travelnet:travelnet_private',
+		'travelnet:elevator',
+	},
 	group = 'shared travelnet',
 }
 
-function nodedef:before_read(nodedef, pos, player)
+function definition:before_read(nodedef, pos, player)
 	if ns:can_bypass(pos, player, 'owner') or metatool.before_read(nodedef, pos, player, true) then
 		-- Player is allowed to bypass protections or operate in area
 		return true
@@ -17,7 +24,7 @@ function nodedef:before_read(nodedef, pos, player)
 	return false
 end
 
-function nodedef:before_write(nodedef, pos, player)
+function definition:before_write(nodedef, pos, player)
 	if ns:can_bypass(pos, player, 'owner') or metatool.before_write(nodedef, pos, player, true) then
 		-- Player is allowed to bypass protections or operate in area
 		return true
@@ -25,7 +32,7 @@ function nodedef:before_write(nodedef, pos, player)
 	return false
 end
 
-function nodedef:copy(node, pos, player)
+function definition:copy(node, pos, player)
 	-- Copy function does not really copy anything here
 	-- but instead it will claim ownership of pointed
 	-- node and mark it as shared node.
@@ -37,7 +44,7 @@ function nodedef:copy(node, pos, player)
 	}
 end
 
-function nodedef:paste(node, pos, player, data)
+function definition:paste(node, pos, player, data)
 	-- Paste function does not really paste anything here
 	-- but instead it will restore ownership of pointed
 	-- node and mark it as shared node
@@ -49,13 +56,4 @@ function nodedef:paste(node, pos, player, data)
 	}
 end
 
-return {
-	name = 'travelnet',
-	nodes = {
-		'travelnet:travelnet',
-		'locked_travelnet:travelnet',
-		'travelnet:travelnet_private',
-		'travelnet:elevator',
-	},
-	tooldef = nodedef,
-}
+return definition

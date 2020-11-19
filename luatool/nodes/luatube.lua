@@ -33,16 +33,18 @@ table.insert(nodes, nodenameprefix .. '_burnt')
 
 local ns = metatool.ns('luatool')
 
-local nodedef = {
+local definition = {
+	name = 'luatube',
+	nodes = nodes,
 	group = 'lua tube',
 	protection_bypass_read = "interact",
 }
 
-function nodedef:info(node, pos, player, itemstack)
+function definition:info(node, pos, player, itemstack)
 	return ns.info(node, pos, player, itemstack, 'lua tube')
 end
 
-function nodedef:copy(node, pos, player)
+function definition:copy(node, pos, player)
 	local meta = minetest.get_meta(pos)
 
 	-- get and store lua code
@@ -55,7 +57,7 @@ function nodedef:copy(node, pos, player)
 	}
 end
 
-function nodedef:paste(node, pos, player, data)
+function definition:paste(node, pos, player, data)
 	-- restore settings and update tube, no api available
 	local meta = minetest.get_meta(pos)
 	if data.mem_stored then
@@ -69,8 +71,4 @@ function nodedef:paste(node, pos, player, data)
 	nodedef.on_receive_fields(pos, "", fields, player)
 end
 
-return {
-	name = 'luatube',
-	nodes = nodes,
-	tooldef = nodedef,
-}
+return definition
