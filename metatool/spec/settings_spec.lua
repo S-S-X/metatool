@@ -11,7 +11,7 @@
 --]]
 
 dofile("spec/test_helpers.lua")
-fixture("minetest")
+fixture("minetest/core")
 fixture("metatool")
 
 require("settings")

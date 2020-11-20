@@ -8,7 +8,7 @@ local recipe = {
 	{ 'default:obsidian_shard', '', '' }
 }
 
---luacheck: ignore unused argument tooldef player pointed_thing node pos
+--luacheck: ignore unused argument player node
 local tool = metatool:register_tool('luatool', {
 	description = 'LuaTool',
 	name = 'LuaTool',
@@ -17,14 +17,6 @@ local tool = metatool:register_tool('luatool', {
 	settings = {
 		machine_use_priv = 'server'
 	},
-	on_read_node = function(tooldef, player, pointed_thing, node, pos)
-		local data, group = tooldef:copy(node, pos, player)
-		local description = type(data) == 'table' and data.description or ('Data from ' .. minetest.pos_to_string(pos))
-		return data, group, description
-	end,
-	on_write_node = function(tooldef, data, group, player, pointed_thing, node, pos)
-		tooldef:paste(node, pos, player, data, group)
-	end,
 })
 
 local function find_luatool_stack(player, refstack)

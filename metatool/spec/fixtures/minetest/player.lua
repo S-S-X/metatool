@@ -1,5 +1,5 @@
 
-fixture("minetest")
+fixture("minetest/core")
 
 local players = {}
 

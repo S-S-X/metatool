@@ -10,20 +10,11 @@ local recipe = {
 	{ 'default:obsidian_shard', '', '' }
 }
 
---luacheck: ignore unused argument tooldef player pointed_thing node pos
 local tool = metatool:register_tool('tubetool', {
 	description = 'TubeTool',
 	name = 'TubeTool',
 	texture = 'tubetool_wand.png',
 	recipe = recipe,
-	on_read_node = function(tooldef, player, pointed_thing, node, pos)
-		local data, group = tooldef:copy(node, pos, player)
-		local description = type(data) == 'table' and data.description or ('Data from ' .. minetest.pos_to_string(pos))
-		return data, group, description
-	end,
-	on_write_node = function(tooldef, data, group, player, pointed_thing, node, pos)
-		tooldef:paste(node, pos, player, data, group)
-	end,
 })
 
 -- Create namespace containing tubetool common functions
@@ -39,9 +30,6 @@ tool:ns({
 		return true
 	end,
 })
-
--- TODO: Very early name for metatool:tubetool, probably not found anywhere in wild and could be removed
-minetest.register_alias('tubetool:wand', 'metatool:tubetool')
 
 -- nodes
 tool:load_node_definition(dofile(modpath .. '/nodes/mese_tube.lua'))
