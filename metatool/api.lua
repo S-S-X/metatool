@@ -10,20 +10,14 @@ metatool.tools = {}
 -- Metatool privileged tools
 metatool.privileged_tools = {}
 
-local transform_tool_name = function(name, mtprefix)
+function metatool.transform_tool_name(name, mtprefix)
 	local parts = name:gsub('\\s',''):split(':')
-	if #parts > 2 or #parts < 1 then
-		print(S('Invalid metatool name %s', name))
-		return
-	elseif #parts == 2 then
-		-- this will strip leading colon
-		return parts[1] .. ':' .. parts[2]
+	if #parts == 2 then
+		return (mtprefix and ':' or '') .. parts[1] .. ':' .. parts[2]
 	elseif #parts == 1 and parts[1] ~= 'metatool' then
 		return (mtprefix and ':' or '') .. 'metatool:' .. parts[1]
-	else
-		print(S('Invalid metatool name %s', name))
-		return
 	end
+	-- print(S('Invalid metatool name %s', name))
 end
 
 local register_privileged_tool = function(toolname, definition)
@@ -141,7 +135,7 @@ end
 --luacheck: ignore unused argument self
 
 metatool.tool = function(toolname)
-	local name = transform_tool_name(toolname)
+	local name = metatool.transform_tool_name(toolname)
 	if name and metatool.tools[name] then
 		return metatool.tools[name]
 	end
@@ -187,22 +181,22 @@ metatool.is_protected = function(pos, player, privs, no_violation_record)
 	return false
 end
 
-function metatool:before_info(nodedef, pos, player, no_violation_record)
-	if metatool.is_protected(pos, player, nodedef.protection_bypass_info, no_violation_record) then
+function metatool:before_info(pos, player, no_violation_record)
+	if metatool.is_protected(pos, player, self.protection_bypass_info, no_violation_record) then
 		return false
 	end
 	return true
 end
 
-function metatool:before_read(nodedef, pos, player, no_violation_record)
-	if metatool.is_protected(pos, player, nodedef.protection_bypass_read, no_violation_record) then
+function metatool:before_read(pos, player, no_violation_record)
+	if metatool.is_protected(pos, player, self.protection_bypass_read, no_violation_record) then
 		return false
 	end
 	return true
 end
 
-function metatool:before_write(nodedef, pos, player, no_violation_record)
-	if metatool.is_protected(pos, player, nodedef.protection_bypass_write, no_violation_record) then
+function metatool:before_write(pos, player, no_violation_record)
+	if metatool.is_protected(pos, player, self.protection_bypass_write, no_violation_record) then
 		return false
 	end
 	return true
@@ -289,15 +283,15 @@ function metatool:on_use(toolname, itemstack, player, pointed_thing)
 
 	if controls.aux1 or controls.sneak then
 		local use_info = controls.sneak and (tool.on_read_info or nodedef.info)
-		if use_info and nodedef:before_info(nodedef, pos, player) then
+		if use_info and nodedef:before_info(pos, player) then
 			-- Execute on_read_info when tool is used on node and sneak is held
 			return metatool.on_tool_info(tool, player, pointed_thing, node, pos, nodedef, itemstack)
-		elseif not use_info and nodedef:before_read(nodedef, pos, player) then
+		elseif not use_info and nodedef:before_read(pos, player) then
 			-- Execute on_read_node when tool is used on node and special or sneak is held
 			return metatool.on_tool_read(tool, player, pointed_thing, node, pos, nodedef, itemstack)
 		end
 	else
-		if nodedef:before_write(nodedef, pos, player) then
+		if nodedef:before_write(pos, player) then
 			-- Execute on_write_node when tool is used on node and no modifier keys is held
 			return metatool.on_tool_write(tool, player, pointed_thing, node, pos, nodedef, itemstack)
 		end
@@ -340,7 +334,7 @@ function metatool:load_node_definition(def)
 end
 
 function metatool:register_tool(name, definition)
-	local itemname = transform_tool_name(name, true)
+	local itemname = metatool.transform_tool_name(name, true)
 	local itemname_clean = itemname:gsub('^:', '')
 	if not self.tools[itemname_clean] then
 		if type(definition) ~= 'table' then

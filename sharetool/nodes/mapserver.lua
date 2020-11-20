@@ -19,16 +19,16 @@ local definition = {
 	group = 'shared poi',
 }
 
-function definition:before_read(nodedef, pos, player)
-	if ns:can_bypass(pos, player, 'owner') or metatool.before_read(nodedef, pos, player, true) then
+function definition:before_read(pos, player)
+	if ns:can_bypass(pos, player, 'owner') or metatool.before_read(self, pos, player, true) then
 		-- Player is allowed to bypass protections or operate in area
 		return true
 	end
 	return false
 end
 
-function definition:before_write(nodedef, pos, player)
-	if ns:can_bypass(pos, player, 'owner') or metatool.before_write(nodedef, pos, player, true) then
+function definition:before_write(pos, player)
+	if ns:can_bypass(pos, player, 'owner') or metatool.before_write(self, pos, player, true) then
 		-- Player is allowed to bypass protections or operate in area
 		return true
 	end
