@@ -123,6 +123,9 @@ describe("Metatool API tool registration", function()
 			name = 'UnitTestTool',
 			texture = 'utt.png',
 			recipe = {{'air'},{'air'},{'air'}},
+			settings = {
+				machine_use_priv = "server"
+			},
 			on_read_node = function(tooldef, player, pointed_thing, node, pos)
 				local data, group = tooldef:copy(node, pos, player)
 				return data, group, "on_read_node description"
@@ -146,6 +149,7 @@ describe("Metatool API tool registration", function()
 		assert.equals("test_testtool2_privs", tool.privs)
 		local expected_settings = {
 			extra_config_key = "testtool2_extra_config_value",
+			machine_use_priv = "server",
 		}
 		assert.same(expected_settings, tool.settings)
 
@@ -322,6 +326,45 @@ describe("Metatool API node registration", function()
 			number_test2 = 0,
 		}
 		assert.same(expected_settings, tool.nodes.testnode3.settings)
+
+	end)
+
+end)
+
+describe("Tool behavior", function()
+
+	world.layout({
+		{{x=123,y=123,z=123}, "testnode1"},
+		{{x=123,y=124,z=123}, "testnode1"},
+	})
+	local player = Player("SX", {server=1,test_testtool2_privs=1,test_priv=1})
+
+	describe("node write operation", function()
+
+		it("protects nodes from write", function()
+			local use_stack = ItemStack("metatool:testtool2")
+			local count = use_stack:get_count()
+			local pointed_thing = {
+				type = "node",
+				above = {x=123,y=124,z=123}, -- Pointing from above to downwards,
+				under = {x=123,y=123,z=123}, -- crosshair at protected node surface
+			}
+			local out_stack = metatool:on_use("metatool:testtool2", use_stack, player, pointed_thing)
+			-- Verify that returned stack is not modified
+			assert.equals(true, out_stack == nil or (out_stack == use_stack and count == out_stack:get_count()))
+		end)
+
+		it("writes unprotected nodes", function()
+			local use_stack = ItemStack("metatool:testtool2")
+			metatool.write_data(use_stack,{data={},group="test node"})
+			local pointed_thing = {
+				type = "node",
+				above = {x=123,y=125,z=123}, -- Pointing from above to downwards,
+				under = {x=123,y=124,z=123}, -- crosshair at protected node surface
+			}
+			local out_stack = metatool:on_use("metatool:testtool2", use_stack, player, pointed_thing)
+			-- TODO: Check if data was written, currently this only verifies no crash
+		end)
 
 	end)
 

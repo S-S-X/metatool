@@ -1,3 +1,9 @@
+local function DEPRECATED(msg)
+	-- TODO: Add configurable behavior to fail or warn when deprectaed things are used
+	-- Now it has to be fail. Warnings are for pussies, hard fail for serious Sam.
+	error(msg or "Attempted to use deprecated method")
+end
+
 local function noop(...) end
 local function dummy_coords(...) return { x = 123, y = 123, z = 123 } end
 
@@ -77,9 +83,13 @@ _G.core.settings = _G.Settings(configuration_file)
 _G.core.register_on_joinplayer = noop
 _G.core.register_on_leaveplayer = noop
 
+fixture("minetest/game/item")
 fixture("minetest/game/misc")
 fixture("minetest/common/misc_helpers")
 fixture("minetest/common/vector")
+fixture("minetest/common/serialize")
+
+fixture("minetest/itemstack")
 
 _G.minetest.registered_nodes = {}
 
@@ -88,7 +98,7 @@ _G.minetest.registered_chatcommands = {}
 _G.minetest.register_lbm = noop
 _G.minetest.register_abm = noop
 _G.minetest.register_chatcommand = noop
-_G.minetest.chat_send_player = noop
+_G.minetest.chat_send_player = function(...) print(unpack({...})) end
 _G.minetest.register_alias = noop
 _G.minetest.register_craftitem = noop
 _G.minetest.register_craft = noop
@@ -106,16 +116,19 @@ _G.minetest.get_us_time = function()
 	return socket.gettime() * 1000 * 1000
 end
 
-_G.minetest.get_node = function(pos)
+_G.minetest.get_node_or_nil = function(pos)
 	local hash = minetest.hash_node_position(pos)
-	return world.nodes[hash] or {name="IGNORE",param2=0}
+	return world.nodes[hash]
+end
+_G.minetest.get_node = function(pos)
+	return minetest.get_node_or_nil(pos) or {name="IGNORE",param2=0}
 end
 
 _G.minetest.get_worldpath = function(...) return "./spec/fixtures" end
 _G.minetest.get_modpath = function(...) return "./spec/fixtures" end
 _G.minetest.get_current_modname = function() return "technic" end
 
-_G.minetest.get_pointed_thing_position = dummy_coords
+--_G.minetest.get_pointed_thing_position = dummy_coords
 
 --
 -- Minetest default noop table

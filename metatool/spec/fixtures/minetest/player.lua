@@ -30,7 +30,7 @@ end
 _G.Player = function(name, privs)
 	local player = {
 		_name = name or "SX",
-		_privs = privs or { test_priv=1 },
+		_privs = privs or { server = 1, test_priv=1 },
 		get_player_control = function(self)
 			return {}
 		end,
@@ -38,6 +38,6 @@ _G.Player = function(name, privs)
 			return self._name
 		end
 	}
-	table.insert(players, player)
+	players[player._name] = player
 	return player
 end
