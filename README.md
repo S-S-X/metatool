@@ -31,34 +31,31 @@ For more complete and tool specific documentation go see README.md files in subd
 
 Example to add support for technic:injector
 
-```
+```lua
 local definition = {
 	name = "sci",
 	nodes = "technic:injector",
-	tooldef = {
-		group = "technic injector",
-		copy = function(node, pos, player)
-			-- Get some metadata from injector node and store it within
-			-- tool memory and also set new nice description for tool.
-			local meta = minetest.get_meta(pos)
-			return {
-				description = "This wand has some injector data",
-				myvalue = meta:get_string("owner")
-			}
-		end,
-
-		paste = function(node, pos, player, data)
-			-- Restore SCI metatdata from tool memory
-			local meta = minetest.get_meta(pos)
-			meta:set_string("owner", data.myvalue)
-		end,
-	}
+	group = "technic injector",
+	copy = function(self, node, pos, player)
+		-- Get some metadata from injector node and store it within
+		-- tool memory and also set new nice description for tool.
+		local meta = minetest.get_meta(pos)
+		return {
+			description = "This wand has some injector data",
+			myvalue = meta:get_string("owner")
+		}
+	end,
+	paste = function(self, node, pos, player, data)
+		-- Restore SCI metatdata from tool memory
+		local meta = minetest.get_meta(pos)
+		meta:set_string("owner", data.myvalue)
+	end,
 }
 ```
 
 Supply above definition for tool, mytool variable is returned from metatool:register_tool method
 
-```
+```lua
 mytool:load_node_definition(definition)
 ```
 
@@ -75,7 +72,7 @@ That's all, now you can use tubetool wand to copy/paste metadata owner value fro
 Callback `on_read_info(tooldef, player, pointed_thing, node, pos, nodedef)`
 
 Example definition:
-```
+```lua
 	on_read_info = function(tooldef, player, pointed_thing, node, pos, nodedef)
 		tooldef:info(node, pos, player)
 	end,
@@ -84,7 +81,7 @@ Example definition:
 Callback `data, group, description = on_read_node(tooldef, player, pointed_thing, node, pos, nodedef)`
 
 Example definition:
-```
+```lua
 	on_read_node = function(tooldef, player, pointed_thing, node, pos, nodedef)
 		local data, group = tooldef:copy(node, pos, player)
 		local description = type(data) == 'table' and data.description or ('Data from ' .. minetest.pos_to_string(pos))
@@ -95,7 +92,7 @@ Example definition:
 Callback `on_write_node(tooldef, data, group, player, pointed_thing, node, pos, nodedef)`
 
 Example definition:
-```
+```lua
 	on_write_node = function(tooldef, data, group, player, pointed_thing, node, pos, nodedef)
 		tooldef:paste(node, pos, player, data, group)
 	end,
@@ -106,8 +103,8 @@ Example definition:
 Callback `data = copy(node, pos, player)`
 
 Example definition:
-```
-	copy = function(node, pos, player)
+```lua
+	copy = function(self, node, pos, player)
 		return { description = "new description", myvalue = "any value" }
 	end,
 ```
@@ -115,8 +112,8 @@ Example definition:
 Callback `paste(node, pos, player, data)`
 
 Example definition:
-```
-	paste = function(node, pos, player, data)
+```lua
+	paste = function(self, node, pos, player, data)
 		print("Used on " .. node.name .. " by " .. player:get_player_name())
 	end,
 ```
@@ -165,4 +162,5 @@ Above protection_bypass_write parameters might not work if this is overridden.
 Protection checks are done automatically for all tool uses, node registration does not need any protection checks.
 By default tools cannot be used to read data from protected nodes and cannot be used to write data to protected nodes.
 
-Tools can override protection settings and also configuration can be used to override default protection behavior.
+In addition to global configuration, tools can override default tool wide protection behavior and also node definition
+can override default protection behavior for nodes. See `before_*` callbacks and `protection_bypass_*` attributes.

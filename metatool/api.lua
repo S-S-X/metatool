@@ -241,7 +241,7 @@ function metatool.on_tool_write(tool, player, pointed_thing, node, pos, nodedef,
 			group = data.group
 		end
 		if tool.on_write_node then
-			tool.on_write_node(tool, tooldata, group, player, pointed_thing, node, pos, nodedef)
+			tool:on_write_node(tooldata, group, player, pointed_thing, node, pos, nodedef)
 		else
 			tool:paste(node, pos, player, tooldata, group)
 		end
