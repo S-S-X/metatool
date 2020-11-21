@@ -1,0 +1,3 @@
+[submodule "metatool/spec/fixtures/mineunit"]
+	path = metatool/spec/fixtures/mineunit
+	url = git@github.com:mt-mods/mineunit.git

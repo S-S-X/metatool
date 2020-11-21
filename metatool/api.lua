@@ -10,20 +10,14 @@ metatool.tools = {}
 -- Metatool privileged tools
 metatool.privileged_tools = {}
 
-local transform_tool_name = function(name, mtprefix)
+function metatool.transform_tool_name(name, mtprefix)
 	local parts = name:gsub('\\s',''):split(':')
-	if #parts > 2 or #parts < 1 then
-		print(S('Invalid metatool name %s', name))
-		return
-	elseif #parts == 2 then
-		-- this will strip leading colon
-		return parts[1] .. ':' .. parts[2]
+	if #parts == 2 then
+		return (mtprefix and ':' or '') .. parts[1] .. ':' .. parts[2]
 	elseif #parts == 1 and parts[1] ~= 'metatool' then
 		return (mtprefix and ':' or '') .. 'metatool:' .. parts[1]
-	else
-		print(S('Invalid metatool name %s', name))
-		return
 	end
+	-- print(S('Invalid metatool name %s', name))
 end
 
 local register_privileged_tool = function(toolname, definition)
@@ -37,11 +31,11 @@ local remove_uncraftable_tool = function(player, tooldef)
 		local inv = player:get_inventory()
 		local lists = inv:get_lists()
 		local ref = ItemStack(tooldef.itemname)
-		local rm = ItemStack(string.format('%s %d', tooldef.itemname, 99))
+		local rm = ItemStack(string.format('%s %d', tooldef.itemname, 65535))
 		for list,_ in pairs(lists) do
 			-- look for at least single tool
 			while inv:contains_item(list, ref, false) do
-				-- take away 99 stacks at once
+				-- take away max stacks at once
 				inv:remove_item(list, rm)
 			end
 		end
@@ -138,26 +132,15 @@ local return_itemstack = function(player, itemstack, separated)
 	end
 end
 
-local validate_tool_definition = function(tooldef)
-	local function F(key)
-		local res = type(tooldef[key]) == 'function'
-		if not res then print(string.format('%s missing function %s', tooldef.itemname, key)) end
-		return res
-	end
-	return tooldef and F('on_read_node') and F('on_write_node')
-end
-
---luacheck: ignore unused argument self
-
 metatool.tool = function(toolname)
-	local name = transform_tool_name(toolname)
+	local name = metatool.transform_tool_name(toolname)
 	if name and metatool.tools[name] then
 		return metatool.tools[name]
 	end
 end
 
 -- Create or retrieve tool namespace, sorry.. might seem bit hacky
-metatool.ns = function(self, data)
+function metatool:ns(data)
 	if type(self) == 'string' then
 		-- metatool.ns('mytool') / retrieve namespace
 		local tool = metatool.tool(self)
@@ -196,29 +179,90 @@ metatool.is_protected = function(pos, player, privs, no_violation_record)
 	return false
 end
 
-metatool.before_info = function(nodedef, pos, player, no_violation_record)
-	if metatool.is_protected(pos, player, nodedef.protection_bypass_info, no_violation_record) then
+function metatool:before_info(pos, player, no_violation_record)
+	if metatool.is_protected(pos, player, self.protection_bypass_info, no_violation_record) then
 		return false
 	end
 	return true
 end
 
-metatool.before_read = function(nodedef, pos, player, no_violation_record)
-	if metatool.is_protected(pos, player, nodedef.protection_bypass_read, no_violation_record) then
+function metatool:before_read(pos, player, no_violation_record)
+	if metatool.is_protected(pos, player, self.protection_bypass_read, no_violation_record) then
 		return false
 	end
 	return true
 end
 
-metatool.before_write = function(nodedef, pos, player, no_violation_record)
-	if metatool.is_protected(pos, player, nodedef.protection_bypass_write, no_violation_record) then
+function metatool:before_write(pos, player, no_violation_record)
+	if metatool.is_protected(pos, player, self.protection_bypass_write, no_violation_record) then
 		return false
 	end
 	return true
+end
+
+function metatool.on_tool_info(tool, player, pointed_thing, node, pos, nodedef, itemstack)
+	if tool.on_read_info then
+		-- Tool on_read_info method defined, call through it and let it handle nodes
+		return tool:on_read_info(player, pointed_thing, node, pos, nodedef, itemstack)
+	elseif type(nodedef.info) == "function" then
+		-- Only node definition had info method available, use it directly
+		return nodedef:info(node, pos, player, itemstack)
+	end
+end
+
+function metatool.on_tool_read(tool, player, pointed_thing, node, pos, nodedef, itemstack)
+	local data, group, description
+	if tool.on_read_node then
+		-- Tool on_read_node method defined, call through it and let it handle nodes
+		data, group, description = tool:on_read_node(player, pointed_thing, node, pos, nodedef)
+	elseif type(nodedef.copy) == "function" then
+		-- Only node definition had copy method available, use it directly
+		minetest.chat_send_player(player:get_player_name(), S('copying data for group %s', nodedef.group))
+		data = nodedef:copy(node, pos, player)
+		group = nodedef.group
+		description = type(data) == 'table' and data.description or ('Data from ' .. minetest.pos_to_string(pos))
+	end
+	local separated
+	itemstack, separated = separate_stack(itemstack)
+	local result = metatool.write_data(separated or itemstack, {data=data,group=group}, description, tool)
+	if type(result) == 'string' then
+		minetest.chat_send_player(player:get_player_name(), result)
+	end
+	-- if stack was separated give missing items to player
+	return_itemstack(player, itemstack, separated)
+	return itemstack
+end
+
+function metatool.on_tool_write(tool, player, pointed_thing, node, pos, nodedef, itemstack)
+	local data = metatool.read_data(itemstack)
+	if not tool.allow_use_empty and type(data) ~= 'table' then
+		minetest.chat_send_player(
+			player:get_player_name(),
+			'no data stored in this wand, sneak+use or special+use to record data.'
+		)
+		return
+	end
+	-- Execute on_write_node when tool is used on node and tool contains data
+	local tooldata
+	local group
+	if type(data) == 'table' then
+		tooldata = data.data
+		group = data.group
+	end
+	if tool.on_write_node then
+		return tool:on_write_node(tooldata, group, player, pointed_thing, node, pos, nodedef)
+	elseif nodedef.group ~= group then
+		minetest.chat_send_player(
+			player:get_player_name(),
+			S('metatool wand contains data for %s, cannot apply for %s', group, nodedef.group)
+		)
+	elseif nodedef and data and type(nodedef.paste) == "function" then
+		return nodedef:paste(node, pos, player, tooldata)
+	end
 end
 
 -- Called when registered tool is used
-metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
+function metatool:on_use(toolname, itemstack, player, pointed_thing)
 
 	local tool = self.tools[toolname]
 	if not player or not tool then return end
@@ -238,7 +282,7 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 		end
 	end
 
-	local node, pos, nodedef = metatool:get_node(tool, player, pointed_thing)
+	local node, pos, nodedef = metatool.get_node(tool, player, pointed_thing)
 	if not node then
 		return
 	end
@@ -247,45 +291,17 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 
 	if controls.aux1 or controls.sneak then
 		local use_info = controls.sneak and (tool.on_read_info or nodedef.info)
-		if use_info and nodedef.before_info(nodedef, pos, player) then
-			-- Execute on_read_node when tool is used on node and sneak is held
-			if tool.on_read_info then
-				-- Tool info method defined, call through it and let it handle nodes
-				tool.on_read_info(tool, player, pointed_thing, node, pos, nodedef, itemstack)
-			else
-				-- Only node definition had info method available, use it directly
-				nodedef.info(node, pos, player, itemstack)
-			end
-		elseif not use_info and nodedef.before_read(nodedef, pos, player) then
+		if use_info and nodedef:before_info(pos, player) then
+			-- Execute on_read_info when tool is used on node and sneak is held
+			return metatool.on_tool_info(tool, player, pointed_thing, node, pos, nodedef, itemstack)
+		elseif not use_info and nodedef:before_read(pos, player) then
 			-- Execute on_read_node when tool is used on node and special or sneak is held
-			local data, group, description = tool.on_read_node(tool, player, pointed_thing, node, pos, nodedef)
-			local separated
-			itemstack, separated = separate_stack(itemstack)
-			local result = metatool.write_data(separated or itemstack, {data=data,group=group}, description, tool)
-			if type(result) == 'string' then
-				minetest.chat_send_player(player:get_player_name(), result)
-			end
-			-- if stack was separated give missing items to player
-			return_itemstack(player, itemstack, separated)
+			return metatool.on_tool_read(tool, player, pointed_thing, node, pos, nodedef, itemstack)
 		end
 	else
-		if nodedef.before_write(nodedef, pos, player) then
-			local data = metatool.read_data(itemstack)
-			if tool.allow_use_empty or type(data) == 'table' then
-				-- Execute on_write_node when tool is used on node and tool contains data
-				local tooldata
-				local group
-				if type(data) == 'table' then
-					tooldata = data.data
-					group = data.group
-				end
-				tool.on_write_node(tool, tooldata, group, player, pointed_thing, node, pos, nodedef)
-			else
-				minetest.chat_send_player(
-					player:get_player_name(),
-					'no data stored in this wand, sneak+use or special+use to record data.'
-				)
-			end
+		if nodedef:before_write(pos, player) then
+			-- Execute on_write_node when tool is used on node and no modifier keys is held
+			return metatool.on_tool_write(tool, player, pointed_thing, node, pos, nodedef, itemstack)
 		end
 	end
 
@@ -293,7 +309,7 @@ metatool.on_use = function(self, toolname, itemstack, player, pointed_thing)
 end
 
 -- Common node loading method for tools
-metatool.load_node_definition = function(self, def)
+function metatool:load_node_definition(def)
 	if self == metatool then
 		-- Could go full OOP and actually check for tool object.. sorry about that
 		print('metatool:load_node invalid method call, requires tool context')
@@ -306,22 +322,15 @@ metatool.load_node_definition = function(self, def)
 		))
 		return
 	end
-	if type(def.tooldef) ~= 'table' then
-		print(string.format(
-			'metatool:%s error in %s:load_node_definition invalid `tooldef` type: %s',
-			self.name, self.name, type(def.tooldef)
-		))
-		return
-	end
 	local nodedef_name
 	if type(def.nodes) == 'table' and #def.nodes > 0 then
 		nodedef_name = def.nodes[1]
 		for _,nodename in ipairs(def.nodes) do
-			metatool:register_node(self.name, nodename, def.tooldef)
+			metatool:register_node(self.name, nodename, def)
 		end
 	elseif type(def.nodes) == 'string' then
 		nodedef_name = def.nodes
-		metatool:register_node(self.name, def.nodes, def.tooldef)
+		metatool:register_node(self.name, def.nodes, def)
 	else
 		print(string.format(
 			'metatool:%s error in %s:load_node_definition invalid `nodes` type: %s',
@@ -329,11 +338,11 @@ metatool.load_node_definition = function(self, def)
 		))
 		return
 	end
-	metatool.merge_node_settings(self.name, def.name or nodedef_name, def.tooldef)
+	metatool.merge_node_settings(self.name, def.name or nodedef_name, def)
 end
 
-metatool.register_tool = function(self, name, definition)
-	local itemname = transform_tool_name(name, true)
+function metatool:register_tool(name, definition)
+	local itemname = metatool.transform_tool_name(name, true)
 	local itemname_clean = itemname:gsub('^:', '')
 	if not self.tools[itemname_clean] then
 		if type(definition) ~= 'table' then
@@ -341,43 +350,37 @@ metatool.register_tool = function(self, name, definition)
 			return
 		end
 		definition.itemname = itemname_clean
-		if validate_tool_definition(definition) then
-			metatool.merge_tool_settings(itemname_clean, definition)
-			if not register_metatool_item(itemname, definition) then
-				print(S('metatool:register_tool tool registration failed for "%s".', name))
-				return
-			end
-			-- TODO: Keep just 2 of these: name, itemname and nice_name.
-			-- Maybe remove nice_name, use name for fancy definition.name and itemname for itemname_clean.
-			-- TODO: Keep everything given in original definition and then just override all keys used by API.
-			self.tools[itemname_clean] = {
-				name = itemname_clean,
-				itemname = itemname_clean,
-				nice_name = definition.name or name,
-				description = definition.description,
-				allow_use_empty = definition.allow_use_empty,
-				privs = definition.privs,
-				settings = definition.settings,
-				recipe = definition.recipe,
-				ns = metatool.ns,
-				load_node_definition = metatool.load_node_definition,
-				nodes = {},
-				copy = metatool.copy,
-				paste = metatool.paste,
-				on_read_node = definition.on_read_node,
-				on_write_node = definition.on_write_node,
-			}
-			print(S('metatool:register_tool registered tool "%s".', itemname_clean))
-			return self.tools[itemname_clean]
-		else
-			print('metatool:register_tool invalid tool definition, missing required values.')
+		metatool.merge_tool_settings(itemname_clean, definition)
+		if not register_metatool_item(itemname, definition) then
+			print(S('metatool:register_tool tool registration failed for "%s".', name))
+			return
 		end
+		-- TODO: Keep just 2 of these: name, itemname and nice_name.
+		-- Maybe remove nice_name, use name for fancy definition.name and itemname for itemname_clean.
+		-- TODO: Keep everything given in original definition and then just override all keys used by API.
+		self.tools[itemname_clean] = {
+			name = itemname_clean,
+			itemname = itemname_clean,
+			nice_name = definition.name or name,
+			description = definition.description,
+			allow_use_empty = definition.allow_use_empty,
+			privs = definition.privs,
+			settings = definition.settings,
+			recipe = definition.recipe,
+			ns = metatool.ns,
+			load_node_definition = metatool.load_node_definition,
+			nodes = {},
+			on_read_node = definition.on_read_node,
+			on_write_node = definition.on_write_node,
+		}
+		print(S('metatool:register_tool registered tool "%s".', itemname_clean))
+		return self.tools[itemname_clean]
 	else
 		print(S('metatool:register_tool not registering tool %s because it is already registered.', name))
 	end
 end
 
-metatool.register_node = function(self, toolname, name, definition, override)
+function metatool:register_node(toolname, name, definition, override)
 	local tooldef = self.tools[toolname]
 	if override or not tooldef.nodes[name] then
 		if type(definition) ~= 'table' then
@@ -406,7 +409,7 @@ metatool.register_node = function(self, toolname, name, definition, override)
 	end
 end
 
-metatool.get_node = function(self, tool, player, pointed_thing)
+function metatool.get_node(tool, player, pointed_thing)
 	if not player or not pointed_thing then
 		-- not valid player or pointed_thing
 		return
@@ -471,34 +474,4 @@ metatool.read_data = function(itemstack)
 	local meta = itemstack:get_meta()
 	local datastring = meta:get_string('data')
 	return minetest.deserialize(datastring)
-end
-
--- TODO: Remove metatool.info, metatool.copy and metatool.paste and
--- update tools to call these directly using nodedef event
--- handler argument provided through metatool.on_use.
-metatool.info = function(self, node, pos, player)
-	local definition = self.nodes[node.name] or self.nodes['*']
-	if definition then
-		definition.info(node, pos, player)
-	end
-end
-
-metatool.copy = function(self, node, pos, player)
-	local definition = self.nodes[node.name] or self.nodes['*']
-	if definition and type(definition.copy) == "function" then
-		minetest.chat_send_player(player:get_player_name(), S('copying data for group %s', definition.group))
-		return definition.copy(node, pos, player), definition.group
-	end
-end
-
-metatool.paste = function(self, node, pos, player, data, group)
-	local definition = self.nodes[node.name] or self.nodes['*']
-	if data and definition and definition.group == group and type(definition.paste) == "function" then
-		return definition.paste(node, pos, player, data)
-	else
-		minetest.chat_send_player(
-			player:get_player_name(),
-			S('metatool wand contains data for %s, cannot apply for %s', group, definition.group)
-		)
-	end
 end

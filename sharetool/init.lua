@@ -14,8 +14,7 @@ local recipe = {
 }
 --]]
 
---luacheck: ignore unused argument data group pointed_thing
-local tool = metatool:register_tool('sharetool', {
+local sharetool = {
 	description = 'ShareTool',
 	name = 'ShareTool',
 	texture = 'sharetool_wand.png',
@@ -25,38 +24,40 @@ local tool = metatool:register_tool('sharetool', {
 	settings = {
 		shared_account = 'shared'
 	},
-	on_read_node = function(tooldef, player, pointed_thing, node, pos)
-		local definition = tooldef.nodes[node.name]
-		if definition then
-			local res = definition.copy(node, pos, player)
-			local name = player:get_player_name()
-			local success = type(res) ~= 'table' or res.success or res.success == nil
-			if success then
-				minetest.chat_send_player(name, S('Node %s ownership changed to %s', node.name, name))
-			else
-				minetest.chat_send_player(name, S('Failed %s ownership change to %s', node.name, name))
-			end
-			-- Return nil to keep tool without metadata
-			return nil, nil, nil
+}
+
+--luacheck: ignore unused argument data group pointed_thing
+function sharetool:on_read_node(player, pointed_thing, node, pos)
+	local definition = self.nodes[node.name]
+	if definition then
+		local res = definition:copy(node, pos, player)
+		local name = player:get_player_name()
+		local success = type(res) ~= 'table' or res.success or res.success == nil
+		if success then
+			minetest.chat_send_player(name, S('Node %s ownership changed to %s', node.name, name))
+		else
+			minetest.chat_send_player(name, S('Failed %s ownership change to %s', node.name, name))
 		end
-	end,
-	on_write_node = function(tooldef, data, group, player, pointed_thing, node, pos)
-		local definition = tooldef.nodes[node.name]
-		if definition then
-			local res = definition.paste(node, pos, player)
-			local name = player:get_player_name()
-			local sname = tooldef.settings.shared_account
-			local success = type(res) ~= 'table' or res.success or res.success == nil
-			if success then
-				minetest.chat_send_player(name, S('Node %s ownership changed to %s', node.name, sname))
-			else
-				minetest.chat_send_player(name, S('Failed %s ownership change to %s', node.name, sname))
-			end
-			-- Return nil to keep tool without metadata
-			return nil, nil, nil
+	end
+	-- Return nil to keep tool without metadata
+end
+
+function sharetool:on_write_node(data, group, player, pointed_thing, node, pos)
+	local definition = self.nodes[node.name]
+	if definition then
+		local res = definition:paste(node, pos, player)
+		local name = player:get_player_name()
+		local sname = self.settings.shared_account
+		local success = type(res) ~= 'table' or res.success or res.success == nil
+		if success then
+			minetest.chat_send_player(name, S('Node %s ownership changed to %s', node.name, sname))
+		else
+			minetest.chat_send_player(name, S('Failed %s ownership change to %s', node.name, sname))
 		end
-	end,
-})
+	end
+end
+
+local tool = metatool:register_tool('sharetool', sharetool)
 
 -- Create namespace containing sharetool runtime data and functions
 tool:ns({

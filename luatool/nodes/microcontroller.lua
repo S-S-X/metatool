@@ -30,34 +30,33 @@ for i=0,15 do
 	table.insert(nodes, nodenameprefix .. lpadcut(d2b(i), '0', 4))
 end
 
---luacheck: ignore unused argument node player
-return {
+local definition = {
 	name = 'microcontroller',
 	nodes = nodes,
-	tooldef = {
-		group = 'microcontroller',
-		protection_bypass_read = "interact",
-
-		copy = function(node, pos, player)
-			local meta = minetest.get_meta(pos)
-
-			-- get and store lua code
-			local code = meta:get_string("code")
-
-			-- return data required for replicating this controller settings
-			return {
-				description = string.format("Microcontroller at %s", minetest.pos_to_string(pos)),
-				code = code,
-			}
-		end,
-
-		paste = function(node, pos, player, data)
-			-- restore settings and update tube, no api available
-			local fields = {
-				code = data.code,
-			}
-			local nodedef = minetest.registered_nodes[node.name]
-			nodedef.on_receive_fields(pos, "", fields, player)
-		end,
-	}
+	group = 'microcontroller',
+	protection_bypass_read = "interact",
 }
+
+function definition:copy(node, pos, player)
+	local meta = minetest.get_meta(pos)
+
+	-- get and store lua code
+	local code = meta:get_string("code")
+
+	-- return data required for replicating this controller settings
+	return {
+		description = string.format("Microcontroller at %s", minetest.pos_to_string(pos)),
+		code = code,
+	}
+end
+
+function definition:paste(node, pos, player, data)
+	-- restore settings and update tube, no api available
+	local fields = {
+		code = data.code,
+	}
+	local nodedef = minetest.registered_nodes[node.name]
+	nodedef.on_receive_fields(pos, "", fields, player)
+end
+
+return definition

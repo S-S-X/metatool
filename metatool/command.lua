@@ -29,7 +29,7 @@ metatool.chat.register_command = function(cmd, params, description, privs, minar
 end
 
 local metatool_privileged_give = function(name, params)
-		local toolname = params[1]
+		local toolname = metatool.transform_tool_name(params[1])
 		local tooldef = metatool.privileged_tools[toolname]
 		local count = 1
 		if not tooldef then
