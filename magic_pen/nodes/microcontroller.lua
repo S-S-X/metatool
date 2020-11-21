@@ -30,18 +30,19 @@ for i=0,15 do
 	table.insert(nodes, nodenameprefix .. lpadcut(d2b(i), '0', 4))
 end
 
-return {
+local definition = {
 	name = 'microcontroller',
 	nodes = nodes,
-	tooldef = {
-		group = 'text',
-		protection_bypass_read = "interact",
-		copy = function(node, pos, player)
-			local meta = minetest.get_meta(pos)
-			return {
-				description = string.format("Microcontroller at %s", minetest.pos_to_string(pos)),
-				content = meta:get_string("code"),
-			}
-		end,
-	}
+	group = 'text',
+	protection_bypass_read = "interact",
 }
+
+function definition:copy(node, pos, player)
+	local meta = minetest.get_meta(pos)
+	return {
+		description = string.format("Microcontroller at %s", minetest.pos_to_string(pos)),
+		content = meta:get_string("code"),
+	}
+end
+
+return definition

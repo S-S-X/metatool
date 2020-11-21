@@ -61,42 +61,43 @@ local function parse_comments(content)
 	return title, author
 end
 
-return {
+local definition = {
 	name = 'luacontroller',
 	nodes = nodes,
-	tooldef = {
-		group = 'text',
-		protection_bypass_read = "interact",
-		copy = function(node, pos, player)
-			local meta = minetest.get_meta(pos)
-			local content = meta:get_string("code")
-			local title, author = parse_comments(content)
-			local nicename = minetest.registered_nodes[node.name].description or node.name
-			local description = title
-				and ("%s: %s"):format(nicename, title)
-				or ("%s at %s"):format(nicename, minetest.pos_to_string(pos))
-			return {
-				description = description,
-				content = content,
-				title = title,
-				source = author,
-			}
-		end,
-		paste = function(node, pos, player, data)
-			local content = data.content
-			local title, author = parse_comments(content)
-			if not author and data.source then
-				content = ("-- Author: %s\n%s"):format(data.source, content)
-			end
-			if not title and data.title then
-				content = ("-- Description: %s\n%s"):format(data.title, content)
-			end
-			local fields = {
-				program = 1,
-				code = content,
-			}
-			local nodedef = minetest.registered_nodes[node.name]
-			nodedef.on_receive_fields(pos, "", fields, player)
-		end,
-	}
+	group = 'text',
+	protection_bypass_read = "interact",
 }
+
+function definition:copy(node, pos, player)
+	local meta = minetest.get_meta(pos)
+	local content = meta:get_string("code")
+	local title, author = parse_comments(content)
+	local nicename = minetest.registered_nodes[node.name].description or node.name
+	local description = title
+		and ("%s: %s"):format(nicename, title)
+		or ("%s at %s"):format(nicename, minetest.pos_to_string(pos))
+	return {
+		description = description,
+		content = content,
+		title = title,
+		source = author,
+	}
+end
+function definition:paste(node, pos, player, data)
+	local content = data.content
+	local title, author = parse_comments(content)
+	if not author and data.source then
+		content = ("-- Author: %s\n%s"):format(data.source, content)
+	end
+	if not title and data.title then
+		content = ("-- Description: %s\n%s"):format(data.title, content)
+	end
+	local fields = {
+		program = 1,
+		code = content,
+	}
+	local nodedef = minetest.registered_nodes[node.name]
+	nodedef.on_receive_fields(pos, "", fields, player)
+end
+
+return definition

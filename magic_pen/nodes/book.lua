@@ -22,31 +22,32 @@ end
 table.insert(nodes, "homedecor:book")
 table.insert(nodes, "homedecor:book_open")
 
-return {
+local definition = {
 	name = 'book',
 	nodes = nodes,
-	tooldef = {
-		group = 'text',
-		protection_bypass_read = "interact",
-		copy = function(node, pos, player)
-			local meta = minetest.get_meta(pos)
-			return {
-				description = ("%s at %s"):format(node.name, minetest.pos_to_string(pos)),
-				source = meta:get("owner"),
-				title = meta:get("title"),
-				content = meta:get("text"),
-			}
-		end,
-		--luacheck: ignore unused argument data
-		paste = function(node, pos, player, data)
-			local meta = minetest.get_meta(pos)
-			if data.title then
-				meta:set_string("title", data.title)
-				meta:set_string("infotext", data.title)
-			end
-			if data.content then
-				meta:set_string("text", data.content)
-			end
-		end,
-	}
+	group = 'text',
+	protection_bypass_read = "interact",
 }
+
+function definition:copy(node, pos, player)
+	local meta = minetest.get_meta(pos)
+	return {
+		description = ("%s at %s"):format(node.name, minetest.pos_to_string(pos)),
+		source = meta:get("owner"),
+		title = meta:get("title"),
+		content = meta:get("text"),
+	}
+end
+
+function definition:paste(node, pos, player, data)
+	local meta = minetest.get_meta(pos)
+	if data.title then
+		meta:set_string("title", data.title)
+		meta:set_string("infotext", data.title)
+	end
+	if data.content then
+		meta:set_string("text", data.content)
+	end
+end
+
+return definition

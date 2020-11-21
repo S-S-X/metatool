@@ -1,5 +1,5 @@
 --
--- tubetool:wand is in game tool that allows cloning pipeworks node data
+-- metatool:magic_pen is in game tool that allows copying text
 --
 
 local has_feather = not not minetest.registered_items['mobs:chicken_feather']
@@ -12,7 +12,6 @@ local recipe = {
 	{ 'default:coal_lump', '', '' }
 }
 
---luacheck: ignore unused argument tooldef player pointed_thing node pos
 local tool = metatool:register_tool('magic_pen', {
 	description = 'Magic pen',
 	name = 'MagicPen',
@@ -22,14 +21,6 @@ local tool = metatool:register_tool('magic_pen', {
 		machine_use_priv = 'server',
 		storage_size = 1024 * 16,
 	},
-	on_read_node = function(tooldef, player, pointed_thing, node, pos)
-		local data, group = tooldef:copy(node, pos, player)
-		local description = type(data) == 'table' and data.description or ('Data from ' .. minetest.pos_to_string(pos))
-		return data, group, description
-	end,
-	on_write_node = function(tooldef, data, group, player, pointed_thing, node, pos)
-		tooldef:paste(node, pos, player, data, group)
-	end,
 })
 
 tool:ns({

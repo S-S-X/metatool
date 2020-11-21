@@ -43,41 +43,43 @@ local get_content_title = metatool.ns('magic_pen').get_content_title
 
 local truncate = metatool.ns('magic_pen').truncate
 
-return {
+local definition = {
 	name = 'display_modpack',
 	nodes = nodes,
-	tooldef = {
-		group = 'text',
-		protection_bypass_read = "interact",
-		copy = function(node, pos, player)
-			local meta = minetest.get_meta(pos)
-			local keys = metakeys[node.name]
-			local content = get_content(keys, meta)
-			local title = get_title(keys, meta) or get_content_title(content)
-			local nicename = minetest.registered_nodes[node.name].description or node.name
-			return {
-				description = ("%s at %s"):format(nicename, minetest.pos_to_string(pos)),
-				content = content,
-				source = get_author(keys, meta),
-				title = title,
-			}
-		end,
-		paste = function(node, pos, player, data)
-			local meta = minetest.get_meta(pos)
-			local keys = metakeys[node.name]
-			-- Truncate content if needed
-			local content = truncate(data.content, keys[4])
-			-- Set infotext. Update node and text entity
-			if keys[2] then
-				set_content(keys, meta, content)
-				set_title(keys, meta, data.title)
-				if data.title then
-					meta:set_string("infotext", "\"".. data.title .."\"\n"..S("(right-click to read more text)"))
-				end
-			elseif content then
-				signs_api.set_display_text(pos, content)
-			end
-			display_api.update_entities(pos)
-		end,
-	}
+	group = 'text',
+	protection_bypass_read = "interact",
 }
+
+function definition:copy(node, pos, player)
+	local meta = minetest.get_meta(pos)
+	local keys = metakeys[node.name]
+	local content = get_content(keys, meta)
+	local title = get_title(keys, meta) or get_content_title(content)
+	local nicename = minetest.registered_nodes[node.name].description or node.name
+	return {
+		description = ("%s at %s"):format(nicename, minetest.pos_to_string(pos)),
+		content = content,
+		source = get_author(keys, meta),
+		title = title,
+	}
+end
+
+function definition:paste(node, pos, player, data)
+	local meta = minetest.get_meta(pos)
+	local keys = metakeys[node.name]
+	-- Truncate content if needed
+	local content = truncate(data.content, keys[4])
+	-- Set infotext. Update node and text entity
+	if keys[2] then
+		set_content(keys, meta, content)
+		set_title(keys, meta, data.title)
+		if data.title then
+			meta:set_string("infotext", "\"".. data.title .."\"\n"..S("(right-click to read more text)"))
+		end
+	elseif content then
+		signs_api.set_display_text(pos, content)
+	end
+	display_api.update_entities(pos)
+end
+
+return definition

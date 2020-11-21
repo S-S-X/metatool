@@ -12,26 +12,27 @@ local function add_field(t, f)
 	end
 end
 
-return {
+local definition = {
 	name = 'touchscreen',
 	nodes = "digistuff:touchscreen",
-	tooldef = {
-		group = 'text',
-		copy = function(node, pos, player)
-			local meta = minetest.get_meta(pos)
-			local data = minetest.deserialize(meta:get_string("data"))
-			local content = {}
-			if type(data) == "table" then
-				for _,field in ipairs(data) do
-					add_field(content, field)
-				end
-			end
-			local nicename = minetest.registered_nodes[node.name].description or node.name
-			return {
-				description = ("%s at %s"):format(nicename, minetest.pos_to_string(pos)),
-				content = table.concat(content, "\n"),
-				source = meta:get("owner"),
-			}
-		end,
-	}
+	group = 'text',
 }
+
+function definition:copy(node, pos, player)
+	local meta = minetest.get_meta(pos)
+	local data = minetest.deserialize(meta:get_string("data"))
+	local content = {}
+	if type(data) == "table" then
+		for _,field in ipairs(data) do
+			add_field(content, field)
+		end
+	end
+	local nicename = minetest.registered_nodes[node.name].description or node.name
+	return {
+		description = ("%s at %s"):format(nicename, minetest.pos_to_string(pos)),
+		content = table.concat(content, "\n"),
+		source = meta:get("owner"),
+	}
+end
+
+return definition
