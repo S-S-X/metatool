@@ -147,15 +147,11 @@ Above protection_bypass_write parameters might not work if this is overridden.
 
 ### Metatool API methods (for special needs)
 
-`node, pos, nodedef = metatool:get_node(tool, player, pointed_thing)`
+`node, pos, nodedef = metatool.get_node(tool, player, pointed_thing)`
 
 `metatool.write_data(itemstack, data, description)`
 
 `data = metatool.read_data = function(itemstack)`
-
-`data = metatool:copy(node, pos, player)`
-
-`metatool:paste(node, pos, player, data, group)`
 
 ## Minetest protection checks
 

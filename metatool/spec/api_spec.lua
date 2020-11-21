@@ -83,12 +83,12 @@ describe("Metatool API tool registration", function()
 			name = 'UnitTestTool',
 			texture = 'utt.png',
 			recipe = {{'air'},{'air'},{'air'}},
-			on_read_node = function(tooldef, player, pointed_thing, node, pos)
-				local data, group = tooldef:copy(node, pos, player)
+			on_read_node = function(self, player, pointed_thing, node, pos, nodedef)
+				local data, group = nodedef:copy(node, pos, player)
 				return data, group, "on_read_node description"
 			end,
-			on_write_node = function(tooldef, data, group, player, pointed_thing, node, pos)
-				tooldef:paste(node, pos, player, data, group)
+			on_write_node = function(self, data, group, player, pointed_thing, node, pos, nodedef)
+				nodedef:paste(node, pos, player, data, group)
 			end,
 		}
 		local tool = metatool:register_tool('testtool0', definition)
@@ -126,12 +126,12 @@ describe("Metatool API tool registration", function()
 			settings = {
 				machine_use_priv = "server"
 			},
-			on_read_node = function(tooldef, player, pointed_thing, node, pos)
-				local data, group = tooldef:copy(node, pos, player)
+			on_read_node = function(self, player, pointed_thing, node, pos, nodedef)
+				local data, group = nodedef:copy(node, pos, player)
 				return data, group, "on_read_node description"
 			end,
-			on_write_node = function(tooldef, data, group, player, pointed_thing, node, pos)
-				tooldef:paste(node, pos, player, data, group)
+			on_write_node = function(self, data, group, player, pointed_thing, node, pos, nodedef)
+				nodedef:paste(node, pos, player, data, group)
 			end,
 		}
 		local tool = metatool:register_tool('testtool2', definition)

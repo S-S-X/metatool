@@ -103,15 +103,9 @@ Tool registration method, returns tool definition assembly.
 Node registration method, this method will probably change or will be removed in future.
 Do not use directly, instead use `tool:load_node_definition`.
 
-`metatool:get_node(tool, player, pointed_thing)`
+`metatool.get_node(tool, player, pointed_thing)`
 Get node from world, checks node compatibility and protections.
 Returns either `nil` or indexed table containing node, pos, definition.
-
-`metatool:copy(node, pos, player)`
-Wrappper that does simple checks and calls node definition `copy` method.
-
-`metatool:paste(node, pos, player, data, group)`
-Wrappper that does simple checks and calls node definition `paste` method.
 
 ### Metatool API methods for registered tools
 

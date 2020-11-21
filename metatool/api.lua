@@ -132,8 +132,6 @@ local return_itemstack = function(player, itemstack, separated)
 	end
 end
 
---luacheck: ignore unused argument self
-
 metatool.tool = function(toolname)
 	local name = metatool.transform_tool_name(toolname)
 	if name and metatool.tools[name] then
@@ -205,10 +203,10 @@ end
 function metatool.on_tool_info(tool, player, pointed_thing, node, pos, nodedef, itemstack)
 	if tool.on_read_info then
 		-- Tool on_read_info method defined, call through it and let it handle nodes
-		tool:on_read_info(player, pointed_thing, node, pos, nodedef, itemstack)
+		return tool:on_read_info(player, pointed_thing, node, pos, nodedef, itemstack)
 	else
 		-- Only node definition had info method available, use it directly
-		nodedef:info(node, pos, player, itemstack)
+		return nodedef:info(node, pos, player, itemstack)
 	end
 end
 
@@ -219,7 +217,9 @@ function metatool.on_tool_read(tool, player, pointed_thing, node, pos, nodedef, 
 		data, group, description = tool:on_read_node(player, pointed_thing, node, pos, nodedef)
 	else
 		-- Only node definition had copy method available, use it directly
-		data, group = tool:copy(node, pos, player)
+		minetest.chat_send_player(player:get_player_name(), S('copying data for group %s', nodedef.group))
+		data = nodedef:copy(node, pos, player)
+		group = nodedef.group
 		description = type(data) == 'table' and data.description or ('Data from ' .. minetest.pos_to_string(pos))
 	end
 	local separated
@@ -232,24 +232,29 @@ end
 
 function metatool.on_tool_write(tool, player, pointed_thing, node, pos, nodedef, itemstack)
 	local data = metatool.read_data(itemstack)
-	if tool.allow_use_empty or type(data) == 'table' then
-		-- Execute on_write_node when tool is used on node and tool contains data
-		local tooldata
-		local group
-		if type(data) == 'table' then
-			tooldata = data.data
-			group = data.group
-		end
-		if tool.on_write_node then
-			tool:on_write_node(tooldata, group, player, pointed_thing, node, pos, nodedef)
-		else
-			tool:paste(node, pos, player, tooldata, group)
-		end
-	else
+	if not tool.allow_use_empty and type(data) ~= 'table' then
 		minetest.chat_send_player(
 			player:get_player_name(),
 			'no data stored in this wand, sneak+use or special+use to record data.'
 		)
+		return
+	end
+	-- Execute on_write_node when tool is used on node and tool contains data
+	local tooldata
+	local group
+	if type(data) == 'table' then
+		tooldata = data.data
+		group = data.group
+	end
+	if tool.on_write_node then
+		return tool:on_write_node(tooldata, group, player, pointed_thing, node, pos, nodedef)
+	elseif nodedef.group ~= group then
+		minetest.chat_send_player(
+			player:get_player_name(),
+			S('metatool wand contains data for %s, cannot apply for %s', group, nodedef.group)
+		)
+	elseif nodedef and data then
+		return nodedef:paste(node, pos, player, tooldata)
 	end
 end
 
@@ -274,7 +279,7 @@ function metatool:on_use(toolname, itemstack, player, pointed_thing)
 		end
 	end
 
-	local node, pos, nodedef = metatool:get_node(tool, player, pointed_thing)
+	local node, pos, nodedef = metatool.get_node(tool, player, pointed_thing)
 	if not node then
 		return
 	end
@@ -362,8 +367,6 @@ function metatool:register_tool(name, definition)
 			ns = metatool.ns,
 			load_node_definition = metatool.load_node_definition,
 			nodes = {},
-			copy = metatool.copy,
-			paste = metatool.paste,
 			on_read_node = definition.on_read_node,
 			on_write_node = definition.on_write_node,
 		}
@@ -403,7 +406,7 @@ function metatool:register_node(toolname, name, definition, override)
 	end
 end
 
-function metatool:get_node(tool, player, pointed_thing)
+function metatool.get_node(tool, player, pointed_thing)
 	if not player or not pointed_thing then
 		-- not valid player or pointed_thing
 		return
@@ -463,36 +466,4 @@ metatool.read_data = function(itemstack)
 	local meta = itemstack:get_meta()
 	local datastring = meta:get_string('data')
 	return minetest.deserialize(datastring)
-end
-
--- TODO: Remove metatool.info, metatool.copy and metatool.paste and
--- update tools to call these directly using nodedef event
--- handler argument provided through metatool.on_use.
-function metatool:info(node, pos, player)
-	local nodedef = self.nodes[node.name] or self.nodes['*']
-	if nodedef then
-		nodedef:info(node, pos, player)
-	end
-end
-
-function metatool:copy(node, pos, player)
-	local nodedef = self.nodes[node.name] or self.nodes['*']
-	if nodedef then
-		minetest.chat_send_player(player:get_player_name(), S('copying data for group %s', nodedef.group))
-		return nodedef:copy(node, pos, player), nodedef.group
-	end
-end
-
-function metatool:paste(node, pos, player, data, group)
-	local nodedef = self.nodes[node.name] or self.nodes['*']
-	if nodedef.group ~= group then
-		minetest.chat_send_player(
-			player:get_player_name(),
-			S('metatool wand contains data for %s, cannot apply for %s', group, nodedef.group)
-		)
-		return
-	end
-	if nodedef and data then
-		return nodedef:paste(node, pos, player, data)
-	end
 end
