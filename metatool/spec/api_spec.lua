@@ -11,9 +11,9 @@
 --]]
 
 dofile("spec/test_helpers.lua")
-fixture("minetest")
-fixture("minetest/player")
-fixture("minetest/protection")
+fixture("mineunit/core")
+fixture("mineunit/player")
+fixture("mineunit/protection")
 fixture("metatool")
 
 require("settings")
@@ -83,12 +83,12 @@ describe("Metatool API tool registration", function()
 			name = 'UnitTestTool',
 			texture = 'utt.png',
 			recipe = {{'air'},{'air'},{'air'}},
-			on_read_node = function(tooldef, player, pointed_thing, node, pos)
-				local data, group = tooldef:copy(node, pos, player)
+			on_read_node = function(self, player, pointed_thing, node, pos, nodedef)
+				local data, group = nodedef:copy(node, pos, player)
 				return data, group, "on_read_node description"
 			end,
-			on_write_node = function(tooldef, data, group, player, pointed_thing, node, pos)
-				tooldef:paste(node, pos, player, data, group)
+			on_write_node = function(self, data, group, player, pointed_thing, node, pos, nodedef)
+				nodedef:paste(node, pos, player, data, group)
 			end,
 		}
 		local tool = metatool:register_tool('testtool0', definition)
@@ -123,12 +123,15 @@ describe("Metatool API tool registration", function()
 			name = 'UnitTestTool',
 			texture = 'utt.png',
 			recipe = {{'air'},{'air'},{'air'}},
-			on_read_node = function(tooldef, player, pointed_thing, node, pos)
-				local data, group = tooldef:copy(node, pos, player)
+			settings = {
+				machine_use_priv = "server"
+			},
+			on_read_node = function(self, player, pointed_thing, node, pos, nodedef)
+				local data, group = nodedef:copy(node, pos, player)
 				return data, group, "on_read_node description"
 			end,
-			on_write_node = function(tooldef, data, group, player, pointed_thing, node, pos)
-				tooldef:paste(node, pos, player, data, group)
+			on_write_node = function(self, data, group, player, pointed_thing, node, pos, nodedef)
+				nodedef:paste(node, pos, player, data, group)
 			end,
 		}
 		local tool = metatool:register_tool('testtool2', definition)
@@ -146,6 +149,7 @@ describe("Metatool API tool registration", function()
 		assert.equals("test_testtool2_privs", tool.privs)
 		local expected_settings = {
 			extra_config_key = "testtool2_extra_config_value",
+			machine_use_priv = "server",
 		}
 		assert.same(expected_settings, tool.settings)
 
@@ -177,17 +181,15 @@ describe("Metatool API node registration", function()
 				"testnode2",
 				"nonexistent2",
 			},
-			tooldef = {
-				group = 'test node',
-				protection_bypass_write = "default_bypass_write_priv",
-				copy = function(node, pos, player)
-					print("nodedef copy callback executed")
-				end,
-				paste = function(node, pos, player, data)
-					print("nodedef paste callback executed")
-				end,
-			}
+			group = 'test node',
+			protection_bypass_write = "default_bypass_write_priv",
 		}
+		function definition:copy(node, pos, player)
+			print("nodedef copy callback executed")
+		end
+		function definition:paste(node, pos, player, data)
+			print("nodedef paste callback executed")
+		end
 		tool:load_node_definition(definition)
 
 		assert.is_table(tool.nodes)
@@ -199,9 +201,9 @@ describe("Metatool API node registration", function()
 		assert.is_function(tool.nodes.testnode1.before_read)
 		assert.is_function(tool.nodes.testnode2.before_write)
 
-		assert.equals(definition.tooldef.copy, tool.nodes.testnode1.copy)
-		assert.equals(definition.tooldef.paste, tool.nodes.testnode2.paste)
-		assert.equals("default_bypass_write_priv", definition.tooldef.protection_bypass_write)
+		assert.equals(definition.copy, tool.nodes.testnode1.copy)
+		assert.equals(definition.paste, tool.nodes.testnode2.paste)
+		assert.equals("default_bypass_write_priv", definition.protection_bypass_write)
 
 		local expected_settings = {
 			protection_bypass_write = "default_bypass_write_priv"
@@ -225,17 +227,15 @@ describe("Metatool API node registration", function()
 				"testnode2",
 				"nonexistent2",
 			},
-			tooldef = {
-				group = 'test node',
-				protection_bypass_write = "default_bypass_write_priv",
-				copy = function(node, pos, player)
-					print("nodedef copy callback executed")
-				end,
-				paste = function(node, pos, player, data)
-					print("nodedef paste callback executed")
-				end,
-			}
+			group = 'test node',
+			protection_bypass_write = "default_bypass_write_priv",
 		}
+		function definition:copy(node, pos, player)
+			print("nodedef copy callback executed")
+		end
+		function definition:paste(node, pos, player, data)
+			print("nodedef paste callback executed")
+		end
 		tool:load_node_definition(definition)
 
 		assert.is_table(tool.nodes)
@@ -247,8 +247,8 @@ describe("Metatool API node registration", function()
 		assert.is_function(tool.nodes.testnode1.before_read)
 		assert.is_function(tool.nodes.testnode2.before_write)
 
-		assert.equals(definition.tooldef.copy, tool.nodes.testnode1.copy)
-		assert.equals(definition.tooldef.paste, tool.nodes.testnode2.paste)
+		assert.equals(definition.copy, tool.nodes.testnode1.copy)
+		assert.equals(definition.paste, tool.nodes.testnode2.paste)
 		assert.equals("testtool2_testnode2_bypass_write", tool.nodes.testnode1.protection_bypass_write)
 		assert.equals("testtool2_testnode2_bypass_write", tool.nodes.testnode2.protection_bypass_write)
 		assert.equals("testtool2_testnode2_bypass_info", tool.nodes.testnode1.protection_bypass_info)
@@ -275,26 +275,24 @@ describe("Metatool API node registration", function()
 		local definition = {
 			name = 'testnode3',
 			nodes = "testnode3",
-			tooldef = {
-				group = 'test node',
-				protection_bypass_read = "default_bypass_read_priv",
-				settings = {
-					allow_doing_x = true,
-					message_for_y = "test y message",
-					boolean_test1 = true,
-					boolean_test2 = true,
-					boolean_test3 = true,
-					number_test1 = 0,
-					number_test2 = 0,
-				},
-				copy = function(node, pos, player)
-					print("nodedef copy callback executed")
-				end,
-				paste = function(node, pos, player, data)
-					print("nodedef paste callback executed")
-				end,
-			}
+			group = 'test node',
+			protection_bypass_read = "default_bypass_read_priv",
+			settings = {
+				allow_doing_x = true,
+				message_for_y = "test y message",
+				boolean_test1 = true,
+				boolean_test2 = true,
+				boolean_test3 = true,
+				number_test1 = 0,
+				number_test2 = 0,
+			},
 		}
+		function definition:copy(node, pos, player)
+			print("nodedef copy callback executed")
+		end
+		function definition:paste(node, pos, player, data)
+			print("nodedef paste callback executed")
+		end
 		tool:load_node_definition(definition)
 
 		assert.is_table(tool.nodes)
@@ -305,9 +303,9 @@ describe("Metatool API node registration", function()
 		assert.is_function(tool.nodes.testnode3.before_read)
 		assert.is_function(tool.nodes.testnode3.before_write)
 
-		assert.not_equals(definition.tooldef.copy, tool.nodes.testnode1.copy)
-		assert.equals(definition.tooldef.copy, tool.nodes.testnode3.copy)
-		assert.equals(definition.tooldef.paste, tool.nodes.testnode3.paste)
+		assert.not_equals(definition.copy, tool.nodes.testnode1.copy)
+		assert.equals(definition.copy, tool.nodes.testnode3.copy)
+		assert.equals(definition.paste, tool.nodes.testnode3.paste)
 		assert.equals("testtool2_testnode2_bypass_write", tool.nodes.testnode1.protection_bypass_write)
 		assert.equals("testtool2_testnode2_bypass_write", tool.nodes.testnode2.protection_bypass_write)
 		assert.is_nil(tool.nodes.testnode3.protection_bypass_write)
@@ -328,6 +326,45 @@ describe("Metatool API node registration", function()
 			number_test2 = 0,
 		}
 		assert.same(expected_settings, tool.nodes.testnode3.settings)
+
+	end)
+
+end)
+
+describe("Tool behavior", function()
+
+	world.layout({
+		{{x=123,y=123,z=123}, "testnode1"},
+		{{x=123,y=124,z=123}, "testnode1"},
+	})
+	local player = Player("SX", {server=1,test_testtool2_privs=1,test_priv=1})
+
+	describe("node write operation", function()
+
+		it("protects nodes from write", function()
+			local use_stack = ItemStack("metatool:testtool2")
+			local count = use_stack:get_count()
+			local pointed_thing = {
+				type = "node",
+				above = {x=123,y=124,z=123}, -- Pointing from above to downwards,
+				under = {x=123,y=123,z=123}, -- crosshair at protected node surface
+			}
+			local out_stack = metatool:on_use("metatool:testtool2", use_stack, player, pointed_thing)
+			-- Verify that returned stack is not modified
+			assert.equals(true, out_stack == nil or (out_stack == use_stack and count == out_stack:get_count()))
+		end)
+
+		it("writes unprotected nodes", function()
+			local use_stack = ItemStack("metatool:testtool2")
+			metatool.write_data(use_stack,{data={},group="test node"})
+			local pointed_thing = {
+				type = "node",
+				above = {x=123,y=125,z=123}, -- Pointing from above to downwards,
+				under = {x=123,y=124,z=123}, -- crosshair at protected node surface
+			}
+			local out_stack = metatool:on_use("metatool:testtool2", use_stack, player, pointed_thing)
+			-- TODO: Check if data was written, currently this only verifies no crash
+		end)
 
 	end)
 

@@ -33,43 +33,42 @@ table.insert(nodes, nodenameprefix .. '_burnt')
 
 local ns = metatool.ns('luatool')
 
---luacheck: ignore unused argument node player
-return {
+local definition = {
 	name = 'luatube',
 	nodes = nodes,
-	tooldef = {
-		group = 'lua tube',
-		protection_bypass_read = "interact",
-
-		info = function(node, pos, player, itemstack)
-			return ns.info(node, pos, player, itemstack, 'lua tube')
-		end,
-
-		copy = function(node, pos, player)
-			local meta = minetest.get_meta(pos)
-
-			-- get and store lua code
-			local code = meta:get_string("code")
-
-			-- return data required for replicating this tube settings
-			return {
-				description = string.format("Lua tube at %s", minetest.pos_to_string(pos)),
-				code = code,
-			}
-		end,
-
-		paste = function(node, pos, player, data)
-			-- restore settings and update tube, no api available
-			local meta = minetest.get_meta(pos)
-			if data.mem_stored then
-				meta:set_string("lc_memory", data.mem)
-			end
-			local fields = {
-				program = 1,
-				code = data.code or meta:get_string("code"),
-			}
-			local nodedef = minetest.registered_nodes[node.name]
-			nodedef.on_receive_fields(pos, "", fields, player)
-		end,
-	}
+	group = 'lua tube',
+	protection_bypass_read = "interact",
 }
+
+function definition:info(node, pos, player, itemstack)
+	return ns.info(node, pos, player, itemstack, 'lua tube')
+end
+
+function definition:copy(node, pos, player)
+	local meta = minetest.get_meta(pos)
+
+	-- get and store lua code
+	local code = meta:get_string("code")
+
+	-- return data required for replicating this tube settings
+	return {
+		description = string.format("Lua tube at %s", minetest.pos_to_string(pos)),
+		code = code,
+	}
+end
+
+function definition:paste(node, pos, player, data)
+	-- restore settings and update tube, no api available
+	local meta = minetest.get_meta(pos)
+	if data.mem_stored then
+		meta:set_string("lc_memory", data.mem)
+	end
+	local fields = {
+		program = 1,
+		code = data.code or meta:get_string("code"),
+	}
+	local nodedef = minetest.registered_nodes[node.name]
+	nodedef.on_receive_fields(pos, "", fields, player)
+end
+
+return definition

@@ -24,3 +24,7 @@ _G.Settings = function(fname)
 	end
 	return settings
 end
+
+minetest.register_node("testnode1", {})
+minetest.register_node("testnode2", {})
+minetest.register_node("testnode3", {})
