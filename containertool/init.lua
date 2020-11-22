@@ -48,7 +48,7 @@ end
 
 local function get_digiline_channel(meta, node)
 	if tool.settings.copy_digiline_channel and has_digiline(node.name) then
-		return meta:get("channel")
+		return meta:get_string("channel")
 	end
 end
 
@@ -63,8 +63,10 @@ local function get_splitstacks(meta, node, pos)
 end
 
 tool:ns({
+	description = description,
 	is_tubedevice = is_tubedevice,
 	has_digiline = has_digiline,
+	get_digiline_channel = get_digiline_channel,
 	get_common_attributes = function(meta, node, pos, player)
 		local owner = meta:get("owner")
 		return {
@@ -113,6 +115,8 @@ tool:ns({
 -- nodes
 local modpath = minetest.get_modpath('containertool')
 tool:load_node_definition(dofile(modpath .. '/nodes/technic_chests.lua'))
+tool:load_node_definition(dofile(modpath .. '/nodes/more_chests_shared.lua'))
+tool:load_node_definition(dofile(modpath .. '/nodes/digilines_chest.lua'))
 
 -- Register after everything else, default behavior for nodes that seems to be compatible
 minetest.register_on_mods_loaded(function()

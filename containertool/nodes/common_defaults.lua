@@ -56,8 +56,8 @@ function definition:paste(node, pos, player, data)
 	set_digiline_meta(meta, {channel = data.channel}, node)
 	-- Yeah, sorry... everyone just keeps their internal stuff "protected"
 	if on_receive_fields[node.name] then
-		if not pcall(function()on_receive_fields[node.name](pos, nil, {}, player)end) then
-			on_receive_fields[node.name](pos, nil, {quit=1}, player)
+		if not pcall(function()on_receive_fields[node.name](pos, "", {}, player)end) then
+			on_receive_fields[node.name](pos, "", {quit=1}, player)
 		end
 	end
 end
