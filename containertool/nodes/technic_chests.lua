@@ -29,10 +29,20 @@ for _, nodename in ipairs(nodes) do
 	end
 end
 
--- Meta getters / setters considering nil values
-local function get_int(meta, key) local value = meta:get(key) return value and tonumber(value) end
-local function set_int(meta, key, value) if value then meta:set_int(key, value) end end
-local function set_string(meta, key, value) if value then meta:set_string(key, value) end end
+local ns = metatool.ns('containertool')
+
+-- Helpers
+local has_digiline = ns.has_digiline
+-- Base metadata reader
+local get_common_attributes = ns.get_common_attributes
+-- Special metadata setters
+local set_key_lock_secret = ns.set_key_lock_secret
+local set_digiline_meta = ns.set_digiline_meta
+local set_splitstacks = ns.set_splitstacks
+-- Common metadata setters/getters
+local get_int = ns.get_int
+local set_int = ns.set_int
+local set_string = ns.set_string
 
 local function set_color(meta, node, pos, color)
 	if color then
@@ -57,62 +67,64 @@ local function set_color(meta, node, pos, color)
 	end
 end
 
-return {
+local definition = {
 	name = 'technic_chest',
 	nodes = nodes,
-	tooldef = {
-		group = 'container',
-		protection_bypass_read = "interact",
-		before_write = function(nodedef, pos, player)
-			-- FIXME: Supply missing protected/locked arguments or reimplement protection checking here
-			return technic.chests.change_allowed(pos, player)
-		end,
-		copy = function(node, pos, player)
-			local meta = minetest.get_meta(pos)
-			local has_color = not not (basenode2colornode[node.name] or colornode2basenode[node.name])
-			-- Allow reading key_lock_secret only by chest owner
-			local owner = meta:get("owner")
-			local key_lock_secret = owner == player:get_player_name() and meta:get("key_lock_secret")
-			local infotext = meta:get("infotext")
-			local nicename = infotext or minetest.registered_nodes[node.name].description or node.name
-			return {
-				description = ("%s at %s"):format(nicename, minetest.pos_to_string(pos)),
-				-- Information/interface
-				color = get_int(meta, "color") or has_color,
-				sort_mode = get_int(meta, "sort_mode"),
-				autosort = get_int(meta, "autosort"),
-				-- Security
-				owner = owner,
-				key_lock_secret = key_lock_secret,
-				-- Pipeworks
-				splitstacks = get_int(meta, "splitstacks"),
-				-- Digilines
-				channel = meta:get("channel"),
-				put = get_int(meta, "send_put"),
-				take = get_int(meta, "send_take"),
-				inject = get_int(meta, "send_inject"),
-				pull = get_int(meta, "send_pull"),
-				overflow = get_int(meta, "send_overflow"),
-			}
-		end,
-		paste = function(node, pos, player, data)
-			local meta = minetest.get_meta(pos)
-			-- Information/interface
-			set_color(meta, node, pos, data.color)
-			set_int(meta, "sort_mode", data.sort_mode)
-			set_int(meta, "autosort", data.autosort)
-			-- Security
-			set_string(meta, "key_lock_secret", data.secret)
-			-- Pipeworks
-			set_int(meta, "splitstacks", data.splitstacks)
-			-- Digilines
-			--set_string(meta, "channel", data.channel)
-			set_int(meta, "send_put", data.put)
-			set_int(meta, "send_take", data.take)
-			set_int(meta, "send_inject", data.inject)
-			set_int(meta, "send_pull", data.pull)
-			set_int(meta, "send_overflow", data.overflow)
-			on_receive_fields[node.name](pos, nil, {sort = 1}, player)
-		end,
-	}
+	group = 'container',
+	protection_bypass_read = "interact",
+	settings = {
+		copy_color = true,
+	},
 }
+
+function definition:before_write(pos, player)
+	return technic.chests.change_allowed(pos, player, true, true)
+end
+
+function definition:copy(node, pos, player)
+	local meta = minetest.get_meta(pos)
+	local has_color = not not (basenode2colornode[node.name] or colornode2basenode[node.name])
+	-- Read common data like owner, splitstacks, channel etc.
+	local data = get_common_attributes(meta, node, pos, player)
+	-- Information/interface
+	data.color = self.settings.copy_color and (get_int(meta, "color") or has_color)
+	data.sort_mode = get_int(meta, "sort_mode")
+	data.autosort = get_int(meta, "autosort")
+	-- Digilines
+	if has_digiline(node.name) then
+		-- Chests seems to be clearing unchecked meta so we do the same
+		data.technic_chest_put = get_int(meta, "send_put") or ""
+		data.technic_chest_take = get_int(meta, "send_take") or ""
+		data.technic_chest_inject = get_int(meta, "send_inject") or ""
+		data.technic_chest_pull = get_int(meta, "send_pull") or ""
+		data.technic_chest_overflow = get_int(meta, "send_overflow") or ""
+	end
+	-- Return collected data
+	return data
+end
+
+function definition:paste(node, pos, player, data)
+	local meta = minetest.get_meta(pos)
+	-- Information/interface
+	set_color(meta, node, pos, data.color)
+	set_int(meta, "sort_mode", data.sort_mode)
+	set_int(meta, "autosort", data.autosort)
+	-- Security
+	set_key_lock_secret(meta, data, node)
+	-- Pipeworks
+	set_splitstacks(meta, data, node, pos)
+	-- Digilines
+	local digiline_data = {
+		channel = data.channel,
+		send_put = data.technic_chest_put,
+		send_take = data.technic_chest_take,
+		send_inject = data.technic_chest_inject,
+		send_pull = data.technic_chest_pull,
+		send_overflow = data.technic_chest_overflow,
+	}
+	set_digiline_meta(meta, digiline_data, node)
+	-- Update formspec
+	on_receive_fields[node.name](pos, nil, {quit=1}, player)
+end
+
+return definition

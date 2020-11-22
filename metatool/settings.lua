@@ -110,13 +110,17 @@ local update_setting = function(target, name, key, value)
 	if target[key] == nil then
 		-- If key is not set use provided value and export it if asked to
 		target[key] = value
+		-- Export default configuration to settings file
+		if metatool.export_default_config then
+			if type(value) == "boolean" then
+				settings:set_bool(makekey(name, key), value)
+			else
+				settings:set(makekey(name, key), value)
+			end
+		end
 	else
 		-- If key is set convert configuration value to type of default setting
 		target[key] = convert(target[key], type(value))
-	end
-	-- Export default configuration to settings file
-	if metatool.export_default_config then
-		settings:set(makekey(name, key), value)
 	end
 end
 

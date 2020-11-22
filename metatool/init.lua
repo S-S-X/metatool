@@ -14,7 +14,7 @@
 -- initialize namespace and core functions
 metatool = {
 	configuration_file = minetest.get_worldpath() .. '/metatool.cfg',
-	export_default_config = minetest.settings:get_bool("metatool_export_default_config", false),
+	export_default_config = minetest.settings:get_bool("metatool_export_default_config", true),
 	modpath = minetest.get_modpath('metatool'),
 	S = string.format
 }
