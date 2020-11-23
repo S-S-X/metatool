@@ -227,14 +227,20 @@ describe("Metatool API node registration", function()
 				"testnode2",
 				"nonexistent2",
 			},
-			group = 'test node',
+			group = 'test node 2',
 			protection_bypass_write = "default_bypass_write_priv",
 		}
 		function definition:copy(node, pos, player)
-			print("nodedef copy callback executed")
+			print("testnode2 copy callback executed")
+			local meta = minetest.get_meta(pos)
+			local value = meta:get_string("test")
+			--assert.equals("node2meta", value)
+			return { description = "after copy description", testvalue = value }
 		end
 		function definition:paste(node, pos, player, data)
-			print("nodedef paste callback executed")
+			print("testnode2 paste callback executed")
+			local meta = minetest.get_meta(pos)
+			meta:set_string("test", data.testvalue)
 		end
 		tool:load_node_definition(definition)
 
@@ -275,7 +281,7 @@ describe("Metatool API node registration", function()
 		local definition = {
 			name = 'testnode3',
 			nodes = "testnode3",
-			group = 'test node',
+			group = 'test node 3',
 			protection_bypass_read = "default_bypass_read_priv",
 			settings = {
 				allow_doing_x = true,
@@ -288,10 +294,14 @@ describe("Metatool API node registration", function()
 			},
 		}
 		function definition:copy(node, pos, player)
-			print("nodedef copy callback executed")
+			print("testnode3 copy callback executed")
+			local meta = minetest.get_meta(pos)
+			return { description = "after copy description", testvalue = meta:get("test") }
 		end
 		function definition:paste(node, pos, player, data)
-			print("nodedef paste callback executed")
+			print("testnode3 paste callback executed")
+			local meta = minetest.get_meta(pos)
+			meta:set_string("test", data.testvalue)
 		end
 		tool:load_node_definition(definition)
 
@@ -337,11 +347,16 @@ describe("Tool behavior", function()
 		{{x=123,y=123,z=123}, "testnode1"},
 		{{x=123,y=124,z=123}, "testnode1"},
 	})
+	local worldmeta_node1 = minetest.get_meta({x=123,y=123,z=123})
+	local worldmeta_node2 = minetest.get_meta({x=123,y=124,z=123})
+
 	local player = Player("SX", {server=1,test_testtool2_privs=1,test_priv=1})
 
 	describe("node write operation", function()
 
 		it("protects nodes from write", function()
+			worldmeta_node1:set_string("test", "node1meta")
+			worldmeta_node2:set_string("test", "node2meta")
 			local use_stack = ItemStack("metatool:testtool2")
 			local count = use_stack:get_count()
 			local pointed_thing = {
@@ -355,14 +370,48 @@ describe("Tool behavior", function()
 		end)
 
 		it("writes unprotected nodes", function()
+			worldmeta_node1:set_string("test", "node1meta")
+			worldmeta_node2:set_string("test", "node2meta")
 			local use_stack = ItemStack("metatool:testtool2")
-			metatool.write_data(use_stack,{data={},group="test node"})
+			metatool.write_data(use_stack,{data={testvalue="write test"},group="test node"})
 			local pointed_thing = {
 				type = "node",
 				above = {x=123,y=125,z=123}, -- Pointing from above to downwards,
 				under = {x=123,y=124,z=123}, -- crosshair at protected node surface
 			}
 			local out_stack = metatool:on_use("metatool:testtool2", use_stack, player, pointed_thing)
+			-- Verify that returned stack is not modified
+			assert.equals(true, out_stack == nil or (out_stack == use_stack and count == out_stack:get_count()))
+			local meta = use_stack:get_meta()
+			assert.not_nil(meta)
+			local worldmeta = minetest.get_meta({x=123,y=124,z=123})
+			assert.equals("write test", worldmeta:get("test"))
+		end)
+
+		it("reads unprotected nodes", function()
+			worldmeta_node1:set_string("test", "node1meta")
+			worldmeta_node2:set_string("test", "node2meta")
+			local use_stack = ItemStack("metatool:testtool2")
+			local pointed_thing = {
+				type = "node",
+				above = {x=123,y=125,z=123}, -- Pointing from above to downwards,
+				under = {x=123,y=124,z=123}, -- crosshair at protected node surface
+			}
+
+			-- Use tool to copy metadata from pointed node
+			player:_set_player_control_state("aux1", true)
+			local out_stack = metatool:on_use("metatool:testtool2", use_stack, player, pointed_thing)
+			player:_reset_player_controls()
+
+			-- Check results
+			assert.not_nil(out_stack)
+			assert.equals("on_read_node description", out_stack:get_description("description"))
+			local data = out_stack:get_meta():get("data")
+			assert.is_string(data)
+			data = minetest.deserialize(data)
+			assert.is_table(data)
+			assert.is_table(data.data)
+			assert.equals("node2meta", data.data.testvalue)
 			-- TODO: Check if data was written, currently this only verifies no crash
 		end)
 
