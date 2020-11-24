@@ -13,11 +13,28 @@ local set_key_lock_secret = ns.set_key_lock_secret
 local set_digiline_meta = ns.set_digiline_meta
 local set_splitstacks = ns.set_splitstacks
 
+-- Blacklist some nodes
+local tubedevice_blacklist = {
+	"^technic:.*_battery_box",
+	"^technic:.*tool_workshop",
+	"^pipeworks:dispenser",
+	"^pipeworks:nodebreaker",
+	"^pipeworks:deployer",
+	"^digtron:",
+	"^jumpdrive:",
+	"^vacuum:",
+}
+local function blacklisted(name)
+	for _,value in ipairs(tubedevice_blacklist) do
+		if name:find(value) then return true end
+	end
+end
+
 -- Collect nodes and on_receive_fields callback functions
 local nodes = {}
 local on_receive_fields = {}
-for nodename, nodedef in pairs(minetest.registered_nodes) do
-	if is_tubedevice(nodename) then
+for nodename, nodedef in pairs(minetest.registered_nodes) do print(nodename)
+	if is_tubedevice(nodename) and not blacklisted(nodename) then
 		-- Match found, add to registration list
 		table.insert(nodes, nodename)
 		if nodedef.on_receive_fields then
@@ -57,7 +74,7 @@ function definition:paste(node, pos, player, data)
 	-- Yeah, sorry... everyone just keeps their internal stuff "protected"
 	if on_receive_fields[node.name] then
 		if not pcall(function()on_receive_fields[node.name](pos, "", {}, player)end) then
-			on_receive_fields[node.name](pos, "", {quit=1}, player)
+			pcall(function()on_receive_fields[node.name](pos, "", {quit=1}, player)end)
 		end
 	end
 end
