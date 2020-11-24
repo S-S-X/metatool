@@ -2,17 +2,15 @@
 -- metatool:containertool is in game tool that allows cloning container configuration
 --
 
-local recipe = {
-	{ '', '', 'default:cobble' },
-	{ '', 'default:cobble', '' },
-	{ 'default:cobble', '', '' }
-}
-
 local tool = metatool:register_tool('containertool', {
 	description = 'Container tool',
 	name = 'ContainerTool',
 	texture = 'containertool.png',
-	recipe = recipe,
+	recipe = {
+		{ '', '', 'default:mese_crystal' },
+		{ '', 'default:chest', '' },
+		{ 'default:skeleton_key', '', '' }
+	},
 	settings = {
 		copy_key_lock_secret = true,
 		copy_digiline_channel = false,
