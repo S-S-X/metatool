@@ -6,19 +6,19 @@
 		- Only default configuration
 		- Configuration only for single tool
 		- Metatool core/API configuration
-		- No configuration (empty file)
-		- No configuration file at, not even empty file
+		- No configuration, empty file
+		- No configuration, not even empty file
 --]]
+dofile("../spec/mineunit/init.lua")
 
-dofile("spec/test_helpers.lua")
-fixture("mineunit/core")
-fixture("mineunit/player")
-fixture("mineunit/protection")
+mineunit("core")
+mineunit("player")
+mineunit("protection")
+
 fixture("metatool")
-
-require("settings")
-require("command")
-require("api")
+sourcefile("settings")
+sourcefile("command")
+sourcefile("api")
 
 describe("Metatool API protection", function()
 
