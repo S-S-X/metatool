@@ -4,7 +4,7 @@
 
 local tool = metatool:register_tool('containertool', {
 	description = 'Container tool',
-	name = 'ContainerTool',
+	name = 'Container tool',
 	texture = 'containertool.png',
 	recipe = {
 		{ '', '', 'default:mese_crystal' },

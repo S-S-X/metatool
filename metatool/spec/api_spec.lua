@@ -20,25 +20,29 @@ sourcefile("settings")
 sourcefile("command")
 sourcefile("api")
 
+local UnprotectedPos = {x=-123,y=-123,z=-123}
+local ProtectedPos = {x=123,y=123,z=123}
+mineunit:protect(ProtectedPos, "dummy")
+
 describe("Metatool API protection", function()
 
 	it("metatool.is_protected bypass privileges", function()
-		local value = metatool.is_protected(ProtectedPos(), Player(), "test_priv", true)
+		local value = metatool.is_protected(ProtectedPos, Player(), "test_priv", true)
 		assert.equals(false, value)
 	end)
 
 	it("metatool.is_protected no bypass privileges", function()
-		local value = metatool.is_protected(ProtectedPos(), Player(), "test_priv2", true)
+		local value = metatool.is_protected(ProtectedPos, Player(), "test_priv2", true)
 		assert.equals(true, value)
 	end)
 
 	it("metatool.is_protected bypass privileges, unprotected", function()
-		local value = metatool.is_protected(UnprotectedPos(), Player(), "test_priv", true)
+		local value = metatool.is_protected(UnprotectedPos, Player(), "test_priv", true)
 		assert.equals(false, value)
 	end)
 
 	it("metatool.is_protected no bypass privileges, unprotected", function()
-		local value = metatool.is_protected(UnprotectedPos(), Player(), "test_priv2", true)
+		local value = metatool.is_protected(UnprotectedPos, Player(), "test_priv2", true)
 		assert.equals(false, value)
 	end)
 
