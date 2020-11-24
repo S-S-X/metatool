@@ -20,4 +20,8 @@ read_globals = {
 	"default",
 	"pipeworks",
 	"technic",
+	"signs",
+	"signs_api",
+	"signs_lib",
+	"display_api",
 }

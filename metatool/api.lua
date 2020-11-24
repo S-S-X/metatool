@@ -68,8 +68,8 @@ local register_metatool_item = function(itemname, definition)
 		inventory_image = texture,
 		groups = groups,
 		stack_max = stack_max,
-		wield_image = texture,
-		wield_scale = { x = 0.8, y = 1, z = 0.8 },
+		wield_image = definition.wield_image or texture,
+		wield_scale = definition.wield_scale or { x = 0.8, y = 1, z = 0.8 },
 		liquids_pointable = definition.liquids_pointable,
 		on_use = function(...)
 			return metatool:on_use(definition.itemname, unpack({...}))
@@ -204,7 +204,7 @@ function metatool.on_tool_info(tool, player, pointed_thing, node, pos, nodedef, 
 	if tool.on_read_info then
 		-- Tool on_read_info method defined, call through it and let it handle nodes
 		return tool:on_read_info(player, pointed_thing, node, pos, nodedef, itemstack)
-	else
+	elseif type(nodedef.info) == "function" then
 		-- Only node definition had info method available, use it directly
 		return nodedef:info(node, pos, player, itemstack)
 	end
@@ -215,7 +215,7 @@ function metatool.on_tool_read(tool, player, pointed_thing, node, pos, nodedef, 
 	if tool.on_read_node then
 		-- Tool on_read_node method defined, call through it and let it handle nodes
 		data, group, description = tool:on_read_node(player, pointed_thing, node, pos, nodedef)
-	else
+	elseif type(nodedef.copy) == "function" then
 		-- Only node definition had copy method available, use it directly
 		minetest.chat_send_player(player:get_player_name(), S('copying data for group %s', nodedef.group))
 		data = nodedef:copy(node, pos, player)
@@ -224,7 +224,10 @@ function metatool.on_tool_read(tool, player, pointed_thing, node, pos, nodedef, 
 	end
 	local separated
 	itemstack, separated = separate_stack(itemstack)
-	metatool.write_data(separated or itemstack, {data=data,group=group}, description)
+	local result = metatool.write_data(separated or itemstack, {data=data,group=group}, description, tool)
+	if type(result) == 'string' then
+		minetest.chat_send_player(player:get_player_name(), result)
+	end
 	-- if stack was separated give missing items to player
 	return_itemstack(player, itemstack, separated)
 	return itemstack
@@ -253,7 +256,7 @@ function metatool.on_tool_write(tool, player, pointed_thing, node, pos, nodedef,
 			player:get_player_name(),
 			S('metatool wand contains data for %s, cannot apply for %s', group, nodedef.group)
 		)
-	elseif nodedef and data then
+	elseif nodedef and data and type(nodedef.paste) == "function" then
 		return nodedef:paste(node, pos, player, tooldata)
 	end
 end
@@ -386,7 +389,7 @@ function metatool:register_node(toolname, name, definition, override)
 			print('metatool:register_node invalid definition, group must be defined.')
 		elseif name ~= '*' and not minetest.registered_nodes[name] then
 			print(S('metatool:register_node node %s not registered for minetest, skipping registration.', name))
-		elseif type(definition.copy) == 'function' and type(definition.paste) == 'function' then
+		elseif type(definition.copy) == 'function' or type(definition.paste) == 'function' then
 			if type(definition.before_info) ~= 'function' then
 				definition.before_info = metatool.before_info
 			end
@@ -442,7 +445,7 @@ function metatool.get_node(tool, player, pointed_thing)
 end
 
 -- Save data for tool and update tool description
-metatool.write_data = function(itemstack, data, description)
+metatool.write_data = function(itemstack, data, description, tool)
 	if not itemstack then
 		return
 	end
@@ -450,6 +453,11 @@ metatool.write_data = function(itemstack, data, description)
 	local meta = itemstack:get_meta()
 	if data.data or data.group then
 		local datastring = minetest.serialize(data)
+		local storage_size = tool and tonumber(tool.settings.storage_size)
+		if storage_size and #datastring > storage_size then
+			return S('Cannot store %d bytes, max storage for %s is %d bytes',
+				#datastring, tool.nice_name, tool.settings.storage_size)
+		end
 		meta:set_string('data', datastring)
 	end
 	if description then
