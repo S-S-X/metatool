@@ -26,6 +26,8 @@ For more complete and tool specific documentation go see README.md files in subd
 * Luatool [luatool/README.md](luatool/README.md)
 * Tubetool [tubetool/README.md](tubetool/README.md)
 * Sharetool [sharetool/README.md](sharetool/README.md)
+* Magic pen [magic_pen/README.md](magic_pen/README.md)
+* Containertool [containertool/README.md](containertool/README.md)
 
 ## How to add supported nodes for tools
 
