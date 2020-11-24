@@ -1,4 +1,6 @@
 
+mineunit:set_modpath("metatool", "../metatool")
+
 _G.metatool = {}
 _G.metatool.S = string.format
 _G.metatool.configuration_file = fixture_path("metatool.cfg")
