@@ -4,7 +4,6 @@ on: [push, pull_request]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -15,6 +14,11 @@ jobs:
       run: sudo apt-get install -y luarocks
     - name: busted install
       run: luarocks install --local busted
-    - name: busted run
+
+    - name: busted run metatool
       working-directory: ./metatool
+      run: $HOME/.luarocks/bin/busted
+
+    - name: busted run containertool
+      working-directory: ./containertool
       run: $HOME/.luarocks/bin/busted
