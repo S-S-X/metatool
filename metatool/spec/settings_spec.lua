@@ -9,12 +9,12 @@
 		- No configuration, empty file
 		- No configuration, not even empty file
 --]]
+dofile("../spec/mineunit/init.lua")
 
-dofile("spec/test_helpers.lua")
-fixture("mineunit/core")
+mineunit("core")
+
 fixture("metatool")
-
-require("settings")
+sourcefile("settings")
 
 describe("Metatool settings file loading", function()
 
