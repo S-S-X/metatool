@@ -1,7 +1,7 @@
 --[[
 	Regression tests for container tool
 --]]
-dofile("../spec/mineunit/init.lua")
+dofile("../metatool/spec/mineunit/init.lua")
 
 mineunit:set_modpath("containertool", ".")
 
