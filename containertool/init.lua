@@ -9,7 +9,7 @@ local tool = metatool:register_tool('containertool', {
 	recipe = {
 		{ '', '', 'default:mese_crystal' },
 		{ '', 'default:chest', '' },
-		{ 'default:skeleton_key', '', '' }
+		{ 'default:key', '', '' }
 	},
 	settings = {
 		copy_key_lock_secret = true,
