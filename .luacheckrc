@@ -6,7 +6,6 @@ files["**/nodes/*.lua"] = { ignore = {"212"} }
 
 globals = {
 	"metatool",
-	"travelnet",
 }
 
 read_globals = {
@@ -18,6 +17,8 @@ read_globals = {
 	"dump",
 	-- Mods
 	"default",
+	"areas",
+	"travelnet",
 	"pipeworks",
 	"technic",
 	"signs",

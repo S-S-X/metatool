@@ -1,7 +1,144 @@
 
 local S = metatool.S
+local formspec_escape = minetest.formspec_escape
 
-metatool.form = {}
+local function formspec_content(value, default)
+	return formspec_escape(value or default or "")
+end
+
+local function fmt_rect(x, y, w, h)
+	if w then
+		return ("%0.3f,%0.3f;%0.3f,%0.3f"):format(x, y, w, h)
+	end
+	return ("%0.3f,%0.3f"):format(x, y)
+end
+
+--
+-- ATTENTION: metatool.form.Form is unstable and will probably evolve with breaking changes
+-- NOTE: Formspec API is not included in stable features and breaking changes will not change major version.
+--
+local Form = {}
+Form.__index = Form
+setmetatable(Form, {
+	__call = function(_, def)
+		local obj = {
+			width = def and def.width or 8,
+			height = def and def.height or 8,
+			xspacing = def and (def.xspacing or def.spacing) or 0.1,
+			yspacing = def and (def.yspacing or def.spacing) or 0.1,
+			elements = def and def.elements or {},
+		}
+		obj.formspec = ("formspec_version[3]size[%s;]"):format(fmt_rect(obj.width, obj.height))
+		setmetatable(obj, Form)
+		return obj
+	end
+})
+
+function Form:get_rect(x, y, w, h, xcount, xindex, ycount, yindex, paddingtop)
+	local sx = self.xspacing
+	local sy = self.yspacing
+	local cx = xcount or 1
+	local ix = xindex or 1
+	local cy = ycount or 1
+	local iy = yindex or 1
+	local pt = paddingtop or 0
+	w = w or ((self.width - ((cx + 1) * sx)) / cx)
+	h = h or ((self.height - ((cy + 1) * sy)) / cy)
+	if cx > 1 then
+		x = (x or 0) + (sx * ix) + (w * (ix - 1))
+	end
+	if cy > 1 then
+		y = (y or 0) + (sy * iy) + (h * (iy - 1))
+	end
+	return x or sx, (y or sy) + pt, w, h - pt
+end
+
+function Form:raw(element)
+	-- Add raw formspec element, `element` should be string with valid properly escaped formspec section
+	table.insert(self.elements, element)
+	return self
+end
+
+-- NOTE: Unstable function signature and `def` format. High probablility for breaking changes soon.
+-- Formspec API is not included in stable features and breaking changes will not change major version.
+-- def.columns and def.values required
+-- everything else is optional
+function Form:table(def)
+	if not def.name or not def.columns or not def.values then
+		return self
+	end
+	-- TODO: formspec_escape, columns as table with extended options
+	local columns = {}
+	local values = {}
+	for i=1,#def.columns do
+		table.insert(columns, "text")
+		table.insert(values, def.columns[i])
+	end
+	local ccount = #def.columns
+	for _,v in ipairs(def.values) do
+		for i=1,ccount do
+			table.insert(values, v[i] and formspec_escape(v[i]) or "")
+		end
+	end
+	local pt = def.label and 0.4
+	local background = def.background and (";background=%s"):format(def.background) or ""
+	local highlight = def.highlight and (";highlight=%s"):format(def.highlight) or ""
+	local color = def.color and (";color=%s"):format(def.color) or ""
+	local x, y, w, h = self:get_rect(def.x, def.y, def.w, def.h, def.xcount, def.xidx, def.ycount, def.yidx, pt)
+	table.insert(self.elements,
+		(def.label and ("label[%s;%s]"):format(fmt_rect(x + 0.1, y - 0.2), def.label)) ..
+		("tableoptions[border=false%s%s%s]"):format(background,highlight,color) ..
+		("tablecolumns[%s]"):format(table.concat(columns, ";")) ..
+		("table[%s;%s;%s]"):format(fmt_rect(x, y, w, h), def.name, table.concat(values, ","))
+	)
+	return self
+end
+
+-- NOTE: Unstable function signature and `def` format. High probablility for breaking changes soon.
+-- Formspec API is not included in stable features and breaking changes will not change major version.
+-- NOTE: Image button feature unstable, property names will most probably change
+function Form:button(def)
+	if not def.name then
+		return self
+	end
+	local label = formspec_content(def.label, def.name)
+	local x, y, w, h = self:get_rect(def.x, def.y, def.w, def.h, def.xcount, def.xidx, def.ycount, def.yidx)
+	local properties
+	if def.texture1 then
+		local t1 = def.texture1 .. (def.modifier and formspec_escape(def.modifier) or "")
+		local t2 = def.texture2 and def.texture2 .. (def.modifier and formspec_escape(def.modifier) or "")
+		properties = ("%s;%s;%s;false;false;%s"):format(t1, def.name, label, t2)
+	else
+		properties = ("%s;%s"):format(def.name, label)
+	end
+	table.insert(self.elements,
+		("button%s[%s;%s]"):format(def.exit and "_exit" or "", fmt_rect(x, y, w, h), properties)
+	)
+	return self
+end
+
+-- NOTE: Unstable function signature and `def` format. High probablility for breaking changes soon.
+-- Formspec API is not included in stable features and breaking changes will not change major version.
+function Form:field(def)
+	if not def.name then
+		return self
+	end
+	local label = formspec_content(def.label, def.name)
+	local default = formspec_content(def.default)
+	local x, y, w, h = self:get_rect(def.x, def.y, def.w, def.h, def.xcount, def.xidx, def.ycount, def.yidx)
+	table.insert(self.elements,
+		("field[%s;%s;%s;%s]"):format(fmt_rect(x, y, w, h), def.name, label, default)
+	)
+	return self
+end
+
+function Form:render()
+	return self.formspec .. table.concat(self.elements)
+end
+
+metatool.form = {
+	Form = Form
+}
 
 -- container for form handler callback methods
 metatool.form.handlers = {}
@@ -41,7 +178,7 @@ metatool.form.register_global_handler = function()
 end
 
 metatool.form.on_receive = function(player, formname, fields)
-	if metatool.form.handlers[formname] == nil then
+	if type(metatool.form.handlers[formname]) ~= "table" then
 		-- form handler does not exist
 		return
 	end
@@ -73,17 +210,21 @@ end
 
 -- on_create can be either string for static formspecs or function for dynamic formspecs.
 -- on_receive is function that receives fields when form is submitted, can be nil.
-metatool.form.register_form = function(formname, on_create, on_receive)
+metatool.form.register_form = function(formname, formdef)
 	local name = get_formname(formname)
 	if not name then
 		print(S("metatool.form.register_form Registration failed, invalid formname: %s", formname))
 		return
 	end
+	if type(formdef) ~= "table" then
+		print(S("metatool.form.register_form Registration failed, invalid formdef type: %s", type(formdef)))
+		return
+	end
 	metatool.form.register_global_handler()
 	print(S("metatool.form.register_form Registering form: %s", name))
 	metatool.form.handlers[name] = {
-		on_create = on_create,
-		on_receive = on_receive,
+		on_create = formdef.on_create,
+		on_receive = formdef.on_receive,
 	}
 end
 
