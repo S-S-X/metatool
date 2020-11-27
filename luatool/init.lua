@@ -39,9 +39,8 @@ local function find_luatool_stack(player, refstack)
 end
 
 -- lua controller / lua tube mem inspection form
-metatool.form.register_form(
-	'luatool:mem_inspector',
-	function(player, data)
+metatool.form.register_form('luatool:mem_inspector', {
+	on_create = function(player, data)
 		local raw_mem = minetest.deserialize(data.mem)
 		local fmt_mem = dump(raw_mem)
 		return "formspec_version[3]size[10,12;]label[0.1,0.5;" ..
@@ -50,7 +49,7 @@ metatool.form.register_form(
 			"button_exit[5,11;5,1;exit;Exit]" ..
 			"textarea[0,1;10,10;mem;;" .. minetest.formspec_escape(fmt_mem) .. "]"
 	end,
-	function(player, fields, data)
+	on_receive = function(player, fields, data)
 		if fields.save and fields.quit then
 			local itemstack = data.itemstack
 			if not itemstack then
@@ -81,7 +80,7 @@ metatool.form.register_form(
 			end
 		end
 	end
-)
+})
 
 tool:ns({
 	info = function(node, pos, player, itemstack, group)

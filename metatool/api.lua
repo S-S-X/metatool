@@ -158,12 +158,12 @@ function metatool:ns(data)
 	print('metatool.ns called with invalid arguments')
 end
 
-metatool.check_privs = function(player, privs)
+function metatool.check_privs(player, privs)
 	local success,_ = minetest.check_player_privs(player, privs)
 	return success
 end
 
-metatool.is_protected = function(pos, player, privs, no_violation_record)
+function metatool.is_protected(pos, player, privs, no_violation_record)
 	if privs and (metatool.check_privs(player, privs)) then
 		-- player is allowed to bypass protection checks
 		return false
