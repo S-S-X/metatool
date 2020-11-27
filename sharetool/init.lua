@@ -139,8 +139,6 @@ tool:ns({
 		travelnet.targets[owner][network][station] = {pos=pos, timestamp=os.time()}
 		-- Update formspec to reflect changes
 		travelnet.update_formspec(pos, owner, nil)
-		-- Mark node as shared
-		self.mark_shared(meta)
 		-- Save travelnet database
 		travelnet.save_data()
 		return true

@@ -5,6 +5,8 @@
 -- Radius for operation, area is cube and side length is RADIUS * 2 + 1
 local RADIUS = 5
 
+local ns = metatool.ns("sharetool")
+
 local get_meta = minetest.get_meta
 local get_node = minetest.get_node
 
@@ -29,8 +31,14 @@ local function is_area_protected(pos, radius, name)
 	return false
 end
 
-local function transfer_nodes(pos1, pos2, owner)
-	local player = {
+local travelnet_nodes = {
+	['travelnet:travelnet'] = 1,
+	['locked_travelnet:travelnet'] = 1,
+	['travelnet:travelnet_private'] = 1,
+	['travelnet:elevator'] = 1,
+}
+local function transfer_nodes(pos1, pos2, owner, player)
+	local newplayer = {
 		get_player_name = function() return owner end
 	}
 	for x=pos1.x,pos2.x,1 do
@@ -39,10 +47,14 @@ local function transfer_nodes(pos1, pos2, owner)
 				local pos = {x=x,y=y,z=z}
 				local meta = get_meta(pos)
 				if meta:get("owner") then
-					meta:set_string("owner", owner)
-					local nodedef = minetest.registered_nodes[get_node(pos).name]
+					local nodename = get_node(pos).name
+					local nodedef = minetest.registered_nodes[nodename]
 					if nodedef and nodedef.groups and nodedef.groups.technic_chest then
-						pcall(function()nodedef.after_place_node(pos, player)end)
+						pcall(function()nodedef.after_place_node(pos, newplayer)end)
+					elseif travelnet_nodes[nodename] then
+						ns:set_travelnet_owner(pos, player, owner)
+					else
+						meta:set_string("owner", owner)
 					end
 				end
 			end
@@ -55,8 +67,6 @@ local function area_in_area(a, b)
 		and a.pos1.y >= b.pos1.y and a.pos2.y <= b.pos2.y
 		and a.pos1.z >= b.pos1.z and a.pos2.z <= b.pos2.z
 end
-
-local ns = metatool.ns("sharetool")
 
 metatool.form.register_form("sharetool:transfer-ownership", {
 	on_create = function(player, data)
@@ -112,7 +122,7 @@ metatool.form.register_form("sharetool:transfer-ownership", {
 			-- All checks passed, transfer ownership
 			local minpos = vector.subtract(data.pos, RADIUS)
 			local maxpos = vector.add(data.pos, RADIUS)
-			transfer_nodes(minpos, maxpos, fields.owner)
+			transfer_nodes(minpos, maxpos, fields.owner, player)
 			for id,area in pairs(areas and areas:getAreasIntersectingArea(minpos, maxpos)) do
 				if area_in_area(area, {pos1 = minpos, pos2 = maxpos}) then
 					-- Do not care about possible failures here, let it finish also in case of problems

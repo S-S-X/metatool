@@ -38,8 +38,12 @@ function definition:copy(node, pos, player)
 	-- node and mark it as shared node.
 
 	-- Change ownership to player and mark as shared node
+	local success = ns:set_travelnet_owner(pos, player, player:get_player_name())
+	if success then
+		self.mark_shared(minetest.get_meta(pos))
+	end
 	return {
-		success = ns:set_travelnet_owner(pos, player, player:get_player_name()),
+		success = success,
 		description = string.format("Claimed ownership of %s at %s", node.name, minetest.pos_to_string(pos))
 	}
 end
@@ -50,8 +54,12 @@ function definition:paste(node, pos, player, data)
 	-- node and mark it as shared node
 
 	-- Change ownership to shared account and mark as shared node
+	local success = ns:set_travelnet_owner(pos, player)
+	if success then
+		self.mark_shared(minetest.get_meta(pos))
+	end
 	return {
-		success = ns:set_travelnet_owner(pos, player),
+		success = success,
 		description = string.format("Claimed ownership of %s at %s", node.name, minetest.pos_to_string(pos))
 	}
 end
