@@ -6,6 +6,7 @@
 local RADIUS = 5
 
 local get_meta = minetest.get_meta
+local get_node = minetest.get_node
 
 local function is_area_protected(pos, radius, name)
 	-- Check middle point (pointless?) and corners
@@ -29,13 +30,20 @@ local function is_area_protected(pos, radius, name)
 end
 
 local function transfer_nodes(pos1, pos2, owner)
+	local player = {
+		get_player_name = function() return owner end
+	}
 	for x=pos1.x,pos2.x,1 do
 		for y=pos1.y,pos2.y,1 do
 			for z=pos1.z,pos2.z,1 do
-				local meta = get_meta({x=x,y=y,z=z})
-				local has_owner = meta:get("owner")
-				if has_owner then
+				local pos = {x=x,y=y,z=z}
+				local meta = get_meta(pos)
+				if meta:get("owner") then
 					meta:set_string("owner", owner)
+					local nodedef = minetest.registered_nodes[get_node(pos).name]
+					if nodedef and nodedef.groups and nodedef.groups.technic_chest then
+						pcall(function()nodedef.after_place_node(pos, player)end)
+					end
 				end
 			end
 		end
@@ -131,8 +139,6 @@ function definition:before_write() return false end
 --function definition:before_info(pos, player) return true end
 function definition:copy() end
 function definition:paste() end
-
-local get_node = minetest.get_node
 
 function definition:info(node, pos, player, itemstack)
 	local minpos = vector.subtract(pos, RADIUS)
