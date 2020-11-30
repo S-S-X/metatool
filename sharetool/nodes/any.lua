@@ -87,7 +87,7 @@ metatool.form.register_form("sharetool:transfer-ownership", {
 			columns = {"id", "owner", "name"},
 			values = data.areas
 		}):field({
-			name = "owner", label = "New owner:",
+			name = "owner", label = "New owner:", default = ns.shared_account,
 			x = 6, y = 0.5, w = 3.9, h = 0.8
 		}):button({
 			label = "Transfer", name = "transfer", exit = true,
