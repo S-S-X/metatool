@@ -18,6 +18,7 @@ metatool = {
 	modpath = minetest.get_modpath('metatool'),
 	S = string.format
 }
+dofile(metatool.modpath .. '/util.lua')
 dofile(metatool.modpath .. '/settings.lua')
 dofile(metatool.modpath .. '/api.lua')
 dofile(metatool.modpath .. '/command.lua')

@@ -10,7 +10,13 @@ local ns = metatool.ns("sharetool")
 local get_meta = minetest.get_meta
 local get_node = minetest.get_node
 
-local function is_area_protected(pos, radius, name)
+local definition = {
+	name = '*',
+	nodes = '*',
+	group = '*',
+}
+
+local function is_area_protected(pos, radius, player)
 	-- Check middle point (pointless?) and corners
 	local checkpos = {
 		pos,
@@ -23,8 +29,8 @@ local function is_area_protected(pos, radius, name)
 		vector.add(pos, {x=-radius,y=-radius,z= radius}),
 		vector.add(pos, {x=-radius,y=-radius,z=-radius}),
 	}
-	for _,v in ipairs(checkpos) do
-		if minetest.is_protected(v, name) then
+	for _,cpos in ipairs(checkpos) do
+		if not definition:before_info(cpos, player) then
 			return true
 		end
 	end
@@ -62,14 +68,37 @@ local function transfer_nodes(pos1, pos2, owner, player)
 	end
 end
 
-local function area_in_area(a, b)
-	return a.pos1.x >= b.pos1.x and a.pos2.x <= b.pos2.x
-		and a.pos1.y >= b.pos1.y and a.pos2.y <= b.pos2.y
-		and a.pos1.z >= b.pos1.z and a.pos2.z <= b.pos2.z
+local function get_areas(minpos, maxpos)
+	local results = {}
+	for id,area in pairs(areas and areas:getAreasIntersectingArea(minpos, maxpos)) do
+		if metatool.util.area_in_area(area, {pos1 = minpos, pos2 = maxpos}) then
+			table.insert(results, {id, area.owner, area.name})
+		end
+	end
+	return results
+end
+
+local function get_owners(minpos, maxpos)
+	local results = {}
+	for x=minpos.x,maxpos.x,1 do
+		for y=minpos.y,maxpos.y,1 do
+			for z=minpos.z,maxpos.z,1 do
+				local cpos = {x=x,y=y,z=z}
+				local name = get_node(cpos).name
+				local owner = get_meta(cpos):get("owner")
+				if owner then
+					table.insert(results, {name, ("%d,%d,%d"):format(cpos.x, cpos.y, cpos.z), owner})
+				end
+			end
+		end
+	end
+	return results
 end
 
 metatool.form.register_form("sharetool:transfer-ownership", {
 	on_create = function(player, data)
+		local msg = data.msg or ""
+		local default = data.default or ns.shared_account
 		local form = metatool.form.Form({
 			width = 10,
 			height = 10.6,
@@ -87,61 +116,54 @@ metatool.form.register_form("sharetool:transfer-ownership", {
 			columns = {"id", "owner", "name"},
 			values = data.areas
 		}):field({
-			name = "owner", label = "New owner:", default = ns.shared_account,
+			name = "owner", label = "New owner: " .. msg, default = default,
 			x = 6, y = 0.5, w = 3.9, h = 0.8
 		}):button({
-			label = "Transfer", name = "transfer", exit = true,
+			label = "Transfer", name = "transfer",
 			y = 9, h = 0.8, xidx = 1, xcount = 2,
 		}):button({
-			label = "Cancel", name = "cancel", exit = true,
+			label = "Close", name = "cancel", exit = true,
 			y = 9, h = 0.8, xidx = 2, xcount = 2,
 		})
-		return form:render()
+		return form
 	end,
 	on_receive = function(player, fields, data)
-		if not player or not fields or not data then
-			return
-		end
-		local tool = metatool.tool("sharetool")
-		if not metatool.check_privs(player, tool.privs) then
-			minetest.chat_send_player(player:get_player_name(), 'You are not allowed to use this tool.')
-			return
-		end
+		data.msg = nil
+		data.default = fields.owner
 		if fields.transfer and fields.owner then
 			local name = player:get_player_name()
 			if not fields.owner or not ns.player_exists(fields.owner) then
-				minetest.chat_send_player(player:get_player_name(),
+				minetest.chat_send_player(name,
 					("Player %s not found, transfer failed"):format(fields.owner or "?")
 				)
-				return
+				data.msg = "Player not found!"
+				return false
 			end
-			if is_area_protected(data.pos, RADIUS, name) then
-				minetest.chat_send_player(player:get_player_name(), "Area is protected, transfer failed")
-				return
+			if is_area_protected(data.pos, RADIUS, player) then
+				minetest.chat_send_player(name, "Area is protected, transfer failed")
+				return true
 			end
 			-- All checks passed, transfer ownership
 			local minpos = vector.subtract(data.pos, RADIUS)
 			local maxpos = vector.add(data.pos, RADIUS)
 			transfer_nodes(minpos, maxpos, fields.owner, player)
 			for id,area in pairs(areas and areas:getAreasIntersectingArea(minpos, maxpos)) do
-				if area_in_area(area, {pos1 = minpos, pos2 = maxpos}) then
+				if metatool.util.area_in_area(area, {pos1 = minpos, pos2 = maxpos}) then
 					-- Do not care about possible failures here, let it finish also in case of problems
 					-- Problems with area transfer will be reported through chat messages
 					ns:set_area_owner(id, fields.owner, player)
 				end
 			end
-			minetest.chat_send_player(player:get_player_name(),
+			-- Confirmation, update form table data
+			minetest.chat_send_player(name,
 				("Ownership transfer completed, area is now owned by %s"):format(fields.owner)
 			)
+			data.owners = get_owners(minpos, maxpos)
+			data.areas = get_areas(minpos, maxpos)
+			return false
 		end
 	end,
 })
-
-local definition = {
-	name = '*',
-	nodes = '*',
-	group = '*',
-}
 
 function definition:before_read() return false end
 function definition:before_write() return false end
@@ -153,29 +175,10 @@ function definition:paste() end
 function definition:info(node, pos, player, itemstack)
 	local minpos = vector.subtract(pos, RADIUS)
 	local maxpos = vector.add(pos, RADIUS)
-	local arealist = {}
-	for id,area in pairs(areas and areas:getAreasIntersectingArea(minpos, maxpos)) do
-		if area_in_area(area, {pos1 = minpos, pos2 = maxpos}) then
-			table.insert(arealist, {id, area.owner, area.name})
-		end
-	end
-	local owners = {}
-	for x=minpos.x,maxpos.x,1 do
-		for y=minpos.y,maxpos.y,1 do
-			for z=minpos.z,maxpos.z,1 do
-				local cpos = {x=x,y=y,z=z}
-				local name = get_node(cpos).name
-				local owner = get_meta(cpos):get("owner")
-				if owner then
-					table.insert(owners, {name, ("%d,%d,%d"):format(cpos.x, cpos.y, cpos.z), owner})
-				end
-			end
-		end
-	end
 	metatool.form.show(player, "sharetool:transfer-ownership", {
 		pos = pos,
-		owners = owners,
-		areas = arealist,
+		owners = get_owners(minpos, maxpos),
+		areas = get_areas(minpos, maxpos),
 	})
 end
 
