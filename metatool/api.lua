@@ -10,22 +10,12 @@ metatool.tools = {}
 -- Metatool privileged tools
 metatool.privileged_tools = {}
 
-function metatool.transform_tool_name(name, mtprefix)
-	local parts = name:gsub('\\s',''):split(':')
-	if #parts == 2 then
-		return (mtprefix and ':' or '') .. parts[1] .. ':' .. parts[2]
-	elseif #parts == 1 and parts[1] ~= 'metatool' then
-		return (mtprefix and ':' or '') .. 'metatool:' .. parts[1]
-	end
-	-- print(S('Invalid metatool name %s', name))
-end
-
-local register_privileged_tool = function(toolname, definition)
+local function register_privileged_tool(toolname, definition)
 	print(S("Registering %s as privileged tool", toolname))
 	metatool.privileged_tools[toolname] = definition
 end
 
-local remove_uncraftable_tool = function(player, tooldef)
+local function remove_uncraftable_tool(player, tooldef)
 	if not tooldef.recipe then
 		-- take away tools that have no recipe
 		local inv = player:get_inventory()
@@ -48,8 +38,7 @@ local remove_uncraftable_tool = function(player, tooldef)
 	end
 end
 
-local register_metatool_item = function(itemname, definition)
-
+local function register_metatool_item(itemname, definition)
 	if not itemname then return end
 
 	local description = definition.description or "Weird surprise MetaTool, let's roll the dice..."
@@ -99,7 +88,7 @@ local register_metatool_item = function(itemname, definition)
 	return definition.itemname
 end
 
-local separate_stack = function(itemstack)
+local function separate_stack(itemstack)
 	if itemstack:get_count() > 1 then
 		local toolname = itemstack:get_name()
 		local separated = ItemStack(toolname)
@@ -110,7 +99,7 @@ local separate_stack = function(itemstack)
 	return itemstack, false
 end
 
-local return_itemstack = function(player, itemstack, separated)
+local function return_itemstack(player, itemstack, separated)
 	if separated then
 		-- stack was separated, try to recombine
 		local meta1 = itemstack:get_meta()
@@ -132,7 +121,7 @@ local return_itemstack = function(player, itemstack, separated)
 	end
 end
 
-metatool.tool = function(toolname)
+function metatool.tool(toolname)
 	local name = metatool.transform_tool_name(toolname)
 	if name and metatool.tools[name] then
 		return metatool.tools[name]
@@ -156,27 +145,6 @@ function metatool:ns(data)
 		return
 	end
 	print('metatool.ns called with invalid arguments')
-end
-
-function metatool.check_privs(player, privs)
-	local success,_ = minetest.check_player_privs(player, privs)
-	return success
-end
-
-function metatool.is_protected(pos, player, privs, no_violation_record)
-	if privs and (metatool.check_privs(player, privs)) then
-		-- player is allowed to bypass protection checks
-		return false
-	end
-	local name = player:get_player_name()
-	if minetest.is_protected(pos, name) then
-		if not no_violation_record then
-			-- node is protected record violation
-			minetest.record_protection_violation(pos, name)
-		end
-		return true
-	end
-	return false
 end
 
 function metatool:before_info(pos, player, no_violation_record)
@@ -442,36 +410,4 @@ function metatool.get_node(tool, player, pointed_thing)
 	end
 
 	return node, pos, definition
-end
-
--- Save data for tool and update tool description
-metatool.write_data = function(itemstack, data, description, tool)
-	if not itemstack then
-		return
-	end
-
-	local meta = itemstack:get_meta()
-	if data.data or data.group then
-		local datastring = minetest.serialize(data)
-		local storage_size = tool and tonumber(tool.settings.storage_size)
-		if storage_size and #datastring > storage_size then
-			return S('Cannot store %d bytes, max storage for %s is %d bytes',
-				#datastring, tool.nice_name, tool.settings.storage_size)
-		end
-		meta:set_string('data', datastring)
-	end
-	if description then
-		meta:set_string('description', description)
-	end
-end
-
--- Return data stored with tool
-metatool.read_data = function(itemstack)
-	if not itemstack then
-		return
-	end
-
-	local meta = itemstack:get_meta()
-	local datastring = meta:get_string('data')
-	return minetest.deserialize(datastring)
 end
