@@ -13,6 +13,10 @@ local function fmt_rect(x, y, w, h)
 	return ("%0.3f,%0.3f"):format(x, y)
 end
 
+local function generate_nonce()
+	return ("%.32f"):format(math.random()+math.random()+math.random())
+end
+
 --
 -- ATTENTION: metatool.form.Form is unstable and will probably evolve with breaking changes
 -- NOTE: Formspec API is not included in stable features and breaking changes will not change major version.
@@ -22,6 +26,8 @@ Form.__index = Form
 setmetatable(Form, {
 	__call = function(_, def)
 		local obj = {
+			strict = def and (def.strict ~= false) or true,
+			nonce = nil,
 			width = def and def.width or 8,
 			height = def and def.height or 8,
 			xspacing = def and (def.xspacing or def.spacing) or 0.1,
@@ -132,8 +138,9 @@ function Form:field(def)
 	return self
 end
 
-function Form:render()
-	return self.formspec .. table.concat(self.elements)
+function Form:render(nonce)
+	local nonce_field = ("field[-99,-99;0,0;metatool_form_nonce;;%s]"):format(nonce)
+	return self.formspec .. table.concat(self.elements) .. nonce_field
 end
 
 metatool.form = {
@@ -165,7 +172,7 @@ end
 
 -- Temporary storage for form data references
 -- Links are created after(!) form is constructed
--- Links are destroyed after receiving fields
+-- Links are destroyed after receiving fields and data is lost if not maintained by caller
 local formdata = {}
 
 local global_form_handler_registered
@@ -189,26 +196,34 @@ metatool.form.on_receive = function(player, formname, fields)
 	if metatool.form.handlers[formname].on_receive then
 		local playername = player:get_player_name()
 		local data = formdata[playername] and formdata[playername][formname]
+		local secure = data and data.nonce == fields.metatool_form_nonce
+		local strict = data and data.strict
+		local result
 		-- call actual form handler
-		metatool.form.handlers[formname].on_receive(player, fields, data)
-		if fields.quit and formdata[playername] then
+		if not strict or secure then
+			result = metatool.form.handlers[formname].on_receive(player, fields, data.data, secure)
+		elseif not fields.quit then
+			minetest.chat_send_player(player:get_player_name(), "Bug: Invalid security token for form " .. formname)
+		end
+		if result and not fields.quit then
+			minetest.close_formspec(player:get_player_name(), formname)
+		end
+		if (result or fields.quit) and data then
 			formdata[playername][formname] = nil
+		elseif result == false then
+			metatool.form.show(player, formname, data.data)
 		end
 	end
 end
 
 metatool.form.on_create = function(player, formname, data)
-	if has_form(formname) then
-		if type(metatool.form.handlers[formname].on_create) == "function" then
-			-- Use callback to get formspec definition
-			return metatool.form.handlers[formname].on_create(player, data)
-		end
-		-- Assume that on_create is literal formspec definition (string)
-		return metatool.form.handlers[formname].on_create
+	if has_form(formname) and type(metatool.form.handlers[formname].on_create) == "function" then
+		-- Use callback to get formspec definition
+		return metatool.form.handlers[formname].on_create(player, data)
 	end
 end
 
--- on_create can be either string for static formspecs or function for dynamic formspecs.
+-- on_create should be function that returns Form object.
 -- on_receive is function that receives fields when form is submitted, can be nil.
 metatool.form.register_form = function(formname, formdef)
 	local name = get_formname(formname)
@@ -234,16 +249,25 @@ metatool.form.show = function(player, formname, data)
 	local name = get_formname(formname)
 	if has_form(name) then
 		-- Construct form
-		local formspec = metatool.form.on_create(player, name, data)
+		local nonce = generate_nonce()
+		local form = metatool.form.on_create(player, name, data, nonce)
+		if type(form) ~= "table" then
+			minetest.chat_send_player(player:get_player_name(), "Bug: Attempt to open invalid form " .. formname)
+			return
+		end
 		if metatool.form.handlers[name].on_receive then
 			-- Store temporary data ref if form input is processed somehow
 			local playername = player:get_player_name()
 			if not formdata[playername] then
 				formdata[playername] = {}
 			end
-			formdata[playername][name] = data
+			formdata[playername][name] = {
+				strict = form.strict,
+				nonce = nonce,
+				data = data,
+			}
 		end
 		-- Show form to player
-		minetest.show_formspec(player:get_player_name(), name, formspec)
+		minetest.show_formspec(player:get_player_name(), name, form:render(nonce))
 	end
 end

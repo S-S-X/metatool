@@ -14,6 +14,7 @@ read_globals = {
 	"vector",
 	"ItemStack",
 	"Settings",
+	"VoxelManip",
 	"dump",
 	-- Mods
 	"default",

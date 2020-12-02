@@ -16,6 +16,7 @@ mineunit("player")
 mineunit("protection")
 
 fixture("metatool")
+sourcefile("util")
 sourcefile("settings")
 sourcefile("command")
 sourcefile("api")

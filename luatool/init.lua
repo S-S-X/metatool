@@ -43,11 +43,13 @@ metatool.form.register_form('luatool:mem_inspector', {
 	on_create = function(player, data)
 		local raw_mem = minetest.deserialize(data.mem)
 		local fmt_mem = dump(raw_mem)
-		return "formspec_version[3]size[10,12;]label[0.1,0.5;" ..
+		local form = metatool.form.Form({ width = 10, height = 12 })
+		form:raw("label[0.1,0.5;" ..
 			"Memory contents for " .. minetest.formspec_escape(data.name) .. "]" ..
 			"button_exit[0,11;5,1;save;Save for programming]" ..
 			"button_exit[5,11;5,1;exit;Exit]" ..
-			"textarea[0,1;10,10;mem;;" .. minetest.formspec_escape(fmt_mem) .. "]"
+			"textarea[0,1;10,10;mem;;" .. minetest.formspec_escape(fmt_mem) .. "]")
+		return form
 	end,
 	on_receive = function(player, fields, data)
 		if fields.save and fields.quit then

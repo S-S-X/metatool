@@ -63,7 +63,8 @@ local tool = metatool:register_tool('sharetool', sharetool)
 tool:ns({
 	shared_account = metatool.settings('sharetool', 'shared_account'),
 	player_exists = function(player)
-		return type(player) == "userdata" or (minetest.get_auth_handler().get_auth(player) ~= nil)
+		player = type(player) == "userdata" and player:get_player_name() or player
+		return type(player) == "string" and minetest.get_auth_handler().get_auth(player) ~= nil
 	end,
 	set_area_owner = function(self, id, owner, player)
 		--luacheck: globals areas
@@ -139,8 +140,6 @@ tool:ns({
 		travelnet.targets[owner][network][station] = {pos=pos, timestamp=os.time()}
 		-- Update formspec to reflect changes
 		travelnet.update_formspec(pos, owner, nil)
-		-- Mark node as shared
-		self.mark_shared(meta)
 		-- Save travelnet database
 		travelnet.save_data()
 		return true
