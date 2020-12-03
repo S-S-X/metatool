@@ -26,7 +26,7 @@ end
 function definition:paste(node, pos, player, data)
 	local meta = minetest.get_meta(pos)
 	local inv = meta:get_inventory()
-	if not inv then
+	if inv:get_size("main") ~= 1 then
 		minetest.chat_send_player(player:get_player_name(), "Cannot get inventory, your digtron might be broken")
 		return
 	end
