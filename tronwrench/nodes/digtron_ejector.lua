@@ -19,7 +19,6 @@ function definition:copy(node, pos, player)
 end
 
 function definition:paste(node, pos, player, data)
-	local meta = minetest.get_meta(pos)
 	local def = minetest.registered_nodes[node.name]
 	if def and def.on_receive_fields then
 		def.on_receive_fields(pos, "", { nonpipe = data.nonpipe, autoeject = data.autoeject }, player)

@@ -26,4 +26,5 @@ read_globals = {
 	"signs_api",
 	"signs_lib",
 	"display_api",
+	"digtron",
 }
