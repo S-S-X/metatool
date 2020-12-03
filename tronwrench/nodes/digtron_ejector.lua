@@ -3,7 +3,7 @@
 --
 
 local definition = {
-	name = 'digtron ejector',
+	name = 'digtron_ejector',
 	nodes = "digtron:inventory_ejector",
 	group = 'digtron ejector',
 	protection_bypass_read = "interact",

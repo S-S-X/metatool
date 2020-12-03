@@ -3,7 +3,7 @@
 --
 
 local definition = {
-	name = 'digtron digger',
+	name = 'digtron_digger',
 	nodes = {
 		"digtron:intermittent_digger",
 		"digtron:intermittent_soft_digger",

@@ -3,7 +3,7 @@
 --
 
 local definition = {
-	name = 'digtron controller',
+	name = 'digtron_controller',
 	nodes = "digtron:auto_controller",
 	group = 'digtron controller',
 	protection_bypass_read = "interact",
