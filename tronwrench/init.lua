@@ -2,13 +2,15 @@
 -- metatool:tronwrench is in game tool that allows cloning digtron settings
 --
 
+local has_duplicator = not not minetest.registered_items['digtron:duplicator']
+local ingredient = has_duplicator and 'digtron:duplicator' or 'default:steelblock'
+
 local recipe = {
-	{ '', '', 'default:cobble' },
-	{ '', 'default:cobble', '' },
-	{ 'default:cobble', '', '' }
+	{ '', '', 'default:mese_crystal' },
+	{ '', ingredient, '' },
+	{ 'default:obsidian_shard', '', '' }
 }
 
---luacheck: ignore unused argument player node
 local tool = metatool:register_tool('tronwrench', {
 	description = 'Tron wrench',
 	name = 'Tron wrench',
