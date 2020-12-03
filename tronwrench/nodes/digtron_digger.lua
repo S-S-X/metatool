@@ -14,18 +14,17 @@ local definition = {
 
 function definition:copy(node, pos, player)
 	local meta = minetest.get_meta(pos)
-
-	error("Digtron digger not implemented")
-
 	return {
 		description = metatool.util.description(pos, node, meta),
+		period = meta:get_int("period"),
+		offset = meta:get_int("offset"),
 	}
 end
 
 function definition:paste(node, pos, player, data)
 	local meta = minetest.get_meta(pos)
-
-	error("Digtron digger not implemented")
+	meta:set_int("period", data.period)
+	meta:set_int("offset", data.offset)
 end
 
 return definition

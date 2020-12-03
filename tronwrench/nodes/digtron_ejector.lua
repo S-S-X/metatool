@@ -11,18 +11,19 @@ local definition = {
 
 function definition:copy(node, pos, player)
 	local meta = minetest.get_meta(pos)
-
-	error("Digtron ejector not implemented")
-
 	return {
 		description = metatool.util.description(pos, node, meta),
+		nonpipe = meta:get_string("nonpipe"),
+		autoeject = meta:get_string("autoeject"),
 	}
 end
 
 function definition:paste(node, pos, player, data)
 	local meta = minetest.get_meta(pos)
-
-	error("Digtron ejector not implemented")
+	local def = minetest.registered_nodes[node.name]
+	if def and def.on_receive_fields then
+		def.on_receive_fields(pos, "", { nonpipe = data.nonpipe, autoeject = data.autoeject }, player)
+	end
 end
 
 return definition
