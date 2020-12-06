@@ -30,10 +30,10 @@ tool:ns({
 		end
 		return value
 	end,
-	get_content_title = function(content)
-		local title = content and content:gmatch("[\t ]*([^\r\n]+)[\r\n]")()
+	get_content_title = function(content, limit)
+		local title = content and content:gmatch("[\t ]*([^\r\n]+)")()
 		if type(title) == 'string' and #title > 40 then
-			title = title:sub(1, 40)
+			title = title:sub(1, limit or 40)
 		end
 		return title
 	end,
@@ -43,6 +43,7 @@ tool:ns({
 local modpath = minetest.get_modpath('magic_pen')
 tool:load_node_definition(dofile(modpath .. '/nodes/lcd.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/book.lua'))
+tool:load_node_definition(dofile(modpath .. '/nodes/digtron.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/geocache.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/textline.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/digiterms.lua'))
