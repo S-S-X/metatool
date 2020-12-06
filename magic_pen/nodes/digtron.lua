@@ -42,7 +42,7 @@ local function layout_to_text(layout)
 		counts[nodename] = counts[nodename] and (counts[nodename] + 1) or 1
 	end
 	if #results > 0 then
-		counts_text = "Component count:\n"
+		local counts_text = "Component count:\n"
 		for nodename, count in pairs(counts) do
 			counts_text = ("%s%d %s\n"):format(counts_text, count, nodename)
 		end
@@ -53,6 +53,7 @@ end
 function definition:copy(node, pos, player)
 	local meta = minetest.get_meta(pos)
 	local layout_string = meta:get_string("crated_layout")
+	--luacheck: read globals DigtronLayout
 	local layout = DigtronLayout.deserialize(layout_string)
 	return {
 		description = ("%s at %s"):format(node.name, minetest.pos_to_string(pos)),
