@@ -169,41 +169,55 @@ function metatool:before_write(pos, player, no_violation_record)
 end
 
 function metatool.on_tool_info(tool, player, pointed_thing, node, pos, nodedef, itemstack)
-	if tool.on_read_info then
+	if type(tool.on_read_info) == "function" then
 		-- Tool on_read_info method defined, call through it and let it handle nodes
 		return tool:on_read_info(player, pointed_thing, node, pos, nodedef, itemstack)
 	elseif type(nodedef.info) == "function" then
 		-- Only node definition had info method available, use it directly
 		return nodedef:info(node, pos, player, itemstack)
+	else
+		minetest.chat_send_player(player:get_player_name(), S('%s cannot inspect %s', tool.nice_name, node.name))
 	end
 end
 
 function metatool.on_tool_read(tool, player, pointed_thing, node, pos, nodedef, itemstack)
 	local data, group, description
-	if tool.on_read_node then
+	if type(tool.on_read_node) == "function" then
 		-- Tool on_read_node method defined, call through it and let it handle nodes
 		data, group, description = tool:on_read_node(player, pointed_thing, node, pos, nodedef)
 	elseif type(nodedef.copy) == "function" then
 		-- Only node definition had copy method available, use it directly
-		minetest.chat_send_player(player:get_player_name(), S('copying data for group %s', nodedef.group))
 		data = nodedef:copy(node, pos, player)
 		group = nodedef.group
 		description = type(data) == 'table' and data.description or ('Data from ' .. minetest.pos_to_string(pos))
+		if type(data) == 'table' then
+			minetest.chat_send_player(player:get_player_name(),
+				S('%s copied data for group %s', tool.nice_name, nodedef.group)
+			)
+		else
+			minetest.chat_send_player(player:get_player_name(),
+				S('%s copying data for group %s failed', tool.nice_name, nodedef.group)
+			)
+		end
+	else
+		minetest.chat_send_player(player:get_player_name(), S('%s cannot read from %s', tool.nice_name, node.name))
 	end
-	local separated
-	itemstack, separated = separate_stack(itemstack)
-	local result = metatool.write_data(separated or itemstack, {data=data,group=group}, description, tool)
-	if type(result) == 'string' then
-		minetest.chat_send_player(player:get_player_name(), result)
+	if type(data) == 'table' then
+		local separated
+		itemstack, separated = separate_stack(itemstack)
+		local result = metatool.write_data(separated or itemstack, {data=data,group=group}, description, tool)
+		if type(result) == 'string' then
+			minetest.chat_send_player(player:get_player_name(), result)
+		end
+		-- if stack was separated give missing items to player
+		return_itemstack(player, itemstack, separated)
 	end
-	-- if stack was separated give missing items to player
-	return_itemstack(player, itemstack, separated)
 	return itemstack
 end
 
 function metatool.on_tool_write(tool, player, pointed_thing, node, pos, nodedef, itemstack)
 	local data = metatool.read_data(itemstack)
-	if not tool.allow_use_empty and type(data) ~= 'table' then
+	if not tool.allow_use_empty and (type(data) ~= 'table' or type(data.data) ~= 'table') then
 		minetest.chat_send_player(
 			player:get_player_name(),
 			'no data stored in this wand, sneak+use or special+use to record data.'
@@ -217,7 +231,7 @@ function metatool.on_tool_write(tool, player, pointed_thing, node, pos, nodedef,
 		tooldata = data.data
 		group = data.group
 	end
-	if tool.on_write_node then
+	if type(tool.on_write_node) == "function" then
 		return tool:on_write_node(tooldata, group, player, pointed_thing, node, pos, nodedef)
 	elseif nodedef.group ~= group then
 		minetest.chat_send_player(
@@ -226,6 +240,8 @@ function metatool.on_tool_write(tool, player, pointed_thing, node, pos, nodedef,
 		)
 	elseif nodedef and data and type(nodedef.paste) == "function" then
 		return nodedef:paste(node, pos, player, tooldata)
+	else
+		minetest.chat_send_player(player:get_player_name(), S('%s cannot write to %s', tool.nice_name, node.name))
 	end
 end
 

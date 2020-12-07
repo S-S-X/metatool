@@ -90,6 +90,7 @@ function definition:copy(node, pos, player)
 	data.color = self.settings.copy_color and (get_int(meta, "color") or has_color)
 	data.sort_mode = get_int(meta, "sort_mode")
 	data.autosort = get_int(meta, "autosort")
+	data.infotext = meta:get("infotext")
 	-- Digilines
 	if has_digiline(node.name) then
 		-- Chests seems to be clearing unchecked meta so we do the same
@@ -109,6 +110,7 @@ function definition:paste(node, pos, player, data)
 	set_color(meta, node, pos, data.color)
 	set_int(meta, "sort_mode", data.sort_mode)
 	set_int(meta, "autosort", data.autosort)
+	set_string(meta, "infotext", data.infotext)
 	-- Security
 	set_key_lock_secret(meta, data, node)
 	-- Pipeworks
