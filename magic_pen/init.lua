@@ -41,6 +41,7 @@ tool:ns({
 
 -- nodes
 local modpath = minetest.get_modpath('magic_pen')
+tool:load_node_definition(dofile(modpath .. '/nodes/any.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/lcd.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/book.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/digtron.lua'))
