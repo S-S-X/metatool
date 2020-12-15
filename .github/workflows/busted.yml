@@ -22,3 +22,7 @@ jobs:
     - name: busted run containertool
       working-directory: ./containertool
       run: $HOME/.luarocks/bin/busted
+
+    - name: busted run sharetool
+      working-directory: ./sharetool
+      run: $HOME/.luarocks/bin/busted
