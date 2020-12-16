@@ -113,6 +113,7 @@ tool:ns({
 -- nodes
 local modpath = minetest.get_modpath('containertool')
 tool:load_node_definition(dofile(modpath .. '/nodes/technic_chests.lua'))
+tool:load_node_definition(dofile(modpath .. '/nodes/technic_injector.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/more_chests_shared.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/digilines_chest.lua'))
 
