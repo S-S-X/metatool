@@ -6,6 +6,11 @@ local definition = {
 	name = 'travelnet',
 	nodes = {
 		'travelnet:travelnet',
+		'travelnet:travelnet_red',
+		'travelnet:travelnet_blue',
+		'travelnet:travelnet_green',
+		'travelnet:travelnet_black',
+		'travelnet:travelnet_white',
 		'locked_travelnet:travelnet',
 		'travelnet:travelnet_private',
 		'travelnet:elevator',
