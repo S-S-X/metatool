@@ -39,6 +39,11 @@ end
 
 local travelnet_nodes = {
 	['travelnet:travelnet'] = 1,
+	['travelnet:travelnet_red'] = 1,
+	['travelnet:travelnet_blue'] = 1,
+	['travelnet:travelnet_green'] = 1,
+	['travelnet:travelnet_black'] = 1,
+	['travelnet:travelnet_white'] = 1,
 	['locked_travelnet:travelnet'] = 1,
 	['travelnet:travelnet_private'] = 1,
 	['travelnet:elevator'] = 1,
