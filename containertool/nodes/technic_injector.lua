@@ -24,11 +24,13 @@ function definition:copy(node, pos, player)
 	-- Read common data like owner, splitstacks, channel etc.
 	local data = get_common_attributes(meta, node, pos, player)
 	-- Technic injector specific configuration
-	local enabled = minetest.get_node_timer(pos):is_started()
+	local enabled = minetest.get_node_timer(pos):is_started() or nil
 	if not enabled then
 		-- technic mod version might not have nodetimers for injector, check formspec
 		local formspec = meta:get_string("formspec")
-		enabled = formspec:find("button%[[0-9.;,]+;enable;") and false
+		if formspec:find("button%[[0-9.;,]+;enable;") then
+			enabled = false
+		end
 	end
 	data.enabled = enabled
 	data.technic_sci_mode = meta:get_string("mode")
@@ -42,12 +44,14 @@ function definition:paste(node, pos, player, data)
 	set_splitstacks(meta, data, node, pos)
 	-- Update formspec
 	local fields = {
-		enable = data.enabled and 1,
-		disable = (data.enabled == false) and 1,
-		mode_item = (data.technic_sci_mode == "single items") and 1,
-		mode_stack = (data.technic_sci_mode == "whole stacks") and 1,
+		enable = data.enabled and 1 or nil,
+		disable = (data.enabled == false) and 1 or nil,
+		mode_item = (data.technic_sci_mode == "single items") and 1 or nil,
+		mode_stack = (data.technic_sci_mode == "whole stacks") and 1 or nil,
 	}
-	on_receive_fields(pos, "", fields, player)
+	for k,v in pairs(fields) do
+		on_receive_fields(pos, "", {[k] = v}, player)
+	end
 end
 
 return definition
