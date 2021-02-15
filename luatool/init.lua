@@ -41,7 +41,7 @@ end
 -- lua controller / lua tube mem inspection form
 metatool.form.register_form('luatool:mem_inspector', {
 	on_create = function(player, data)
-		local raw_mem = minetest.deserialize(data.mem)
+		local raw_mem = data.raw and data.mem or minetest.deserialize(data.mem)
 		local fmt_mem = dump(raw_mem)
 		local form = metatool.form.Form({ width = 10, height = 12 })
 		form:raw("label[0.1,0.5;" ..
@@ -85,20 +85,20 @@ metatool.form.register_form('luatool:mem_inspector', {
 })
 
 tool:ns({
-	info = function(node, pos, player, itemstack, group)
-		local meta = minetest.get_meta(pos)
-		local mem = meta:get_string('lc_memory')
+	info = function(pos, player, itemstack, mem, group, raw)
 		metatool.form.show(player, 'luatool:mem_inspector', {
 			group = group, -- tool storage group for stack manipulation
 			itemstack = itemstack, -- tool itemstack
 			name = "CPU at " .. minetest.pos_to_string(pos),
 			mem = mem,
+			raw = raw,
 		})
 	end,
 })
 
 -- nodes
 local modpath = minetest.get_modpath('luatool')
+tool:load_node_definition(dofile(modpath .. '/nodes/memory.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/luatube.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/luacontroller.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/microcontroller.lua'))

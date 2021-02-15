@@ -41,7 +41,9 @@ local definition = {
 }
 
 function definition:info(node, pos, player, itemstack)
-	return ns.info(node, pos, player, itemstack, 'lua controller')
+	local meta = minetest.get_meta(pos)
+	local mem = meta:get_string("lc_memory")
+	return ns.info(pos, player, itemstack, mem, "lua controller")
 end
 
 function definition:copy(node, pos, player)
