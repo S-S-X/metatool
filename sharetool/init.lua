@@ -22,7 +22,8 @@ local sharetool = {
 	recipe = recipe,
 	allow_use_empty = true,
 	settings = {
-		shared_account = 'shared'
+		shared_account = 'shared',
+		max_radius = 45,
 	},
 }
 
