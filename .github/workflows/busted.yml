@@ -29,6 +29,7 @@ jobs:
         LABEL: 'Coverage'
         STATUS: ${{ env.coverage1 }}
         COLOR: 99CC09
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: busted run containertool
       working-directory: ./containertool
@@ -42,6 +43,7 @@ jobs:
         LABEL: 'Coverage'
         STATUS: ${{ env.coverage2 }}
         COLOR: 99CC09
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: busted run sharetool
       working-directory: ./sharetool
@@ -55,3 +57,4 @@ jobs:
         LABEL: 'Coverage'
         STATUS: ${{ env.coverage3 }}
         COLOR: 99CC09
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
