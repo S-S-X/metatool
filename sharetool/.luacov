@@ -1,0 +1,11 @@
+runreport = true
+deletestats = true
+
+include = {
+  "[^/]*"
+}
+
+exclude = {
+  "spec/",
+  "/\.?luarocks/",
+}

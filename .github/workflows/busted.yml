@@ -13,16 +13,45 @@ jobs:
     - name: apt
       run: sudo apt-get install -y luarocks
     - name: busted install
-      run: luarocks install --local busted
+      run: |
+        luarocks install --local busted
+        luarocks install --local cluacov
 
     - name: busted run metatool
       working-directory: ./metatool
-      run: $HOME/.luarocks/bin/busted
+      run: |
+        $HOME/.luarocks/bin/busted -c
+        (printf coverage1=>>$GITHUB_ENV;tail -n 2 luacov.report.out | grep ^Total | grep -o '[0-9.]\+%$'>>$GITHUB_ENV)
+    - name: coverage badge sharetool
+      uses: RubbaBoy/BYOB@v1.2.0
+      with:
+        NAME: metatool-coverage
+        LABEL: 'Coverage'
+        STATUS: ${{ env.coverage1 }}
+        COLOR: 99CC09
 
     - name: busted run containertool
       working-directory: ./containertool
-      run: $HOME/.luarocks/bin/busted
+      run: |
+        $HOME/.luarocks/bin/busted -c
+        (printf coverage2=>>$GITHUB_ENV;tail -n 2 luacov.report.out | grep ^Total | grep -o '[0-9.]\+%$'>>$GITHUB_ENV)
+    - name: coverage badge containertool
+      uses: RubbaBoy/BYOB@v1.2.0
+      with:
+        NAME: containertool-coverage
+        LABEL: 'Coverage'
+        STATUS: ${{ env.coverage2 }}
+        COLOR: 99CC09
 
     - name: busted run sharetool
       working-directory: ./sharetool
-      run: $HOME/.luarocks/bin/busted
+      run: |
+        $HOME/.luarocks/bin/busted -c
+        (printf coverage3=>>$GITHUB_ENV;tail -n 2 luacov.report.out | grep ^Total | grep -o '[0-9.]\+%$'>>$GITHUB_ENV)
+    - name: coverage badge sharetool
+      uses: RubbaBoy/BYOB@v1.2.0
+      with:
+        NAME: sharetool-coverage
+        LABEL: 'Coverage'
+        STATUS: ${{ env.coverage3 }}
+        COLOR: 99CC09
