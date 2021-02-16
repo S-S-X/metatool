@@ -6,6 +6,7 @@ include = {
 }
 
 exclude = {
+  "../metatool/",
   "spec/",
   "/\.?luarocks/",
 }
