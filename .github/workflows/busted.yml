@@ -26,7 +26,7 @@ jobs:
       uses: RubbaBoy/BYOB@v1.2.0
       with:
         NAME: metatool-coverage
-        LABEL: 'Coverage'
+        LABEL: 'Metatool API Coverage'
         STATUS: ${{ env.coverage1 }}
         COLOR: 99CC09
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -40,7 +40,7 @@ jobs:
       uses: RubbaBoy/BYOB@v1.2.0
       with:
         NAME: containertool-coverage
-        LABEL: 'Coverage'
+        LABEL: 'Containertool Coverage'
         STATUS: ${{ env.coverage2 }}
         COLOR: 99CC09
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -54,7 +54,7 @@ jobs:
       uses: RubbaBoy/BYOB@v1.2.0
       with:
         NAME: sharetool-coverage
-        LABEL: 'Coverage'
+        LABEL: 'Sharetool Coverage'
         STATUS: ${{ env.coverage3 }}
         COLOR: 99CC09
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
