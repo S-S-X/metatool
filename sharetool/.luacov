@@ -1,9 +1,0 @@
-runreport = true
-deletestats = true
-
-exclude = {
-  "../metatool/",
-  "spec/",
-  "/\.?luarocks/",
-  "/share/lua/",
-}

@@ -29,6 +29,7 @@ jobs:
       uses: mt-mods/mineunit-actions@master
       with:
         working-directory: ./containertool
+        luacov-exclude: '"../metatool/"'
         badge-name: containertool-coverage
         badge-label: Containertool Coverage
     - uses: RubbaBoy/BYOB@v1.2.0
@@ -43,6 +44,7 @@ jobs:
       uses: mt-mods/mineunit-actions@master
       with:
         working-directory: ./sharetool
+        luacov-exclude: '"../metatool/"'
         badge-name: sharetool-coverage
         badge-label: Sharetool Coverage
     - uses: RubbaBoy/BYOB@v1.2.0
