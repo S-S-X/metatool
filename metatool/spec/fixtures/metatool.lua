@@ -27,6 +27,6 @@ _G.Settings = function(fname)
 	return settings
 end
 
-minetest.register_node("testnode1", {})
-minetest.register_node("testnode2", {})
-minetest.register_node("testnode3", {})
+minetest.register_node(":testnode1", {})
+minetest.register_node(":testnode2", {})
+minetest.register_node(":testnode3", {})

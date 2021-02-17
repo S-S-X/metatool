@@ -10,19 +10,47 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: true
-    - name: apt
-      run: sudo apt-get install -y luarocks
-    - name: busted install
-      run: luarocks install --local busted
 
-    - name: busted run metatool
-      working-directory: ./metatool
-      run: $HOME/.luarocks/bin/busted
+    - id: mineunit-metatool
+      uses: mt-mods/mineunit-actions@master
+      with:
+        working-directory: ./metatool
+        badge-name: metatool-coverage
+        badge-label: Metatool API Coverage
+    - uses: RubbaBoy/BYOB@v1.2.0
+      with:
+        NAME: "${{ steps.mineunit-metatool.outputs.badge-name }}"
+        LABEL: "${{ steps.mineunit-metatool.outputs.badge-label }}"
+        STATUS: "${{ steps.mineunit-metatool.outputs.badge-status }}"
+        COLOR: "${{ steps.mineunit-metatool.outputs.badge-color }}"
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: busted run containertool
-      working-directory: ./containertool
-      run: $HOME/.luarocks/bin/busted
+    - id: mineunit-containertool
+      uses: mt-mods/mineunit-actions@master
+      with:
+        working-directory: ./containertool
+        luacov-exclude: '"../metatool/"'
+        badge-name: containertool-coverage
+        badge-label: Containertool Coverage
+    - uses: RubbaBoy/BYOB@v1.2.0
+      with:
+        NAME: "${{ steps.mineunit-containertool.outputs.badge-name }}"
+        LABEL: "${{ steps.mineunit-containertool.outputs.badge-label }}"
+        STATUS: "${{ steps.mineunit-containertool.outputs.badge-status }}"
+        COLOR: "${{ steps.mineunit-containertool.outputs.badge-color }}"
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: busted run sharetool
-      working-directory: ./sharetool
-      run: $HOME/.luarocks/bin/busted
+    - id: mineunit-sharetool
+      uses: mt-mods/mineunit-actions@master
+      with:
+        working-directory: ./sharetool
+        luacov-exclude: '"../metatool/"'
+        badge-name: sharetool-coverage
+        badge-label: Sharetool Coverage
+    - uses: RubbaBoy/BYOB@v1.2.0
+      with:
+        NAME: "${{ steps.mineunit-sharetool.outputs.badge-name }}"
+        LABEL: "${{ steps.mineunit-sharetool.outputs.badge-label }}"
+        STATUS: "${{ steps.mineunit-sharetool.outputs.badge-status }}"
+        COLOR: "${{ steps.mineunit-sharetool.outputs.badge-color }}"
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

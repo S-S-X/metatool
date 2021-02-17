@@ -1,5 +1,10 @@
 ![luacheck](https://github.com/S-S-X/metatool/workflows/luacheck/badge.svg)
 ![busted](https://github.com/S-S-X/metatool/workflows/busted/badge.svg)
+
+![](https://byob.yarr.is/S-S-X/metatool/metatool-coverage)
+![](https://byob.yarr.is/S-S-X/metatool/sharetool-coverage)
+![](https://byob.yarr.is/S-S-X/metatool/containertool-coverage)
+
 [![ContentDB](https://content.minetest.net/packages/-SX-/metatool/shields/downloads/)](https://content.minetest.net/packages/-SX-/metatool/)
 
 ## What metatool? And why?
