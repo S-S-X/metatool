@@ -1,4 +1,4 @@
-minetest.register_node("technic:test_chest", {
+minetest.register_node(":technic:test_chest", {
 	description = "Technic chest",
 	groups = {
 		snappy = 2, choppy = 2, oddly_breakable_by_hand = 2,
@@ -19,7 +19,7 @@ local function set_injector_formspec(pos)
 	meta:set_string("formspec", formspec)
 end
 
-minetest.register_node("technic:injector", {
+minetest.register_node(":technic:injector", {
 	description = "Self-Contained Injector",
 	groups = {snappy=2, choppy=2, oddly_breakable_by_hand=2, tubedevice=1, tubedevice_receiver=1},
 	tube = {
