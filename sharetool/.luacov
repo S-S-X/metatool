@@ -1,12 +1,9 @@
 runreport = true
 deletestats = true
 
-include = {
-  "[^/]*"
-}
-
 exclude = {
   "../metatool/",
   "spec/",
   "/\.?luarocks/",
+  "/share/lua/",
 }
