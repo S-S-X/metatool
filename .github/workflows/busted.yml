@@ -8,8 +8,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: true
 
     - id: mineunit-metatool
       uses: mt-mods/mineunit-actions@master
@@ -29,7 +27,8 @@ jobs:
       uses: mt-mods/mineunit-actions@master
       with:
         working-directory: ./containertool
-        luacov-exclude: '"../metatool/"'
+        mineunit-directory: ../metatool/spec/mineunit
+        luacov-exclude: '["../metatool/"]'
         badge-name: containertool-coverage
         badge-label: Containertool Coverage
     - uses: RubbaBoy/BYOB@v1.2.0
@@ -44,7 +43,8 @@ jobs:
       uses: mt-mods/mineunit-actions@master
       with:
         working-directory: ./sharetool
-        luacov-exclude: '"../metatool/"'
+        mineunit-directory: ../metatool/spec/mineunit
+        luacov-exclude: '["../metatool/"]'
         badge-name: sharetool-coverage
         badge-label: Sharetool Coverage
     - uses: RubbaBoy/BYOB@v1.2.0
