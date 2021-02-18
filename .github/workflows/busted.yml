@@ -28,8 +28,7 @@ jobs:
       with:
         working-directory: ./containertool
         mineunit-directory: ../metatool/spec/mineunit
-        luacov-exclude:
-        - ../metatool/
+        luacov-exclude: '["../metatool/"]'
         badge-name: containertool-coverage
         badge-label: Containertool Coverage
     - uses: RubbaBoy/BYOB@v1.2.0
@@ -45,8 +44,7 @@ jobs:
       with:
         working-directory: ./sharetool
         mineunit-directory: ../metatool/spec/mineunit
-        luacov-exclude:
-        - ../metatool/
+        luacov-exclude: '["../metatool/"]'
         badge-name: sharetool-coverage
         badge-label: Sharetool Coverage
     - uses: RubbaBoy/BYOB@v1.2.0
