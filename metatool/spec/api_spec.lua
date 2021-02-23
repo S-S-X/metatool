@@ -9,7 +9,7 @@
 		- No configuration, empty file
 		- No configuration, not even empty file
 --]]
-dofile("spec/mineunit/init.lua")
+require("mineunit")
 
 mineunit("core")
 mineunit("player")

@@ -1,7 +1,7 @@
 --[[
 	Regression tests for sharetool
 --]]
-dofile("../metatool/spec/mineunit/init.lua")
+require("mineunit")
 
 mineunit:set_modpath("sharetool", ".")
 
