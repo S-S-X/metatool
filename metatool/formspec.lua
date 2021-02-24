@@ -137,7 +137,8 @@ function Form:field(def)
 end
 
 function Form:render()
-	return self.formspec .. table.concat(self.elements)
+	-- Label is hack around formspecs not updating if nothing but field defaults changed
+	return self.formspec .. table.concat(self.elements) .. "label[-9,-9;" .. os.clock() .. "]"
 end
 
 metatool.form = {
@@ -202,7 +203,6 @@ function metatool.form.on_receive(player, formname, fields)
 		local name = data and data.name
 		if name ~= formname then
 			minetest.chat_send_player(playername, "Bug: Form name mismatch: " .. formname)
-			print(name, formname, data and data.nonce, matcher())
 			return true
 		end
 		local secure = data and data.nonce == matcher()
