@@ -90,6 +90,15 @@ local function get_owners(minpos, maxpos)
 	return results
 end
 
+local function get_operation_radius(radius)
+	radius = tonumber(radius)
+	if not radius then
+		return RADIUS, false
+	end
+	local max_radius = metatool.settings("sharetool", "max_radius") or RADIUS
+	return math.min(max_radius, math.max(0, math.floor(radius))), ((radius >= 0) and (radius <= max_radius))
+end
+
 metatool.form.register_form("sharetool:transfer-ownership", {
 	on_create = function(player, data)
 		local max_radius = metatool.settings("sharetool", "max_radius") or RADIUS
@@ -134,21 +143,19 @@ metatool.form.register_form("sharetool:transfer-ownership", {
 		data.msg = nil
 		if fields.radius and (fields.reload or fields.transfer) then
 			data.default = fields.owner
-			data.radius = tonumber(fields.radius)
-			data.radius = data.radius and math.floor(data.radius) or RADIUS
-			local max_radius = metatool.settings("sharetool", "max_radius") or RADIUS
-			local minpos = vector.subtract(data.pos, data.radius)
-			local maxpos = vector.add(data.pos, data.radius)
+			local radius, valid_radius = get_operation_radius(fields.radius)
+			local minpos = vector.subtract(data.pos, radius)
+			local maxpos = vector.add(data.pos, radius)
 			local name = player:get_player_name()
 			if not fields.owner or not ns.player_exists(fields.owner) then
 				minetest.chat_send_player(name,
 					("Player %s not found, transfer failed"):format(fields.owner or "?")
 				)
 				data.msg = "Player not found!"
-			elseif (not data.radius) or (data.radius > max_radius) or (data.radius < 0) then
-				data.radius = RADIUS
+			elseif not valid_radius then
+				radius = RADIUS
 				minetest.chat_send_player(name, "Invalid or too large radius, transfer failed")
-			elseif is_area_protected(data.pos, data.radius, player) then
+			elseif is_area_protected(data.pos, radius, player) then
 				minetest.chat_send_player(name, "Area is protected, transfer failed")
 			elseif fields.transfer then
 				-- All checks passed, transfer ownership
@@ -165,6 +172,7 @@ metatool.form.register_form("sharetool:transfer-ownership", {
 					("Ownership transfer completed, area is now owned by %s"):format(fields.owner)
 				)
 			end
+			data.radius = radius
 			data.owners = get_owners(minpos, maxpos)
 			data.areas = get_areas(minpos, maxpos)
 			return false
