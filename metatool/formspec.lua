@@ -26,8 +26,6 @@ Form.__index = Form
 setmetatable(Form, {
 	__call = function(_, def)
 		local obj = {
-			strict = def and (def.strict ~= false) or true,
-			nonce = nil,
 			width = def and def.width or 8,
 			height = def and def.height or 8,
 			xspacing = def and (def.xspacing or def.spacing) or 0.1,
@@ -138,9 +136,9 @@ function Form:field(def)
 	return self
 end
 
-function Form:render(nonce)
-	local nonce_field = ("field[-99,-99;0,0;metatool_form_nonce;;%s]"):format(nonce)
-	return self.formspec .. table.concat(self.elements) .. nonce_field
+function Form:render()
+	-- Label is hack around formspecs not updating if nothing but field defaults changed
+	return self.formspec .. table.concat(self.elements) .. "label[-9,-9;" .. os.clock() .. "]"
 end
 
 metatool.form = {
@@ -150,7 +148,7 @@ metatool.form = {
 -- container for form handler callback methods
 metatool.form.handlers = {}
 
-local get_formname = function(name)
+local function get_formname(name)
 	if not name then
 		return
 	end
@@ -166,8 +164,8 @@ local get_formname = function(name)
 	return string.format("metatool:%s", name)
 end
 
-local has_form = function(name)
-	return type(metatool.form.handlers[name]) == 'table'
+local function has_form(name)
+	return name and (type(metatool.form.handlers[name]) == 'table')
 end
 
 -- Temporary storage for form data references
@@ -175,48 +173,64 @@ end
 -- Links are destroyed after receiving fields and data is lost if not maintained by caller
 local formdata = {}
 
+local function destroy_formdata(player)
+	local name = type(player) == "userdata" and player:get_player_name() or player
+	if name then
+		formdata[name] = nil
+	end
+end
+
 local global_form_handler_registered
-metatool.form.register_global_handler = function()
+function metatool.form.register_global_handler()
 	if not global_form_handler_registered then
 		global_form_handler_registered = true
 		print("metatool.form.register_global_handler Registering global formspec handler for Metatool")
 		minetest.register_on_player_receive_fields(metatool.form.on_receive)
+		minetest.register_on_leaveplayer(destroy_formdata)
 	end
 end
 
-metatool.form.on_receive = function(player, formname, fields)
-	if type(metatool.form.handlers[formname]) ~= "table" then
+function metatool.form.on_receive(player, formname, fields)
+	local matcher = formname:gmatch("([^~]+)")
+	formname = matcher()
+	if not has_form(formname) then
 		-- form handler does not exist
 		return
 	end
-	if not fields then
-		-- No input received, do nothing
-		return
-	end
-	if metatool.form.handlers[formname].on_receive then
+	if fields and metatool.form.handlers[formname].on_receive then
 		local playername = player:get_player_name()
-		local data = formdata[playername] and formdata[playername][formname]
-		local secure = data and data.nonce == fields.metatool_form_nonce
-		local strict = data and data.strict
+		local data = formdata[playername]
+		local name = data and data.name
+		if name ~= formname then
+			minetest.chat_send_player(playername, "Bug: Form name mismatch: " .. formname)
+			return true
+		end
+		local secure = data and data.nonce == matcher()
 		local result
 		-- call actual form handler
-		if not strict or secure then
+		if secure then
 			result = metatool.form.handlers[formname].on_receive(player, fields, data.data, secure)
 		elseif not fields.quit then
-			minetest.chat_send_player(player:get_player_name(), "Bug: Invalid security token for form " .. formname)
+			minetest.chat_send_player(playername, "Bug: Invalid security token for form " .. formname)
 		end
 		if result and not fields.quit then
-			minetest.close_formspec(player:get_player_name(), formname)
+			minetest.close_formspec(playername, formname)
 		end
-		if (result or fields.quit) and data then
-			formdata[playername][formname] = nil
+		if fields.quit and data then
+			formdata[playername] = nil
 		elseif result == false then
+			-- Update formspec and send to player
 			metatool.form.show(player, formname, data.data)
+		elseif type(result) == "string" then
+			-- Switch formspec and send to player
+			metatool.form.show(player, result, data.data)
 		end
 	end
+	-- this was our form, tell server to stop processing callbacks
+	return true
 end
 
-metatool.form.on_create = function(player, formname, data)
+function metatool.form.on_create(player, formname, data)
 	if has_form(formname) and type(metatool.form.handlers[formname].on_create) == "function" then
 		-- Use callback to get formspec definition
 		return metatool.form.handlers[formname].on_create(player, data)
@@ -225,7 +239,7 @@ end
 
 -- on_create should be function that returns Form object.
 -- on_receive is function that receives fields when form is submitted, can be nil.
-metatool.form.register_form = function(formname, formdef)
+function metatool.form.register_form(formname, formdef)
 	local name = get_formname(formname)
 	if not name then
 		print(S("metatool.form.register_form Registration failed, invalid formname: %s", formname))
@@ -245,29 +259,28 @@ end
 
 -- display formspec to player, if optional data variable is given then it will be
 -- saved and forwarded to on_create and on_receive form handler callback functions.
-metatool.form.show = function(player, formname, data)
+function metatool.form.show(player, formname, data)
 	local name = get_formname(formname)
 	if has_form(name) then
 		-- Construct form
 		local nonce = generate_nonce()
-		local form = metatool.form.on_create(player, name, data, nonce)
+		local form = metatool.form.on_create(player, name, data)
+		local playername = player:get_player_name()
 		if type(form) ~= "table" then
-			minetest.chat_send_player(player:get_player_name(), "Bug: Attempt to open invalid form " .. formname)
+			minetest.chat_send_player(playername, "Bug: Attempt to open invalid form " .. formname)
 			return
 		end
 		if metatool.form.handlers[name].on_receive then
 			-- Store temporary data ref if form input is processed somehow
-			local playername = player:get_player_name()
-			if not formdata[playername] then
-				formdata[playername] = {}
-			end
-			formdata[playername][name] = {
-				strict = form.strict,
+			formdata[playername] = {
+				name = name,
 				nonce = nonce,
 				data = data,
 			}
 		end
 		-- Show form to player
-		minetest.show_formspec(player:get_player_name(), name, form:render(nonce))
+		minetest.show_formspec(playername, name .. "~" .. nonce, form:render())
+	else
+		minetest.chat_send_player(player:get_player_name(), "Bug: Metatool form does not exist " .. formname)
 	end
 end

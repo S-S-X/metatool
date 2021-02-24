@@ -90,12 +90,20 @@ local function get_owners(minpos, maxpos)
 	return results
 end
 
+local function get_operation_radius(radius)
+	radius = tonumber(radius)
+	if not radius then
+		return RADIUS, false
+	end
+	local max_radius = metatool.settings("sharetool", "max_radius") or RADIUS
+	return math.min(math.max(0, math.floor(radius)), max_radius), ((radius >= 0) and (radius <= max_radius))
+end
+
 metatool.form.register_form("sharetool:transfer-ownership", {
 	on_create = function(player, data)
 		local max_radius = metatool.settings("sharetool", "max_radius") or RADIUS
 		local radius = data.radius or RADIUS
 		local msg = data.msg or ""
-		local default = data.default or ns.shared_account
 		local form = metatool.form.Form({
 			width = 10,
 			height = 11,
@@ -103,10 +111,10 @@ metatool.form.register_form("sharetool:transfer-ownership", {
 			("label[0.2,0.5;Transfer node/area ownership %d,%d,%d radius %d]")
 			:format(data.pos.x, data.pos.y, data.pos.z, radius)
 		):field({
-			name = "owner", label = "New owner: " .. msg, default = default,
+			name = "owner", label = "New owner: " .. msg, default = data.new_owner or ns.shared_account,
 			y = 1, h = 0.8, xidx = 1, xcount = 2
 		}):field({
-			name = "radius", label = "Radius: (max " .. max_radius .. ")" , default = radius,
+			name = "radius", label = "Radius: (max " .. max_radius .. ")" .. radius, default = radius,
 			y = 1, h = 0.8, xidx = 2, xcount = 2
 		}):table({
 			name = "owners", label = "Node owners:",
@@ -132,23 +140,17 @@ metatool.form.register_form("sharetool:transfer-ownership", {
 	end,
 	on_receive = function(player, fields, data)
 		data.msg = nil
-		if fields.radius and (fields.reload or fields.transfer) then
-			data.default = fields.owner
-			data.radius = tonumber(fields.radius)
-			data.radius = data.radius and math.floor(data.radius) or RADIUS
-			local max_radius = metatool.settings("sharetool", "max_radius") or RADIUS
-			local minpos = vector.subtract(data.pos, data.radius)
-			local maxpos = vector.add(data.pos, data.radius)
+		if fields.reload or fields.transfer then
+			data.new_owner = fields.owner
+			local radius, valid_radius = get_operation_radius(fields.radius)
+			local minpos = vector.subtract(data.pos, radius)
+			local maxpos = vector.add(data.pos, radius)
 			local name = player:get_player_name()
-			if not fields.owner or not ns.player_exists(fields.owner) then
-				minetest.chat_send_player(name,
-					("Player %s not found, transfer failed"):format(fields.owner or "?")
-				)
+			if not ns.player_exists(fields.owner) then
 				data.msg = "Player not found!"
-			elseif (not data.radius) or (data.radius > max_radius) or (data.radius < 0) then
-				data.radius = RADIUS
+			elseif not valid_radius then
 				minetest.chat_send_player(name, "Invalid or too large radius, transfer failed")
-			elseif is_area_protected(data.pos, data.radius, player) then
+			elseif is_area_protected(data.pos, radius, player) then
 				minetest.chat_send_player(name, "Area is protected, transfer failed")
 			elseif fields.transfer then
 				-- All checks passed, transfer ownership
@@ -165,6 +167,7 @@ metatool.form.register_form("sharetool:transfer-ownership", {
 					("Ownership transfer completed, area is now owned by %s"):format(fields.owner)
 				)
 			end
+			data.radius = radius
 			data.owners = get_owners(minpos, maxpos)
 			data.areas = get_areas(minpos, maxpos)
 			return false

@@ -19,9 +19,9 @@ local tp_tube_form_index = {}
 metatool.form.register_form('tubetool:teleport_tube_list', {
 	on_create = function(player, data)
 		local list = ""
-		for _,tube in ipairs(data.tubes) do
+		for i,tube in ipairs(data.tubes) do
 			list = list .. ",1" ..
-				"," .. math.floor(vector.distance(tube.pos, data.pos)) .. "m" ..
+				"," .. math.floor(tube.distance) .. "m" .. (i==1 and " (targeted)" or "") ..
 				"," .. minetest.formspec_escape(string.format("%d,%d,%d",tube.pos.x,tube.pos.y,tube.pos.z)) ..
 				"," .. (tube.can_receive and "yes" or "no")
 		end
@@ -76,12 +76,15 @@ function definition:info(node, pos, player)
 	local tubes = {}
 	for hash,data in pairs(db) do
 		if data.channel == channel then
+			local tube_pos = minetest.get_position_from_hash(hash)
 			table.insert(tubes, {
-				pos = minetest.get_position_from_hash(hash),
+				pos = tube_pos,
+				distance = vector.distance(pos, tube_pos),
 				can_receive = data.cr == 1,
 			})
 		end
 	end
+	table.sort(tubes, function(a, b) return a.distance < b.distance end)
 	metatool.form.show(player, 'tubetool:teleport_tube_list', {pos = pos, channel = channel, tubes = tubes})
 end
 

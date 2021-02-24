@@ -275,15 +275,9 @@ metatool.form.register_form("sharetool:transfer-travelnet", {
 			end
 		elseif fields.validate then
 			local problems = find_problems(data.pos)
-			metatool.form.show(player, "sharetool:validate-travelnet", {
-				pos = data.pos,
-				node = data.node,
-				owner = data.owner,
-				network = data.network,
-				station = data.station,
-				problems = problems.problems,
-				problems_data = problems.problems_data,
-			})
+			data.problems = problems.problems
+			data.problems_data = problems.problems_data
+			return "sharetool:validate-travelnet"
 		end
 		return true
 	end,
