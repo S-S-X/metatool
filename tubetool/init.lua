@@ -32,7 +32,7 @@ tool:ns({
 		if type(pipeworks) ~= "table" then
 			minetest.chat_send_player(player:get_player_name(), 'Pipeworks mod not installed.')
 			return false
-        end
+		end
 		if not pipeworks.tptube or not pipeworks.tptube.get_db then
 			minetest.chat_send_player(
 				player:get_player_name(),
