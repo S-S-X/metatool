@@ -1,3 +1,5 @@
+![](https://byob.yarr.is/S-S-X/metatool/sharetool-coverage)
+
 ## Sharetool basics
 
 Sharetool is moderator tool that can be used to claim  ownership of various nodes and

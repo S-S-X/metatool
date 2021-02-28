@@ -1,3 +1,5 @@
+![](https://byob.yarr.is/S-S-X/metatool/containertool-coverage)
+
 ## Container tool basics
 
 Container tool is made available for copying container settings from one node to another.
