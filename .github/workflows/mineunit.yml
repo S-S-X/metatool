@@ -15,6 +15,14 @@ jobs:
         working-directory: ./metatool
         badge-name: metatool-coverage
         badge-label: Metatool API Coverage
+    - if: success()
+      uses: peter-evans/commit-comment@v1.3.2
+      with:
+        body: |
+          Test coverage report for Metatool API:
+          ```
+          ${{ steps.mineunit-metatool.outputs.mineunit-report }}
+          ```
     - uses: RubbaBoy/BYOB@v1.2.0
       with:
         NAME: "${{ steps.mineunit-metatool.outputs.badge-name }}"
@@ -29,6 +37,14 @@ jobs:
         working-directory: ./containertool
         badge-name: containertool-coverage
         badge-label: Containertool Coverage
+    - if: success()
+      uses: peter-evans/commit-comment@v1.3.2
+      with:
+        body: |
+          Test coverage report for Containertool:
+          ```
+          ${{ steps.mineunit-containertool.outputs.mineunit-report }}
+          ```
     - uses: RubbaBoy/BYOB@v1.2.0
       with:
         NAME: "${{ steps.mineunit-containertool.outputs.badge-name }}"
@@ -43,6 +59,14 @@ jobs:
         working-directory: ./sharetool
         badge-name: sharetool-coverage
         badge-label: Sharetool Coverage
+    - if: success()
+      uses: peter-evans/commit-comment@v1.3.2
+      with:
+        body: |
+          Test coverage report for Sharetool:
+          ```
+          ${{ steps.mineunit-sharetool.outputs.mineunit-report }}
+          ```
     - uses: RubbaBoy/BYOB@v1.2.0
       with:
         NAME: "${{ steps.mineunit-sharetool.outputs.badge-name }}"
