@@ -15,17 +15,6 @@ jobs:
         working-directory: ./metatool
         badge-name: metatool-coverage
         badge-label: Metatool API Coverage
-    - if: success() && github.event_name == 'pull_request'
-      uses: KeisukeYamashita/create-comment@v1
-      with:
-        check-only-first-line: true
-        comment: |
-          Test coverage report for Metatool API:
-          ```
-          File                             Hits Missed Coverage
-          -----------------------------------------------------
-          ${{ steps.mineunit-metatool.outputs.mineunit-report }}
-          ```
     - uses: RubbaBoy/BYOB@v1.2.0
       if: success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
       with:
@@ -41,17 +30,6 @@ jobs:
         working-directory: ./containertool
         badge-name: containertool-coverage
         badge-label: Containertool Coverage
-    - if: success() && github.event_name == 'pull_request'
-      uses: KeisukeYamashita/create-comment@v1
-      with:
-        check-only-first-line: true
-        comment: |
-          Test coverage report for Containertool:
-          ```
-          File                             Hits Missed Coverage
-          -----------------------------------------------------
-          ${{ steps.mineunit-containertool.outputs.mineunit-report }}
-          ```
     - uses: RubbaBoy/BYOB@v1.2.0
       if: success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
       with:
@@ -67,17 +45,6 @@ jobs:
         working-directory: ./sharetool
         badge-name: sharetool-coverage
         badge-label: Sharetool Coverage
-    - if: success() && github.event_name == 'pull_request'
-      uses: KeisukeYamashita/create-comment@v1
-      with:
-        check-only-first-line: true
-        comment: |
-          Test coverage report for Sharetool:
-          ```
-          File                             Hits Missed Coverage
-          -----------------------------------------------------
-          ${{ steps.mineunit-sharetool.outputs.mineunit-report }}
-          ```
     - uses: RubbaBoy/BYOB@v1.2.0
       if: success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
       with:
@@ -86,3 +53,27 @@ jobs:
         STATUS: "${{ steps.mineunit-sharetool.outputs.badge-status }}"
         COLOR: "${{ steps.mineunit-sharetool.outputs.badge-color }}"
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - if: success() && github.event_name == 'pull_request'
+      uses: KeisukeYamashita/create-comment@v1
+      with:
+        check-only-first-line: true
+        comment: |
+          Test coverage report for Metatool API sources:
+          ```
+          File                             Hits Missed Coverage
+          -----------------------------------------------------
+          ${{ steps.mineunit-metatool.outputs.mineunit-report }}
+          ```
+          Test coverage report for Containertool sources:
+          ```
+          File                             Hits Missed Coverage
+          -----------------------------------------------------
+          ${{ steps.mineunit-containertool.outputs.mineunit-report }}
+          ```
+          Test coverage report for Sharetool sources:
+          ```
+          File                             Hits Missed Coverage
+          -----------------------------------------------------
+          ${{ steps.mineunit-sharetool.outputs.mineunit-report }}
+          ```
