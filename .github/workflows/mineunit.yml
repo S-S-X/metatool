@@ -59,21 +59,24 @@ jobs:
       with:
         check-only-first-line: true
         comment: |
-          Test coverage report for Metatool API sources:
+          <details><summary><i>Click for detailed source code test coverage report</i></summary>
+          
+          ### Test coverage report for Metatool API sources:
           ```
           File                             Hits Missed Coverage
           -----------------------------------------------------
           ${{ steps.mineunit-metatool.outputs.mineunit-report }}
           ```
-          Test coverage report for Containertool sources:
+          ### Test coverage report for Containertool sources:
           ```
           File                             Hits Missed Coverage
           -----------------------------------------------------
           ${{ steps.mineunit-containertool.outputs.mineunit-report }}
           ```
-          Test coverage report for Sharetool sources:
+          ### Test coverage report for Sharetool sources:
           ```
           File                             Hits Missed Coverage
           -----------------------------------------------------
           ${{ steps.mineunit-sharetool.outputs.mineunit-report }}
           ```
+          </details>
