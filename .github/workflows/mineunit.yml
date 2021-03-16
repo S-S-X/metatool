@@ -39,6 +39,21 @@ jobs:
         COLOR: "${{ steps.mineunit-containertool.outputs.badge-color }}"
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - id: mineunit-tubetool
+      uses: mt-mods/mineunit-actions@master
+      with:
+        working-directory: ./tubetool
+        badge-name: tubetool-coverage
+        badge-label: Tubetool Coverage
+    - uses: RubbaBoy/BYOB@v1.2.0
+      if: success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+      with:
+        NAME: "${{ steps.mineunit-tubetool.outputs.badge-name }}"
+        LABEL: "${{ steps.mineunit-tubetool.outputs.badge-label }}"
+        STATUS: "${{ steps.mineunit-tubetool.outputs.badge-status }}"
+        COLOR: "${{ steps.mineunit-tubetool.outputs.badge-color }}"
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - id: mineunit-sharetool
       uses: mt-mods/mineunit-actions@master
       with:
@@ -72,6 +87,12 @@ jobs:
           File                             Hits Missed Coverage
           -----------------------------------------------------
           ${{ steps.mineunit-containertool.outputs.mineunit-report }}
+          ```
+          ### Test coverage report for Tubetool sources:
+          ```
+          File                             Hits Missed Coverage
+          -----------------------------------------------------
+          ${{ steps.mineunit-tubetool.outputs.mineunit-report }}
           ```
           ### Test coverage report for Sharetool sources:
           ```

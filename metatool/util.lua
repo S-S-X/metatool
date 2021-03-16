@@ -8,7 +8,10 @@ metatool.util = {}
 --
 
 function metatool.util.pos_to_string(pos)
-	return ("%d,%d,%d"):format(pos.x, pos.y, pos.z)
+	if pos and pos.x and pos.y and pos.z then
+		return ("%d,%d,%d"):format(pos.x, pos.y, pos.z)
+	end
+	return "?,?,?"
 end
 
 function metatool.util.description(pos, node, meta)
