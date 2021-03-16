@@ -154,9 +154,8 @@ describe("Tool behavior", function()
 			-- Use tool to copy metadata from pointed node
 			local return_stack = metatool:on_use(TOOL_NAME, tool_stack, player, pointed_thing)
 
-			-- Verify that returned stack is empty
-			assert.is_ItemStack(return_stack)
-			assert.is_true(return_stack:is_empty())
+			-- Verify that returned stack is nil, tool not removed from machine
+			assert.is_nil(return_stack)
 		end)
 
 		it("does not allow fake player to use tool without privileges", function()
@@ -167,9 +166,8 @@ describe("Tool behavior", function()
 			-- Use tool to copy metadata from pointed node
 			local return_stack = metatool:on_use(TOOL_NAME, tool_stack, player, pointed_thing)
 
-			-- Verify that returned stack is empty
-			assert.is_ItemStack(return_stack)
-			assert.is_true(return_stack:is_empty())
+			-- Verify that returned stack is nil, tool not removed from machine
+			assert.is_nil(return_stack)
 		end)
 
 	end)
@@ -218,9 +216,8 @@ describe("Tool behavior", function()
 			-- Use tool to copy metadata from pointed node
 			local return_stack = metatool:on_use(TOOL_NAME, tool_stack, player, pointed_thing)
 
-			-- Verify that returned stack is empty
-			assert.is_ItemStack(return_stack)
-			assert.is_true(return_stack:is_empty())
+			-- Verify that returned stack is nil, tool not removed from machine
+			assert.is_nil(return_stack)
 		end)
 
 		it("does not allow fake player to use tool without privileges", function()
@@ -231,9 +228,8 @@ describe("Tool behavior", function()
 			-- Use tool to copy metadata from pointed node
 			local return_stack = metatool:on_use(TOOL_NAME, tool_stack, player, pointed_thing)
 
-			-- Verify that returned stack is empty
-			assert.is_ItemStack(return_stack)
-			assert.is_true(return_stack:is_empty())
+			-- Verify that returned stack is nil, tool not removed from machine
+			assert.is_nil(return_stack)
 		end)
 
 	end)
@@ -282,9 +278,8 @@ describe("Tool behavior", function()
 			-- Use tool to copy metadata from pointed node
 			local return_stack = metatool:on_use(TOOL_NAME, tool_stack, player, pointed_thing)
 
-			-- Verify that returned stack is empty
-			assert.is_ItemStack(return_stack)
-			assert.is_true(return_stack:is_empty())
+			-- Verify that returned stack is nil, tool not removed from machine
+			assert.is_nil(return_stack)
 		end)
 
 		it("does not allow fake player to use tool without privileges", function()
@@ -295,9 +290,8 @@ describe("Tool behavior", function()
 			-- Use tool to copy metadata from pointed node
 			local return_stack = metatool:on_use(TOOL_NAME, tool_stack, player, pointed_thing)
 
-			-- Verify that returned stack is empty
-			assert.is_ItemStack(return_stack)
-			assert.is_true(return_stack:is_empty())
+			-- Verify that returned stack is nil, tool not removed from machine
+			assert.is_nil(return_stack)
 		end)
 
 	end)
