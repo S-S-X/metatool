@@ -10,64 +10,36 @@ jobs:
     - uses: actions/checkout@v2
 
     - id: mineunit-metatool
-      uses: mt-mods/mineunit-actions@master
+      uses: mt-mods/mineunit-actions@badger
       with:
         working-directory: ./metatool
         badge-name: metatool-coverage
         badge-label: Metatool API Coverage
-    - uses: RubbaBoy/BYOB@v1.2.0
-      if: success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
-      with:
-        NAME: "${{ steps.mineunit-metatool.outputs.badge-name }}"
-        LABEL: "${{ steps.mineunit-metatool.outputs.badge-label }}"
-        STATUS: "${{ steps.mineunit-metatool.outputs.badge-status }}"
-        COLOR: "${{ steps.mineunit-metatool.outputs.badge-color }}"
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        badge-secret: ${{ secrets.MineunitBadgesKey }}
 
     - id: mineunit-containertool
-      uses: mt-mods/mineunit-actions@master
+      uses: mt-mods/mineunit-actions@badger
       with:
         working-directory: ./containertool
         badge-name: containertool-coverage
         badge-label: Containertool Coverage
-    - uses: RubbaBoy/BYOB@v1.2.0
-      if: success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
-      with:
-        NAME: "${{ steps.mineunit-containertool.outputs.badge-name }}"
-        LABEL: "${{ steps.mineunit-containertool.outputs.badge-label }}"
-        STATUS: "${{ steps.mineunit-containertool.outputs.badge-status }}"
-        COLOR: "${{ steps.mineunit-containertool.outputs.badge-color }}"
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        badge-secret: ${{ secrets.MineunitBadgesKey }}
 
     - id: mineunit-tubetool
-      uses: mt-mods/mineunit-actions@master
+      uses: mt-mods/mineunit-actions@badger
       with:
         working-directory: ./tubetool
         badge-name: tubetool-coverage
         badge-label: Tubetool Coverage
-    - uses: RubbaBoy/BYOB@v1.2.0
-      if: success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
-      with:
-        NAME: "${{ steps.mineunit-tubetool.outputs.badge-name }}"
-        LABEL: "${{ steps.mineunit-tubetool.outputs.badge-label }}"
-        STATUS: "${{ steps.mineunit-tubetool.outputs.badge-status }}"
-        COLOR: "${{ steps.mineunit-tubetool.outputs.badge-color }}"
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        badge-secret: ${{ secrets.MineunitBadgesKey }}
 
     - id: mineunit-sharetool
-      uses: mt-mods/mineunit-actions@master
+      uses: mt-mods/mineunit-actions@badger
       with:
         working-directory: ./sharetool
         badge-name: sharetool-coverage
         badge-label: Sharetool Coverage
-    - uses: RubbaBoy/BYOB@v1.2.0
-      if: success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
-      with:
-        NAME: "${{ steps.mineunit-sharetool.outputs.badge-name }}"
-        LABEL: "${{ steps.mineunit-sharetool.outputs.badge-label }}"
-        STATUS: "${{ steps.mineunit-sharetool.outputs.badge-status }}"
-        COLOR: "${{ steps.mineunit-sharetool.outputs.badge-color }}"
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        badge-secret: ${{ secrets.MineunitBadgesKey }}
 
     - if: success() && github.event_name == 'pull_request'
       uses: KeisukeYamashita/create-comment@v1
