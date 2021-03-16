@@ -20,7 +20,7 @@ local tool = metatool:register_tool('tubetool', {
 -- Create namespace containing tubetool common functions
 tool:ns({
 	pipeworks_tptube_api_check = function(player)
-		if not pipeworks.tptube or not pipeworks.tptube.get_db then
+		if not pipeworks or not pipeworks.tptube or not pipeworks.tptube.get_db then
 			minetest.chat_send_player(
 				player:get_player_name(),
 				'Installed pipeworks version does not have required tptube.get_db function.'

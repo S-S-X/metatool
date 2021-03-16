@@ -20,9 +20,10 @@ metatool.form.register_form('tubetool:teleport_tube_list', {
 	on_create = function(player, data)
 		local list = ""
 		for i,tube in ipairs(data.tubes) do
+			local dist = math.floor(tube.distance or -1)
 			list = list .. ",1" ..
-				"," .. math.floor(tube.distance) .. "m" .. (i==1 and " (targeted)" or "") ..
-				"," .. minetest.formspec_escape(string.format("%d,%d,%d",tube.pos.x,tube.pos.y,tube.pos.z)) ..
+				"," .. (dist < 0 and "???" or dist) .. "m" .. (i==1 and " (targeted)" or "") ..
+				"," .. minetest.formspec_escape(metatool.util.pos_to_string(tube.pos)) ..
 				"," .. (tube.can_receive and "yes" or "no")
 		end
 		local form = metatool.form.Form({ width = 8, height = 10 })
@@ -40,14 +41,18 @@ metatool.form.register_form('tubetool:teleport_tube_list', {
 		local evt = minetest.explode_table_event(fields.items)
 		if tp_tube_form_index[name] and (evt.type == "DCL" or (fields.wp and fields.quit)) then
 			local tube = data.tubes[tp_tube_form_index[name]]
-			local id = player:hud_add({
-				hud_elem_type = "waypoint",
-				name = S("%s\n\nReceive: %s", data.channel, tube.can_receive and "yes" or "no"),
-				text = "m",
-				number = 0xE0B020,
-				world_pos = tube.pos
-			})
-			minetest.after(60, function() if player then player:hud_remove(id) end end)
+			if tube and tube.pos and data.channel then
+				local id = player:hud_add({
+					hud_elem_type = "waypoint",
+					name = S("%s\n\nReceive: %s", data.channel, tube.can_receive and "yes" or "no"),
+					text = "m",
+					number = 0xE0B020,
+					world_pos = tube.pos
+				})
+				minetest.after(60, function() if player then player:hud_remove(id) end end)
+			else
+				minetest.chat_send_player(player:get_player_name(), 'Invalid tube entry in database')
+			end
 		elseif evt.type == "CHG" or evt.type == "DCL" then
 			tp_tube_form_index[name] = evt.row > 1 and evt.row - 1 or nil
 		end
