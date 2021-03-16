@@ -1,9 +1,10 @@
 ![luacheck](https://github.com/S-S-X/metatool/workflows/luacheck/badge.svg)
 ![mineunit](https://github.com/S-S-X/metatool/workflows/mineunit/badge.svg)
 
-![](https://byob.yarr.is/S-S-X/metatool/metatool-coverage)
-![](https://byob.yarr.is/S-S-X/metatool/sharetool-coverage)
-![](https://byob.yarr.is/S-S-X/metatool/containertool-coverage)
+![](https://mineunit-badges.000webhostapp.com/S-S-X/metatool/metatool-coverage)
+![](https://mineunit-badges.000webhostapp.com/S-S-X/metatool/sharetool-coverage)
+![](https://mineunit-badges.000webhostapp.com/S-S-X/metatool/containertool-coverage)
+![](https://mineunit-badges.000webhostapp.com/S-S-X/metatool/tubetool-coverage)
 
 [![ContentDB](https://content.minetest.net/packages/-SX-/metatool/shields/downloads/)](https://content.minetest.net/packages/-SX-/metatool/)
 

@@ -1,4 +1,4 @@
-![](https://byob.yarr.is/S-S-X/metatool/sharetool-coverage)
+![](https://mineunit-badges.000webhostapp.com/S-S-X/metatool/sharetool-coverage)
 
 ## Sharetool basics
 
