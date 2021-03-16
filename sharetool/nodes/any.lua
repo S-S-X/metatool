@@ -70,9 +70,11 @@ end
 
 local function get_areas(minpos, maxpos)
 	local results = {}
-	for id,area in pairs(areas and areas:getAreasIntersectingArea(minpos, maxpos)) do
-		if metatool.util.area_in_area(area, {pos1 = minpos, pos2 = maxpos}) then
-			table.insert(results, {id, area.owner, area.name})
+	if areas then
+		for id,area in pairs(areas:getAreasIntersectingArea(minpos, maxpos)) do
+			if metatool.util.area_in_area(area, {pos1 = minpos, pos2 = maxpos}) then
+				table.insert(results, {id, area.owner, area.name})
+			end
 		end
 	end
 	return results
