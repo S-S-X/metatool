@@ -22,7 +22,7 @@ local function add_tp_tube(pos, channel, receive)
 	local meta = minetest.get_meta(pos)
 	meta:set_string("channel", channel)
 	meta:set_int("can_receive", receive and 1 or 0)
-	tubedb[hash({x=1,y=1,z=1})] = {
+	tubedb[hash(pos)] = {
 		channel = channel,
 		cr = receive and 1 or 0,
 	}
@@ -34,3 +34,5 @@ world.set_node({x=0,y=0,z=0}, "default:dirt")
 add_tp_tube({x=1,y=1,z=1}, "SX:private", true)
 add_tp_tube({x=2,y=1,z=1}, "SX;receiver", true)
 add_tp_tube({x=3,y=1,z=1}, "public", true)
+add_tp_tube({x=3,y=2,z=1}, "public", true)
+add_tp_tube({x=3,y=3,z=1}, "public", true)

@@ -37,6 +37,58 @@ local function get_tool_itemstack(name, data)
 	return stack
 end
 
+describe("Tool helper methods", function()
+
+	local ns = metatool.ns("tubetool")
+
+	describe("explode_teleport_tube_channel", function()
+
+		local function test_explode(channel, expect_owner, expect_mode, expect_channel)
+			local owner, mode, channel = ns.explode_teleport_tube_channel(channel)
+			assert.equals(expect_owner, owner)
+			assert.equals(expect_mode, mode)
+			assert.equals(expect_channel, channel)
+		end
+
+		it("considers foo: as owned", function() test_explode("foo:", "foo", ":", "") end)
+		it("considers foo; as owned", function() test_explode("foo;", "foo", ";", "") end)
+		it("considers foo:: as owned", function() test_explode("foo::", "foo", ":", ":") end)
+		it("considers foo;; as owned", function() test_explode("foo;;", "foo", ";", ";") end)
+		it("considers foo:bar as owned", function() test_explode("foo:bar", "foo", ":", "bar") end)
+		it("considers foo;bar as owned", function() test_explode("foo;bar", "foo", ";", "bar") end)
+		it("considers foo as public", function() test_explode("foo", nil, nil, "foo") end)
+		it("considers :foo as public", function() test_explode(":foo", nil, nil, ":foo") end)
+		it("considers ;foo as public", function() test_explode(";foo", nil, nil, ";foo") end)
+		it("considers ;:foo as public", function() test_explode(";:foo", nil, nil, ";:foo") end)
+		it("considers ;;foo as public", function() test_explode(";;foo", nil, nil, ";;foo") end)
+		it("considers : as public", function() test_explode(":", nil, nil, ":") end)
+		it("considers ; as public", function() test_explode(";", nil, nil, ";") end)
+		it("considers ;: as public", function() test_explode(";:", nil, nil, ";:") end)
+		it("considers ;; as public", function() test_explode(";;", nil, nil, ";;") end)
+
+	end)
+
+	describe("get_teleport_tubes", function()
+
+		it("returns 0 tubes", function()
+			local tubes = ns.get_teleport_tubes("nonexistent", {x=3,y=1,z=1})
+			assert.equals(0, #tubes)
+		end)
+
+		it("returns 1 tubes", function()
+			local tubes = ns.get_teleport_tubes("SX:private", {x=3,y=1,z=1})
+			assert.equals(1, #tubes)
+		end)
+
+		it("returns 3 tubes", function()
+			local tubes = ns.get_teleport_tubes("public", {x=3,y=1,z=1})
+			assert.equals(3, #tubes)
+		end)
+
+	end)
+
+end)
+
 describe("Tool behavior", function()
 
 	describe("use on teleport tube", function()

@@ -45,6 +45,17 @@ tool:ns({
 		table.sort(tubes, function(a, b) return a.distance < b.distance end)
 		return tubes
 	end,
+	explode_teleport_tube_channel = function(channel)
+		-- Return channel, owner, type. Owner can be nil. Type can be nil, ; or :
+		local a, b, c = channel:match("^([^:;]+)([:;])(.*)$")
+		a = a ~= "" and a or nil
+		b = b ~= "" and b or nil
+		if b then
+			return a,b,c
+		end
+		-- No match for owner and mode
+		return nil,nil,channel
+	end,
 })
 
 -- nodes
