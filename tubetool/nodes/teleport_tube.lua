@@ -69,27 +69,15 @@ local definition = {
 function definition:info(node, pos, player)
 	if not ns.pipeworks_tptube_api_check(player) then return end
 	local meta = minetest.get_meta(pos)
-	local channel = meta:get_string("channel")
-	if channel == "" then
+	local channel = meta:get("channel")
+	if not channel then
 		minetest.chat_send_player(
 			player:get_player_name(),
 			'Invalid channel, impossible to list connected tubes.'
 		)
 		return
 	end
-	local db = pipeworks.tptube.get_db()
-	local tubes = {}
-	for hash,data in pairs(db) do
-		if data.channel == channel then
-			local tube_pos = minetest.get_position_from_hash(hash)
-			table.insert(tubes, {
-				pos = tube_pos,
-				distance = vector.distance(pos, tube_pos),
-				can_receive = data.cr == 1,
-			})
-		end
-	end
-	table.sort(tubes, function(a, b) return a.distance < b.distance end)
+	local tubes = ns.get_teleport_tubes(channel, pos)
 	metatool.form.show(player, 'tubetool:teleport_tube_list', {pos = pos, channel = channel, tubes = tubes})
 end
 

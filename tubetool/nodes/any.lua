@@ -23,23 +23,14 @@ function definition:info(node, pos, player, itemstack)
 	if not ns.pipeworks_tptube_api_check(player) then return end
 
 	local channel = tooldata.data.channel
-	if channel == "" then
+	if not channel or channel == "" then
 		minetest.chat_send_player(
 			player:get_player_name(),
 			'Invalid channel, impossible to list connected tubes.'
 		)
 		return
 	end
-	local db = pipeworks.tptube.get_db()
-	local tubes = {}
-	for hash,data in pairs(db) do
-		if data.channel == channel then
-			table.insert(tubes, {
-				pos = minetest.get_position_from_hash(hash),
-				can_receive = data.cr == 1,
-			})
-		end
-	end
+	local tubes = ns.get_teleport_tubes(channel, pos)
 	metatool.form.show(player, 'tubetool:teleport_tube_list', {pos = pos, channel = channel, tubes = tubes})
 end
 

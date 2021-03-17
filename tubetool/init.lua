@@ -29,6 +29,22 @@ tool:ns({
 		end
 		return true
 	end,
+	get_teleport_tubes = function(channel, pos)
+		local db = pipeworks.tptube.get_db()
+		local tubes = {}
+		for hash,data in pairs(db) do
+			if data.channel == channel then
+				local tube_pos = minetest.get_position_from_hash(hash)
+				table.insert(tubes, {
+					pos = tube_pos,
+					distance = vector.distance(pos, tube_pos),
+					can_receive = data.cr == 1,
+				})
+			end
+		end
+		table.sort(tubes, function(a, b) return a.distance < b.distance end)
+		return tubes
+	end,
 })
 
 -- nodes
