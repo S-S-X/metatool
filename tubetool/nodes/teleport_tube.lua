@@ -103,10 +103,22 @@ function definition:copy(node, pos, player)
 end
 
 function definition:paste(node, pos, player, data)
+	local receive = data.receive
+	-- check and update receive setting if placing private receiver but player is not owner
+	if receive == 1 then
+		local owner, mode = ns.explode_teleport_tube_channel(data.channel)
+		local name = player:get_player_name()
+		if owner ~= name and mode == ";" then
+			receive = 0
+			if type(player) == "userdata" then
+				minetest.chat_send_player(name, "Receive was disabled because you're not owner of private receiver.")
+			end
+		end
+	end
 	-- restore settings and update tube, no api available
 	local fields = {
 		channel = data.channel,
-		["cr" .. data.receive] = data.receive,
+		["cr" .. receive] = receive,
 	}
 	local nodedef = minetest.registered_nodes[node.name]
 	nodedef.on_receive_fields(pos, "", fields, player)
