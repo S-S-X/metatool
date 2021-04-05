@@ -31,6 +31,8 @@ end
 function definition:paste(node, pos, player, data)
 	-- restore settings and update tube, no api available
 	local fields = {
+		set_dist = 1,
+		key_enter_field = "dist",
 		dist = data.dist,
 	}
 	local nodedef = minetest.registered_nodes[node.name]

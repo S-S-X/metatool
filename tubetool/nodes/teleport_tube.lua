@@ -117,6 +117,8 @@ function definition:paste(node, pos, player, data)
 	end
 	-- restore settings and update tube, no api available
 	local fields = {
+		set_channel = 1,
+		key_enter_field = "channel",
 		channel = data.channel,
 		["cr" .. receive] = receive,
 	}
