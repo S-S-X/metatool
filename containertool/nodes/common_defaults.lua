@@ -33,7 +33,7 @@ end
 -- Collect nodes and on_receive_fields callback functions
 local nodes = {}
 local on_receive_fields = {}
-for nodename, nodedef in pairs(minetest.registered_nodes) do print(nodename)
+for nodename, nodedef in pairs(minetest.registered_nodes) do
 	if is_tubedevice(nodename) and not blacklisted(nodename) then
 		-- Match found, add to registration list
 		table.insert(nodes, nodename)
