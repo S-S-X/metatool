@@ -31,9 +31,6 @@ function definition:copy(node, pos, player)
 end
 
 function definition:paste(node, pos, player, data)
-	if #data.recipe < 2 then
-		return false
-	end
 	local meta = minetest.get_meta(pos)
 	local inv = meta:get_inventory()
 
