@@ -1,5 +1,5 @@
 --
--- Register injectors tube for tubetool
+-- Register injectors for tubetool
 --
 
 local definition = {
