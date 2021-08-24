@@ -37,3 +37,5 @@ minetest.register_node(":technic:injector", {
 	end,
 	on_receive_fields = function(...) print(...) end,
 })
+
+drawers = {}

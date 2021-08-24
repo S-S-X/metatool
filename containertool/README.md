@@ -22,10 +22,12 @@ w = ability to write
 
 * technic chests (r/w)
 * technic self contained injector (r/w)
-* technic machines with inventory (r/w)
+* technic machines with inventory (r/w + clone upgrades)
 * default wooden chests (r/w)
 * more_chests:shared (r/w)
 * digilines:chest (r/w)
+* drawers (clone upgrades)
+* jumpdrive engines (clone upgrades)
 
 ## Minetest protection checks (default settings)
 
