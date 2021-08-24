@@ -28,4 +28,5 @@ read_globals = {
 	"display_api",
 	"digtron",
 	"drawers",
+	"jumpdrive",
 }
