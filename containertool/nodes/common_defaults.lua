@@ -6,6 +6,7 @@ local ns = metatool.ns('containertool')
 
 -- Node feature checker
 local is_tubedevice = ns.is_tubedevice
+local is_blacklisted = ns.is_blacklisted
 -- Base metadata reader
 local get_common_attributes = ns.get_common_attributes
 -- Special metadata setters
@@ -13,28 +14,11 @@ local set_key_lock_secret = ns.set_key_lock_secret
 local set_digiline_meta = ns.set_digiline_meta
 local set_splitstacks = ns.set_splitstacks
 
--- Blacklist some nodes
-local tubedevice_blacklist = {
-	"^technic:.*_battery_box",
-	"^technic:.*tool_workshop",
-	"^pipeworks:dispenser",
-	"^pipeworks:nodebreaker",
-	"^pipeworks:deployer",
-	"^digtron:",
-	"^jumpdrive:",
-	"^vacuum:",
-}
-local function blacklisted(name)
-	for _,value in ipairs(tubedevice_blacklist) do
-		if name:find(value) then return true end
-	end
-end
-
 -- Collect nodes and on_receive_fields callback functions
 local nodes = {}
 local on_receive_fields = {}
-for nodename, nodedef in pairs(minetest.registered_nodes) do print(nodename)
-	if is_tubedevice(nodename) and not blacklisted(nodename) then
+for nodename, nodedef in pairs(minetest.registered_nodes) do
+	if is_tubedevice(nodename) and not is_blacklisted(nodename) then
 		-- Match found, add to registration list
 		table.insert(nodes, nodename)
 		if nodedef.on_receive_fields then

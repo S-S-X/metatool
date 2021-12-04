@@ -17,6 +17,24 @@ local tool = metatool:register_tool('containertool', {
 	},
 })
 
+-- Blacklist some nodes
+local tubedevice_blacklist = {
+	"^technic:.*_battery_box",
+	"^technic:.*tool_workshop",
+	"^pipeworks:dispenser",
+	"^pipeworks:nodebreaker",
+	"^pipeworks:deployer",
+	"^digtron:",
+	"^jumpdrive:",
+	"^vacuum:",
+}
+
+local function is_blacklisted(name)
+	for _,value in ipairs(tubedevice_blacklist) do
+		if name:find(value) then return true end
+	end
+end
+
 local function has_digiline(name)
 	local nodedef = minetest.registered_nodes[name]
 	return nodedef and nodedef.digiline and nodedef.digiline.receptor
@@ -63,6 +81,7 @@ end
 tool:ns({
 	description = description,
 	is_tubedevice = is_tubedevice,
+	is_blacklisted = is_blacklisted,
 	has_digiline = has_digiline,
 	get_digiline_channel = get_digiline_channel,
 	get_common_attributes = function(meta, node, pos, player)
@@ -116,6 +135,9 @@ tool:load_node_definition(dofile(modpath .. '/nodes/technic_chests.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/technic_injector.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/more_chests_shared.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/digilines_chest.lua'))
+tool:load_node_definition(dofile(modpath .. '/nodes/technic_machines.lua'))
+tool:load_node_definition(dofile(modpath .. '/nodes/drawers.lua'))
+tool:load_node_definition(dofile(modpath .. '/nodes/jumpdrive.lua'))
 
 -- Register after everything else, default behavior for nodes that seems to be compatible
 minetest.register_on_mods_loaded(function()
