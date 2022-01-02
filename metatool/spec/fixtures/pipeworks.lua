@@ -11,9 +11,12 @@ local tubedb = {}
 
 pipeworks = {
 	tptube = {
+		hash = hash,
 		get_db = function()
 			return tubedb
 		end,
+		set_tube = function() end,
+		update_meta = function() end,
 	}
 }
 

@@ -11,6 +11,7 @@ mineunit("protection")
 mineunit("default/functions")
 
 fixture("metatool")
+fixture("pipeworks")
 
 minetest.register_node(":default:dirt", {})
 minetest.register_node(":digiline_global_memory:controller", {})
