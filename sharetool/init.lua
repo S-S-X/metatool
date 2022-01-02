@@ -27,18 +27,23 @@ local sharetool = {
 	},
 }
 
+local function send_confirmation_message(player, targetname, nodename, result)
+	local success = type(result) ~= 'table' or result.success or result.success == nil
+	minetest.chat_send_player(player:get_player_name(),
+		(type(result) == 'table' and result.description)
+		or (success
+			and S('Node %s ownership changed to %s', nodename, targetname)
+			or S('Failed %s ownership change to %s', nodename, targetname)
+		)
+	)
+end
+
 --luacheck: ignore unused argument data group pointed_thing
 function sharetool:on_read_node(player, pointed_thing, node, pos)
 	local definition = self.nodes[node.name]
 	if definition then
 		local res = definition:copy(node, pos, player)
-		local name = player:get_player_name()
-		local success = type(res) ~= 'table' or res.success or res.success == nil
-		if success then
-			minetest.chat_send_player(name, S('Node %s ownership changed to %s', node.name, name))
-		else
-			minetest.chat_send_player(name, S('Failed %s ownership change to %s', node.name, name))
-		end
+		send_confirmation_message(player, player:get_player_name(), node.name, res)
 	end
 	-- Return nil to keep tool without metadata
 end
@@ -47,14 +52,7 @@ function sharetool:on_write_node(data, group, player, pointed_thing, node, pos)
 	local definition = self.nodes[node.name]
 	if definition then
 		local res = definition:paste(node, pos, player)
-		local name = player:get_player_name()
-		local sname = self.settings.shared_account
-		local success = type(res) ~= 'table' or res.success or res.success == nil
-		if success then
-			minetest.chat_send_player(name, S('Node %s ownership changed to %s', node.name, sname))
-		else
-			minetest.chat_send_player(name, S('Failed %s ownership change to %s', node.name, sname))
-		end
+		send_confirmation_message(player, self.settings.shared_account, node.name, res)
 	end
 end
 
@@ -153,4 +151,5 @@ tool:load_node_definition(dofile(modpath .. '/nodes/travelnet.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/missions.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/mapserver.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/digiline_global_memory.lua'))
+tool:load_node_definition(dofile(modpath .. '/nodes/pipeworks.lua'))
 tool:load_node_definition(dofile(modpath .. '/nodes/any.lua'))
