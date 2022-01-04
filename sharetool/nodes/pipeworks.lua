@@ -44,6 +44,22 @@ function definition:before_write(pos, player)
 	return false
 end
 
+function definition:before_info(pos, player)
+	if ns:can_bypass(pos, player, 'owner') or metatool.before_info(self, pos, player, true) then
+		-- Player is allowed to bypass protections or operate in area
+		return true
+	end
+	return false
+end
+
+local function truth2int(value)
+	if not tonumber(value) and type(value) == "string" then
+		value = value:lower()
+		return (value:find("ye[ps]") or value:find("tru")) and 1 or 0
+	end
+	return value and tonumber(value) ~= 0 and 1 or 0
+end
+
 local function explode_teleport_tube_channel(channel)
 	-- Return channel, owner, type. Owner can be nil. Type can be nil, ; or :
 	local a, b, c = channel:match("^([^:;]+)([:;])(.*)$")
@@ -54,6 +70,15 @@ local function explode_teleport_tube_channel(channel)
 	end
 	-- No match for owner and mode
 	return nil,nil,channel
+end
+
+local function set_channel(pos, meta, channel, receive)
+	meta:set_string("channel", channel)
+	pipeworks.tptube.update_meta(meta, receive == 1)
+	pipeworks.tptube.set_tube(pos, channel, receive)
+	local cr_description = (receive == 1) and "sending and receiving" or "sending"
+	meta:set_string("infotext", pipeworks_translator("Teleportation Tube @1 on '@2'", cr_description, channel))
+	ns.mark_shared(meta)
 end
 
 local function transfer_to(newowner, node, pos, player)
@@ -74,17 +99,68 @@ local function transfer_to(newowner, node, pos, player)
 		end
 
 		-- Change channel ownership and mark as shared node
-		local receive = meta:get_int("can_receive")
-		meta:set_string("channel", channel)
-		pipeworks.tptube.update_meta(meta, receive == 1)
-		pipeworks.tptube.set_tube(pos, channel, receive)
-		local cr_description = (receive == 1) and "sending and receiving" or "sending"
-		meta:set_string("infotext", pipeworks_translator("Teleportation Tube @1 on '@2'", cr_description, channel))
+		set_channel(pos, meta, channel, meta:get_int("can_receive"))
 
-		ns.mark_shared(meta)
 		return { success = true }
 	end
 end
+
+metatool.form.register_form("sharetool:teleport-tube", {
+	on_create = function(player, data)
+		return metatool.form.Form({
+			width = 10,
+			height = 3.2,
+		}):label({
+			label = getdesc(data.pos), x = 0.2, y = 0.4,
+		}):field({
+			name = "channel", label = "New channel: " .. (data.msg or ""), default = data.channel,
+			y = 1.2, h = 0.8, xidx = 1, xcount = 2
+		}):field({
+			name = "receive", label = "Receive: (truthy value)", default = data.receive,
+			y = 1.2, h = 0.8, xidx = 2, xcount = 2
+		}):button({
+			label = "Update", name = "update",
+			y = 2.2, h = 0.8, xidx = 1, xcount = 3,
+		}):button({
+			label = "Transfer", name = "transfer",
+			y = 2.2, h = 0.8, xidx = 2, xcount = 3,
+		}):button({
+			label = "Close", name = "cancel", exit = true,
+			y = 2.2, h = 0.8, xidx = 3, xcount = 3,
+		})
+	end,
+	on_receive = function(player, fields, data)
+		data.msg = nil
+		if fields.update or fields.transfer or fields.key_enter_field then
+			local name = player:get_player_name()
+			local owner, mode, channel = explode_teleport_tube_channel(fields.channel)
+			data.receive = truth2int(fields.receive)
+
+			if not owner or not mode then
+				-- Allow directly setting any public channel or private shared if transfering
+				if fields.transfer then
+					-- Use most restricted channel when adding owner without channel type information
+					channel = ns.shared_account .. ":" .. channel
+				end
+			elseif fields.transfer then
+				-- Swap owner between current player and shared account
+				channel = (owner == ns.shared_account and name or ns.shared_account) .. mode .. channel
+			else
+				channel = owner .. mode .. channel
+			end
+
+			if not owner or owner == name or owner == ns.shared_account then
+				-- Change channel ownership and mark as shared node
+				set_channel(data.pos, minetest.get_meta(data.pos), channel, data.receive)
+			else
+				data.msg = "public, shared or yourself allowed"
+			end
+
+			data.channel = channel
+			return false
+		end
+	end,
+})
 
 function definition:copy(node, pos, player)
 	-- Copy function does not really copy anything here
@@ -98,6 +174,15 @@ function definition:paste(node, pos, player, data)
 	-- but instead it will restore ownership of pointed
 	-- node and mark it as shared node
 	return transfer_to(ns.shared_account, node, pos, player) or { success = false }
+end
+
+function definition:info(node, pos, player)
+	local meta = minetest.get_meta(pos)
+	metatool.form.show(player, "sharetool:teleport-tube", {
+		pos = pos,
+		channel = meta:get_string("channel"),
+		receive = meta:get_int("can_receive"),
+	})
 end
 
 return definition
