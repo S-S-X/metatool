@@ -136,6 +136,15 @@ function Form:field(def)
 	return self
 end
 
+function Form:label(def)
+	local label = formspec_content(def.label, def.name)
+	local x, y = self:get_rect(def.x, def.y, def.w, def.h, def.xcount, def.xidx, def.ycount, def.yidx)
+	table.insert(self.elements,
+		("label[%s;%s]"):format(fmt_rect(x, y), label)
+	)
+	return self
+end
+
 function Form:render()
 	-- Label is hack around formspecs not updating if nothing but field defaults changed
 	return self.formspec .. table.concat(self.elements) .. "label[-9,-9;" .. os.clock() .. "]"
