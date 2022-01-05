@@ -66,6 +66,16 @@ local definition = {
 	protection_bypass_read = "interact",
 }
 
+function definition:before_info(pos, player)
+	if  metatool.before_info(self, pos, player, true) then
+		-- Player is allowed to bypass protections or operate in area
+		return true
+	end
+	-- Allow bypass info protection if tube is marked as shared with sharetool
+	local meta = minetest.get_meta(pos)
+	return meta:get_int('sharetool_shared_node') == 1
+end
+
 function definition:info(node, pos, player)
 	if not ns.pipeworks_tptube_api_check(player) then return end
 	local meta = minetest.get_meta(pos)
