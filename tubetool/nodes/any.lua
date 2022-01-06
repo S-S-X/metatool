@@ -30,6 +30,16 @@ function definition:info(node, pos, player, itemstack)
 		)
 		return
 	end
+
+	-- Done here instead of before_info as it uses tool data instead of target data to deny or allow usage.
+	if not ns.allow_teleport_tube_info(player, channel) then
+		minetest.chat_send_player(
+			player:get_player_name(),
+			('You are not allowed to list locations on stored channel %s.'):format(channel)
+		)
+		return
+	end
+
 	local tubes = ns.get_teleport_tubes(channel, pos)
 	metatool.form.show(player, 'tubetool:teleport_tube_list', {pos = pos, channel = channel, tubes = tubes})
 end

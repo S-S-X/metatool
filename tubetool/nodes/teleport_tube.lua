@@ -67,13 +67,17 @@ local definition = {
 }
 
 function definition:before_info(pos, player)
-	if  metatool.before_info(self, pos, player, true) then
-		-- Player is allowed to bypass protections or operate in area
-		return true
-	end
-	-- Allow bypass info protection if tube is marked as shared with sharetool
+	-- No actual protection checks because this only operates on stored data
 	local meta = minetest.get_meta(pos)
-	return meta:get_int('sharetool_shared_node') == 1
+	local channel = meta:get_string("channel")
+	if not ns.allow_teleport_tube_info(player, channel) then
+		minetest.chat_send_player(
+			player:get_player_name(),
+			('You are not allowed to list locations on channel %s.'):format(channel)
+		)
+		return false
+	end
+	return true
 end
 
 function definition:info(node, pos, player)
