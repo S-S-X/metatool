@@ -17,6 +17,18 @@ local tool = metatool:register_tool('tubetool', {
 	recipe = recipe,
 })
 
+local function explode_teleport_tube_channel(channel)
+	-- Return owner, mode, channel. Owner can be nil. Mode can be nil, ; or :
+	local a, b, c = channel:match("^([^:;]+)([:;])(.*)$")
+	a = a ~= "" and a or nil
+	b = b ~= "" and b or nil
+	if b then
+		return a,b,c
+	end
+	-- No match for owner and mode
+	return nil,nil,channel
+end
+
 -- Create namespace containing tubetool common functions
 tool:ns({
 	pipeworks_tptube_api_check = function(player)
@@ -45,17 +57,25 @@ tool:ns({
 		table.sort(tubes, function(a, b) return a.distance < b.distance end)
 		return tubes
 	end,
-	explode_teleport_tube_channel = function(channel)
-		-- Return channel, owner, type. Owner can be nil. Type can be nil, ; or :
-		local a, b, c = channel:match("^([^:;]+)([:;])(.*)$")
-		a = a ~= "" and a or nil
-		b = b ~= "" and b or nil
-		if b then
-			return a,b,c
+	explode_teleport_tube_channel = explode_teleport_tube_channel,
+	allow_teleport_tube_info = function(player, channel)
+		local owner, mode = explode_teleport_tube_channel(channel)
+		-- Anyone can list all semi private channels for both senders and receivers
+		if not mode or mode == ";" then
+			return true
 		end
-		-- No match for owner and mode
-		return nil,nil,channel
-	end,
+		-- Allow anyone to list all shared channels
+		if owner and owner == metatool.settings('sharetool', 'shared_account') then
+			return true
+		end
+		-- Owner can always list their own tube locations
+		local name = player:get_player_name()
+		if owner == name then
+			return true
+		end
+		-- Player with protection_bypass privilege can list any channel
+		return metatool.check_privs(player, {protection_bypass = true})
+	end
 })
 
 -- nodes
