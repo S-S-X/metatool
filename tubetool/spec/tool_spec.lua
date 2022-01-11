@@ -50,21 +50,46 @@ describe("Tool helper methods", function()
 			assert.equals(expect_channel, channel)
 		end
 
-		it("considers foo: as owned", function() test_explode("foo:", "foo", ":", "") end)
-		it("considers foo; as owned", function() test_explode("foo;", "foo", ";", "") end)
-		it("considers foo:: as owned", function() test_explode("foo::", "foo", ":", ":") end)
-		it("considers foo;; as owned", function() test_explode("foo;;", "foo", ";", ";") end)
+		it("considers foo: as owned",    function() test_explode("foo:",    "foo", ":", "") end)
+		it("considers foo; as owned",    function() test_explode("foo;",    "foo", ";", "") end)
+		it("considers foo:: as owned",   function() test_explode("foo::",   "foo", ":", ":") end)
+		it("considers foo;; as owned",   function() test_explode("foo;;",   "foo", ";", ";") end)
 		it("considers foo:bar as owned", function() test_explode("foo:bar", "foo", ":", "bar") end)
 		it("considers foo;bar as owned", function() test_explode("foo;bar", "foo", ";", "bar") end)
-		it("considers foo as public", function() test_explode("foo", nil, nil, "foo") end)
-		it("considers :foo as public", function() test_explode(":foo", nil, nil, ":foo") end)
-		it("considers ;foo as public", function() test_explode(";foo", nil, nil, ";foo") end)
-		it("considers ;:foo as public", function() test_explode(";:foo", nil, nil, ";:foo") end)
-		it("considers ;;foo as public", function() test_explode(";;foo", nil, nil, ";;foo") end)
-		it("considers : as public", function() test_explode(":", nil, nil, ":") end)
-		it("considers ; as public", function() test_explode(";", nil, nil, ";") end)
-		it("considers ;: as public", function() test_explode(";:", nil, nil, ";:") end)
-		it("considers ;; as public", function() test_explode(";;", nil, nil, ";;") end)
+		it("considers foo as public",    function() test_explode("foo",     nil,   nil, "foo") end)
+		it("considers :foo as public",   function() test_explode(":foo",    nil,   nil, ":foo") end)
+		it("considers ;foo as public",   function() test_explode(";foo",    nil,   nil, ";foo") end)
+		it("considers ;:foo as public",  function() test_explode(";:foo",   nil,   nil, ";:foo") end)
+		it("considers ;;foo as public",  function() test_explode(";;foo",   nil,   nil, ";;foo") end)
+		it("considers : as public",      function() test_explode(":",       nil,   nil, ":") end)
+		it("considers ; as public",      function() test_explode(";",       nil,   nil, ";") end)
+		it("considers ;: as public",     function() test_explode(";:",      nil,   nil, ";:") end)
+		it("considers ;; as public",     function() test_explode(";;",      nil,   nil, ";;") end)
+
+	end)
+
+	describe("allow_teleport_tube_info", function()
+
+		local p1 = Player("p1", {})
+		local p2 = Player("p2", { interact = true })
+		local p3 = Player("p3", { interact = true, protection_bypass = true })
+
+		local function test_allow(player, channel, expect_result)
+			local result = ns.allow_teleport_tube_info(player, channel)
+			assert.equals(expect_result, result)
+		end
+
+		it("allows public for p1",       function() test_allow(p1, "pubch", true) end)
+		it("allows public for p2",       function() test_allow(p2, "pubch", true) end)
+		it("allows public for p3",       function() test_allow(p3, "pubch", true) end)
+
+		it("allows receiver for owner",  function() test_allow(p1, "p1;ch", true) end)
+		it("allows receiver for others", function() test_allow(p2, "p1;ch", true) end)
+		it("allows receiver for bypass", function() test_allow(p3, "p1;ch", true) end)
+
+		it("allows private for owner",   function() test_allow(p1, "p1:ch", true) end)
+		it("denies private for others",  function() test_allow(p2, "p1:ch", false) end)
+		it("allows private for bypass",  function() test_allow(p3, "p1:ch", true) end)
 
 	end)
 
