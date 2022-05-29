@@ -2,6 +2,9 @@
 -- metatool:containertool is in game tool that allows cloning container configuration
 --
 
+local key_item = minetest.get_modpath('adv_keys') and 'keys:key'
+	or (minetest.get_modpath('keys') and 'keys:skeleton_key' or 'default:gold_ingot')
+
 local tool = metatool:register_tool('containertool', {
 	description = 'Container tool',
 	name = 'Container tool',
@@ -9,7 +12,7 @@ local tool = metatool:register_tool('containertool', {
 	recipe = {
 		{ '', '', 'default:mese_crystal' },
 		{ '', 'default:chest', '' },
-		{ 'default:key', '', '' }
+		{ key_item, '', '' }
 	},
 	settings = {
 		copy_key_lock_secret = true,
