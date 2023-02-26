@@ -3,6 +3,10 @@
 --
 
 local function add_field(t, f)
+	if type(f) ~= "table" then
+		table.insert(t, tostring(k).."="..tostring(v))
+		return
+	end
 	for k,v in pairs(f) do
 		if type(v) == "table" then
 			add_field(t, v)
