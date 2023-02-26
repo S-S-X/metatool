@@ -4,7 +4,7 @@
 
 local function add_field(t, f)
 	if type(f) ~= "table" then
-		table.insert(t, tostring(k).."="..tostring(v))
+		table.insert(t, tostring(f))
 		return
 	end
 	for k,v in pairs(f) do
