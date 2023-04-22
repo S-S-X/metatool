@@ -53,10 +53,11 @@ local function add_problem(t, data, code, description)
 		is_valid_pos(data.pos) and metatool.util.pos_to_string(data.pos) or "?",
 		data.station or "?", data.network or "?", data.owner or "?", description,
 	})
+	local travelnets = travelnet.get_travelnets(data.owner, true)
 	table.insert(t.problems_data, {
 		code = code, pos = data.pos,
 		station = data.station, network = data.network, owner = data.owner,
-		netref = data.owner and data.network and travelnet.targets[data.owner][data.network],
+		netref = data.owner and data.network and travelnets[data.network],
 	})
 end
 
@@ -108,7 +109,8 @@ local function check_station_data(t, owner, network, station, data)
 end
 
 local function find_duplicates(t, stdata)
-	local netref = travelnet.targets[stdata.owner][stdata.network]
+	local travelnets = travelnet.get_travelnets(stdata.owner, true)
+	local netref = travelnets[stdata.network]
 	local checked = {}
 	for station, data in pairs(netref) do
 		if type(data) == "table" and is_valid_pos(data.pos) then
@@ -126,25 +128,12 @@ local function find_duplicates(t, stdata)
 end
 
 local function find_invalid_nodes(t, stdata)
-	local netref = travelnet.targets[stdata.owner][stdata.network]
+	local travelnets = travelnet.get_travelnets(stdata.owner, true)
+	local netref = travelnets[stdata.network]
 	for station, data in pairs(netref) do
 		check_station_data(t, stdata.owner, stdata.network, station, data)
 		if type(data) == "table" and is_valid_pos(data.pos) then
 			check_station_node(t, stdata.owner, stdata.network, station, data)
-		end
-	end
-end
-
-local function find_travelnet_from_db(pos)
-	for owner, networks in pairs(travelnet.targets) do
-		for network, stations in pairs(networks) do
-			for station, data in pairs(stations) do
-				local spos = data.pos
-				if is_valid_pos(spos) and pos.x == spos.x and pos.y == spos.y and pos.z == spos.z then
-					-- First match found, return it
-					return owner, network, station
-				end
-			end
 		end
 	end
 end
@@ -159,15 +148,14 @@ local function find_problems(pos)
 	if not ns.player_exists(owner) then
 		add_problem(results, stdata, E_ENGINE, "Owner account not found")
 	end
-	if type(travelnet.targets) ~= "table" then
-		add_problem(results, stdata, E_DATABASE, "Everything is broken, contact nerds")
-	elseif not owner then
+	local travelnets = travelnet.get_travelnets(owner)
+	if not owner then
 		add_problem(results, stdata, E_METADATA, "Invalid owner meta")
-	elseif type(travelnet.targets[owner]) ~= "table" then
+	elseif type(travelnets) ~= "table" then
 		add_problem(results, stdata, E_DATABASE, "All networks missing")
 	elseif not network then
 		add_problem(results, stdata, E_METADATA, "Invalid network meta")
-	elseif type(travelnet.targets[owner][network]) ~= "table" then
+	elseif type(travelnets[network]) ~= "table" then
 		add_problem(results, stdata, E_DATABASE, "Network not found")
 	else
 		find_duplicates(results, stdata)
@@ -346,22 +334,19 @@ function definition:info(node, pos, player, itemstack)
 	local station = meta:get("station_name")
 	if not owner or not network or not station then
 		-- Either metadata is broken or travelnet is not yet configured
-		owner, network, station = find_travelnet_from_db(pos)
-	end
-	if owner and network and station then
-		metatool.form.show(player, "sharetool:transfer-travelnet", {
-			pos = pos,
-			node = node,
-			owner = owner,
-			network = network,
-			station = station,
-		})
-	else
 		minetest.chat_send_player(player:get_player_name(),
 			("Station data for %s in network %s owned by %s not found, is this travelnet configured properly?")
 			:format(station or "?", network or "?", owner or "?")
 		)
+		return
 	end
+	metatool.form.show(player, "sharetool:transfer-travelnet", {
+		pos = pos,
+		node = node,
+		owner = owner,
+		network = network,
+		station = station,
+	})
 end
 
 return definition

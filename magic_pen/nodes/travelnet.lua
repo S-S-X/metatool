@@ -61,8 +61,9 @@ function definition:copy(node, pos, player)
 	local include_coords = player:get_player_name() == owner
 	local network = meta:get("station_network")
 	local stations = {}
-	if owner and network and travelnet.targets[owner] and travelnet.targets[owner][network] then
-		collect_stations(stations, travelnet.targets[owner][network], include_coords, node.name == "travelnet:elevator")
+	local travelnets = travelnet.get_travelnets(owner)
+	if owner and network and travelnets[network] then
+		collect_stations(stations, travelnets[network], include_coords, node.name == "travelnet:elevator")
 	else
 		table.insert(stations, fmt_station(meta:get("station_name"), {pos=pos}, include_coords))
 	end
