@@ -104,20 +104,20 @@ tool:ns({
 		if owner == current_owner then
 			-- Nothing to do, current_owner is same as new owner
 			return true
-        end
+		end
 		local network = meta:get_string("station_network")
 		local station = meta:get_string("station_name")
-		if not travelnet.targets[owner] then
-			travelnet.targets[owner] = {}
+		local current_owner_travelnets = travelnet.get_travelnets(current_owner, true)
+		local new_owner_travelnets = travelnet.get_travelnets(owner, true)
+
+		if not new_owner_travelnets[network] then
+			new_owner_travelnets[network] = {}
 		end
-		if not travelnet.targets[owner][network] then
-			travelnet.targets[owner][network] = {}
-		end
-		if #travelnet.targets[owner][network] >= travelnet.MAX_STATIONS_PER_NETWORK then
+		if #new_owner_travelnets[network] >= travelnet.MAX_STATIONS_PER_NETWORK then
 			minetest.chat_send_player(name, S('Too many travelnets attached to network %s owned by %s.', network, owner))
 			return false
 		end
-		for stname,stdata in pairs(travelnet.targets[owner][network]) do
+		for stname,stdata in pairs(new_owner_travelnets[network]) do
 			if stname == station then
 				if stdata.pos.x ~= pos.x or stdata.pos.y ~= pos.y or stdata.pos.z ~= pos.z then
 					-- Station already exists on network and is at different location
@@ -130,13 +130,17 @@ tool:ns({
 			end
 		end
 		-- Remove old network link
-		if travelnet.targets[current_owner] and travelnet.targets[current_owner][network] then
-			travelnet.targets[current_owner][network][station] = nil
-        end
+		if current_owner_travelnets[network] then
+			current_owner_travelnets[network][station] = nil
+			-- save current owners travelnets
+			travelnet.set_travelnets(current_owner, current_owner_travelnets)
+		end
 		-- Update owner
 		meta:set_string('owner', owner)
 		-- Attach to network
-		travelnet.targets[owner][network][station] = {pos=pos, timestamp=os.time()}
+		new_owner_travelnets[network][station] = {pos=pos, timestamp=os.time()}
+		-- save new owners travelnets
+		travelnet.set_travelnets(owner, new_owner_travelnets)
 		-- Update formspec to reflect changes
 		travelnet.update_formspec(pos, owner, nil)
 		-- Save travelnet database
