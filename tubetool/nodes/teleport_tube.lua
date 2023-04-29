@@ -117,11 +117,11 @@ function definition:copy(node, pos, player)
 end
 
 function definition:paste(node, pos, player, data)
+	local name = player:get_player_name()
 	local receive = data.receive
 	-- check and update receive setting if placing private receiver but player is not owner
 	if receive == 1 then
 		local owner, mode = ns.explode_teleport_tube_channel(data.channel)
-		local name = player:get_player_name()
 		if owner ~= name and mode == ";" then
 			receive = 0
 			if type(player) == "userdata" then
@@ -129,15 +129,21 @@ function definition:paste(node, pos, player, data)
 			end
 		end
 	end
-	-- restore settings and update tube, no api available
-	local fields = {
-		set_channel = 1,
-		key_enter_field = "channel",
-		channel = data.channel,
-		["cr" .. receive] = receive,
-	}
-	local nodedef = minetest.registered_nodes[node.name]
-	nodedef.on_receive_fields(pos, "", fields, player)
+	-- restore settings and update teleport tube
+	if type(pipeworks.tptube) == "table" and type(pipeworks.tptube.set_tube) == "function" then
+		-- using pipeworks api, update_tube will also check permissions
+		pipeworks.tptube.update_tube(pos, data.channel, receive, name)
+	else
+		-- through formspec handler, no api available
+		local fields = {
+			set_channel = 1,
+			key_enter_field = "channel",
+			channel = data.channel,
+			["cr" .. receive] = receive,
+		}
+		local nodedef = minetest.registered_nodes[node.name]
+		nodedef.on_receive_fields(pos, "", fields, player)
+	end
 end
 
 return definition
