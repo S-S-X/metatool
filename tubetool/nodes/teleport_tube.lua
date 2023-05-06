@@ -130,7 +130,7 @@ function definition:paste(node, pos, player, data)
 		end
 	end
 	-- restore settings and update teleport tube
-	if type(pipeworks.tptube) == "table" and type(pipeworks.tptube.set_tube) == "function" then
+	if type(pipeworks.tptube) == "table" and type(pipeworks.tptube.update_tube) == "function" then
 		-- using pipeworks api, update_tube will also check permissions
 		pipeworks.tptube.update_tube(pos, data.channel, receive, name)
 	else
