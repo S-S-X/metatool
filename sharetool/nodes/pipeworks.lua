@@ -74,10 +74,16 @@ end
 
 local function set_channel(pos, meta, channel, receive)
 	meta:set_string("channel", channel)
+	-- new api wont set meta for can_receive so we need to set it here
+	meta:set_int("can_receive", receive)
+	-- old api requires second update_meta arg and sets meta, also required for new api but ignores second arg
 	pipeworks.tptube.update_meta(meta, receive == 1)
 	pipeworks.tptube.set_tube(pos, channel, receive)
-	local cr_description = (receive == 1) and "sending and receiving" or "sending"
-	meta:set_string("infotext", pipeworks_translator("Teleportation Tube @1 on '@2'", cr_description, channel))
+	if not pipeworks.tptube.update_tube then
+		-- old api wont set infotext, if it seems like old api then do it here
+		local cr_description = (receive == 1) and "sending and receiving" or "sending"
+		meta:set_string("infotext", pipeworks_translator("Teleportation Tube @1 on '@2'", cr_description, channel))
+	end
 	ns.mark_shared(meta)
 end
 
