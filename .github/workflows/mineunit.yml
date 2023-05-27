@@ -3,7 +3,7 @@ name: mineunit
 on: [push, pull_request]
 
 jobs:
-  build:
+  mineunit:
     runs-on: ubuntu-latest
 
     steps:
