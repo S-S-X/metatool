@@ -133,6 +133,7 @@ function definition:paste(node, pos, player, data)
 	if type(pipeworks.tptube) == "table" and type(pipeworks.tptube.update_tube) == "function" then
 		-- using pipeworks api, update_tube will also check permissions
 		pipeworks.tptube.update_tube(pos, data.channel, receive, name)
+		pipeworks.tptube.update_meta(minetest.get_meta(pos))
 	else
 		-- through formspec handler, no api available
 		local fields = {
