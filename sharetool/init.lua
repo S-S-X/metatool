@@ -132,19 +132,17 @@ tool:ns({
 		-- Remove old network link
 		if current_owner_travelnets[network] then
 			current_owner_travelnets[network][station] = nil
-			-- save current owners travelnets
+			-- Save current owners travelnets
 			travelnet.set_travelnets(current_owner, current_owner_travelnets)
 		end
 		-- Update owner
 		meta:set_string('owner', owner)
 		-- Attach to network
 		new_owner_travelnets[network][station] = {pos=pos, timestamp=os.time()}
-		-- save new owners travelnets
+		-- Save new owners travelnets
 		travelnet.set_travelnets(owner, new_owner_travelnets)
 		-- Update formspec to reflect changes
 		travelnet.update_formspec(pos, owner, nil)
-		-- Save travelnet database
-		travelnet.save_data()
 		return true
 	end
 })
