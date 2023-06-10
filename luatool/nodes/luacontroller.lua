@@ -22,14 +22,19 @@ local lpadcut = function(s, c, n)
 	return (c:rep(n - #s) .. s):sub(math.max(0, #s - n + 1), #s + 1)
 end
 
-local nodenameprefix = "mesecons_luacontroller:luacontroller"
+local nodenameprefixes = {
+	"mesecons_luacontroller:luacontroller",
+	"mooncontroller:mooncontroller"
+}
 
--- lua controller, 16 different nodes
 local nodes = {}
-for i=0,15 do
-	table.insert(nodes, nodenameprefix .. lpadcut(d2b(i), '0', 4))
+for _, prefix in ipairs(nodenameprefixes) do
+	-- lua/moon controller, 16 different nodes
+	for i=0,15 do
+		table.insert(nodes, prefix .. lpadcut(d2b(i), '0', 4))
+	end
+	table.insert(nodes, prefix .. '_burnt')
 end
-table.insert(nodes, nodenameprefix .. '_burnt')
 
 local ns = metatool.ns('luatool')
 
