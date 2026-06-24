@@ -1,5 +1,5 @@
 
-local S = metatool.S
+local F = metatool.F
 
 metatool.util = {}
 
@@ -38,7 +38,7 @@ function metatool.transform_tool_name(name, mtprefix)
 	elseif #parts == 1 and parts[1] ~= 'metatool' then
 		return (mtprefix and ':' or '') .. 'metatool:' .. parts[1]
 	end
-	-- print(S('Invalid metatool name %s', name))
+	-- print(F('Invalid metatool name %s', name))
 end
 
 function metatool.check_privs(player, privs)
@@ -72,7 +72,7 @@ function metatool.write_data(itemstack, data, description, tool)
 		local datastring = minetest.serialize(data)
 		local storage_size = tool and tonumber(tool.settings.storage_size)
 		if storage_size and #datastring > storage_size then
-			return S('Cannot store %d bytes, max storage for %s is %d bytes',
+			return F('Cannot store %d bytes, max storage for %s is %d bytes',
 				#datastring, tool.nice_name, tool.settings.storage_size)
 		end
 		meta:set_string('data', datastring)

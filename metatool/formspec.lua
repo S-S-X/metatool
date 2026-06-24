@@ -1,5 +1,5 @@
 
-local S = metatool.S
+local F = metatool.F
 local formspec_escape = minetest.formspec_escape
 
 local function formspec_content(value, default)
@@ -251,15 +251,15 @@ end
 function metatool.form.register_form(formname, formdef)
 	local name = get_formname(formname)
 	if not name then
-		print(S("metatool.form.register_form Registration failed, invalid formname: %s", formname))
+		print(F("metatool.form.register_form Registration failed, invalid formname: %s", formname))
 		return
 	end
 	if type(formdef) ~= "table" then
-		print(S("metatool.form.register_form Registration failed, invalid formdef type: %s", type(formdef)))
+		print(F("metatool.form.register_form Registration failed, invalid formdef type: %s", type(formdef)))
 		return
 	end
 	metatool.form.register_global_handler()
-	print(S("metatool.form.register_form Registering form: %s", name))
+	print(F("metatool.form.register_form Registering form: %s", name))
 	metatool.form.handlers[name] = {
 		on_create = formdef.on_create,
 		on_receive = formdef.on_receive,

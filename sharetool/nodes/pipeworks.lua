@@ -7,7 +7,7 @@ if not pipeworks or not pipeworks.tptube or not pipeworks.tptube.set_tube or not
 	return
 end
 
-local S = metatool.S
+local F = metatool.F
 local getdesc = metatool.util.description --(pos, node, meta)
 local pipeworks_translator = minetest.get_translator("pipeworks")
 
@@ -100,7 +100,7 @@ local function transfer_to(newowner, node, pos, player)
 		if channel == raw_channel then
 			return {
 				success = false,
-				description = S("%s is already owner of %s", newowner, getdesc(pos, node, meta))
+				description = F("%s is already owner of %s", newowner, getdesc(pos, node, meta))
 			}
 		end
 

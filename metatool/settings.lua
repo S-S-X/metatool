@@ -3,7 +3,7 @@
 	before initializing any other functionality.
 --]]
 
-local S = metatool.S
+local F = metatool.F
 
 local settings = Settings(metatool.configuration_file)
 
@@ -128,7 +128,7 @@ local node_specials = { "protection_bypass_info", "protection_bypass_read", "pro
 metatool.merge_node_settings = function(toolname, nodename, nodedef)
 	local name = get_toolname(toolname)
 	local path = string.format("%s:nodes:%s", name, nodename)
-	print(S('metatool.merge_node_settings merging settings for node %s', path))
+	print(F('metatool.merge_node_settings merging settings for node %s', path))
 
 	local tool_nodes = get_table(parsed_settings[name], "nodes")
 	local node_settings = get_table(tool_nodes, nodename)
@@ -158,7 +158,7 @@ metatool.merge_tool_settings = function(toolname, tooldef)
 	-- Should be called once during tool registration, assuming settings_data is kept
 	-- unchanged multiple calls wont do anything useful as settings are already merged.
 	local name = get_toolname(toolname)
-	print(S('metatool.merge_tool_settings merging settings for tool %s', name))
+	print(F('metatool.merge_tool_settings merging settings for tool %s', name))
 
 	local tool_settings = get_table(parsed_settings, name)
 	for key,_ in pairs(tool_specials) do

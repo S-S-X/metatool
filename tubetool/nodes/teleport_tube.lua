@@ -2,7 +2,7 @@
 -- Register teleport tube for tubetool
 --
 
-local S = metatool.S
+local F = metatool.F
 
 local nodenameprefix = "pipeworks:teleport_tube_"
 
@@ -44,7 +44,7 @@ metatool.form.register_form('tubetool:teleport_tube_list', {
 			if tube and tube.pos and data.channel then
 				local id = player:hud_add({
 					hud_elem_type = "waypoint",
-					name = S("%s\n\nReceive: %s", data.channel, tube.can_receive and "yes" or "no"),
+					name = F("%s\n\nReceive: %s", data.channel, tube.can_receive and "yes" or "no"),
 					text = "m",
 					number = 0xE0B020,
 					world_pos = tube.pos

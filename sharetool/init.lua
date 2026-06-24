@@ -2,7 +2,7 @@
 -- tubetool:wand is in game tool that allows cloning pipeworks node data
 --
 
-local S = metatool.S
+local F = metatool.F
 local modpath = minetest.get_modpath('sharetool')
 
 local recipe = nil
@@ -32,8 +32,8 @@ local function send_confirmation_message(player, targetname, nodename, result)
 	minetest.chat_send_player(player:get_player_name(),
 		(type(result) == 'table' and result.description)
 		or (success
-			and S('Node %s ownership changed to %s', nodename, targetname)
-			or S('Failed %s ownership change to %s', nodename, targetname)
+			and F('Node %s ownership changed to %s', nodename, targetname)
+			or F('Failed %s ownership change to %s', nodename, targetname)
 		)
 	)
 end
@@ -68,14 +68,14 @@ tool:ns({
 	set_area_owner = function(self, id, owner, player)
 		--luacheck: globals areas
 		if not self.player_exists(owner) then
-			minetest.chat_send_player(player:get_player_name(), S('Player %s not found.', owner))
+			minetest.chat_send_player(player:get_player_name(), F('Player %s not found.', owner))
 			return false
 		end
 		id = tonumber(id)
 		if id == nil or not areas.areas[id] then
 			minetest.chat_send_player(player:get_player_name(), id == nil
-				and S('Invalid area id.')
-				or S('Area %d not found from database.', id)
+				and F('Invalid area id.')
+				or F('Area %d not found from database.', id)
 			)
 			return false
 		end
@@ -114,14 +114,14 @@ tool:ns({
 			new_owner_travelnets[network] = {}
 		end
 		if #new_owner_travelnets[network] >= travelnet.MAX_STATIONS_PER_NETWORK then
-			minetest.chat_send_player(name, S('Too many travelnets attached to network %s owned by %s.', network, owner))
+			minetest.chat_send_player(name, F('Too many travelnets attached to network %s owned by %s.', network, owner))
 			return false
 		end
 		for stname,stdata in pairs(new_owner_travelnets[network]) do
 			if stname == station then
 				if stdata.pos.x ~= pos.x or stdata.pos.y ~= pos.y or stdata.pos.z ~= pos.z then
 					-- Station already exists on network and is at different location
-					minetest.chat_send_player(name, S(
+					minetest.chat_send_player(name, F(
 						'Travelnet network %s owned by %s already has station %s at %s.',
 						network, owner, station, minetest.pos_to_string(stdata.pos)
 					))

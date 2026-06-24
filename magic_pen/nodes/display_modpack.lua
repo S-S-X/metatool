@@ -3,7 +3,7 @@
 -- https://github.com/pyrollo/display_modpack
 --
 
-local S = signs and signs.intllib or string.format
+local F = signs and signs.intllib or string.format
 
 -- Collected nodes that will be registered for tool
 local nodes = {}
@@ -74,7 +74,7 @@ function definition:paste(node, pos, player, data)
 		set_content(keys, meta, content)
 		set_title(keys, meta, data.title)
 		if data.title then
-			meta:set_string("infotext", "\"".. data.title .."\"\n"..S("(right-click to read more text)"))
+			meta:set_string("infotext", "\"".. data.title .."\"\n"..F("(right-click to read more text)"))
 		end
 	elseif content then
 		signs_api.set_display_text(pos, content)
