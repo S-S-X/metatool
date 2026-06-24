@@ -10,6 +10,7 @@ mineunit("player")
 mineunit("protection")
 mineunit("default/functions")
 
+-- In case translations are used, S for S() wrapped strings
 _G.S = _G.S or function(s) return s end
 
 fixture("metatool")

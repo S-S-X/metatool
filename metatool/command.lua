@@ -1,10 +1,10 @@
 
-local S = metatool.S
+local F = metatool.F
 
 metatool.chat = {}
 
 metatool.chat.register_command = function(cmd, params, description, privs, minarg, maxarg, helpfn, mainfn)
-	print(S('Metatool registering chat command /%s', cmd))
+	print(F('Metatool registering chat command /%s', cmd))
 	minetest.register_chatcommand(cmd, {
 		params = params,
 		description = description,
@@ -21,7 +21,7 @@ metatool.chat.register_command = function(cmd, params, description, privs, minar
 				if #params_list >= minarg and #params_list <= maxarg then
 					return mainfn(name, params_list)
 				else
-					minetest.chat_send_player(name, S("Invalid command parameters: %s", table.concat(params_list," ")))
+					minetest.chat_send_player(name, F("Invalid command parameters: %s", table.concat(params_list," ")))
 				end
 			end
 		end
@@ -33,29 +33,29 @@ local metatool_privileged_give = function(name, params)
 		local tooldef = metatool.privileged_tools[toolname]
 		local count = 1
 		if not tooldef then
-			minetest.chat_send_player(name, S("Tool not available: %s", toolname))
+			minetest.chat_send_player(name, F("Tool not available: %s", toolname))
 			return
 		end
 		if #params > 1 then
 			count = tonumber(params[2])
 			if not count or math.floor(count) ~= count or count < 1 or count > 99 then
-				minetest.chat_send_player(name, S("Tool count must be between %d and %d", 1, 99))
+				minetest.chat_send_player(name, F("Tool count must be between %d and %d", 1, 99))
 				return
 			end
 		end
 		local player = minetest.get_player_by_name(name)
 		if not minetest.check_player_privs(player, tooldef.privs) then
-			minetest.chat_send_player(name, S("Tool not available: %s", toolname))
+			minetest.chat_send_player(name, F("Tool not available: %s", toolname))
 			return
 		end
 		local inv = player:get_inventory()
 		local stack = ItemStack(string.format("%s %d", tooldef.itemname, count))
 		if inv:room_for_item("main", stack) then
 			inv:add_item("main", stack)
-			minetest.chat_send_player(name, S("%d %s added to inventory", count, tooldef.itemname))
+			minetest.chat_send_player(name, F("%d %s added to inventory", count, tooldef.itemname))
 			return true
 		else
-			minetest.chat_send_player(name, S("Not enough inventory space for %s", tooldef.itemname))
+			minetest.chat_send_player(name, F("Not enough inventory space for %s", tooldef.itemname))
 			return true
 		end
 end
@@ -68,7 +68,7 @@ local metatool_privileged_list = function(name)
 			table.insert(available_tools, toolname)
 		end
 	end
-	minetest.chat_send_player(name, S("Available tools: %s", table.concat(available_tools, ", ")))
+	minetest.chat_send_player(name, F("Available tools: %s", table.concat(available_tools, ", ")))
 	return true
 end
 
